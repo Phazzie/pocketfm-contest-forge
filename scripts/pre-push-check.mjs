@@ -47,7 +47,7 @@ function run(command, args) {
 			process.platform === 'win32' && command === 'npm' ? 'npm.cmd' : command,
 			args,
 			{
-				stdio: 'inherit',
+				stdio: ['ignore', 'inherit', 'inherit'],
 				cwd: process.cwd()
 			}
 		);

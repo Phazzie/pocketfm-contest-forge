@@ -11,5 +11,5 @@ fi
 
 cd "$APP"
 
-npm run guard:repo-hygiene
-npm run prepush
+npm run guard:repo-hygiene < /dev/null
+npm run prepush < /dev/null

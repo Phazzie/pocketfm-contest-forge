@@ -23,7 +23,7 @@
 		"guard:docs-drift": "node scripts/guard-docs-drift.mjs",
 		"hooks:install": "node scripts/install-git-hooks.mjs",
 		"prepush": "node scripts/pre-push-check.mjs",
-		"lint": "prettier --check . && eslint src scripts eslint.config.js svelte.config.js vite.config.ts",
+		"lint": "node scripts/lint.mjs",
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
