@@ -1,0 +1,53 @@
+{
+	"name": "pocketfm-contest-forge",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test:unit": "vitest",
+		"test": "npm run test:unit -- --run",
+		"test:browser": "node scripts/browser-smoke.mjs",
+		"verify": "node scripts/verify-all.mjs",
+		"verify:guards": "npm run guard:repo-hygiene && npm run guard:module-shape && npm run guard:no-live-fallback",
+		"verify:ui": "node scripts/verify-ui.mjs",
+		"scaffold:module": "node scripts/scaffold-story-module.mjs",
+		"guard:repo-hygiene": "node scripts/guard-repo-hygiene.mjs",
+		"guard:module-shape": "node scripts/guard-module-shape.mjs",
+		"guard:no-live-fallback": "node scripts/guard-no-live-fallback.mjs",
+		"guard:docs-drift": "node scripts/guard-docs-drift.mjs",
+		"hooks:install": "node scripts/install-git-hooks.mjs",
+		"prepush": "node scripts/pre-push-check.mjs",
+		"lint": "prettier --check . && eslint src scripts eslint.config.js svelte.config.js vite.config.ts",
+		"format": "prettier --write ."
+	},
+	"devDependencies": {
+		"@eslint/compat": "^2.0.4",
+		"@eslint/js": "^10.0.1",
+		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/kit": "^2.57.0",
+		"@sveltejs/vite-plugin-svelte": "^7.0.0",
+		"@types/node": "^22",
+		"eslint": "^10.2.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-svelte": "^3.17.0",
+		"globals": "^17.4.0",
+		"playwright": "^1.60.0",
+		"prettier": "^3.8.1",
+		"prettier-plugin-svelte": "^3.5.1",
+		"svelte": "^5.55.2",
+		"svelte-check": "^4.4.6",
+		"typescript": "^6.0.2",
+		"typescript-eslint": "^8.58.1",
+		"vite": "^8.0.7",
+		"vitest": "^4.1.3"
+	},
+	"dependencies": {
+		"zod": "^4.4.3"
+	}
+}

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+if [[ -d "$ROOT/pocketfm-contest-forge" ]]; then
+	APP="$ROOT/pocketfm-contest-forge"
+else
+	APP="$ROOT"
+fi
+
+cd "$APP"
+
+npm run format
+npm run guard:repo-hygiene
+npm run guard:module-shape
+npm run guard:no-live-fallback
+npm run guard:docs-drift -- --staged
+npm test
