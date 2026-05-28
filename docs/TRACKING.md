@@ -6,12 +6,13 @@ Use this file for active issues, review findings, risks, and decisions that need
 
 ## Active Review Findings
 
-| Status | Priority | Item                                                                                   | Source       | Next Action                                                               |
-| ------ | -------- | -------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------- |
-| Done   | P2       | Default protagonist is derived from title words, producing "Crown weaponizes a crown." | Review       | Added explicit protagonist input, safer fixture default, and sanity test. |
-| Done   | P3       | Mechanism validation checks count, not uniqueness.                                     | Review       | Validates unique mechanism IDs and rejects duplicate selections.          |
-| Done   | P3       | Root `node_modules/.package-lock.json` contains local macOS install state.             | Review       | Root installed-tree metadata is no longer modified in this patch.         |
-| Done   | P3       | Root `package-lock.json` has accidental name casing churn.                             | Local status | Root package-lock is no longer modified in this patch.                    |
+| Status | Priority | Item                                                                                   | Source       | Next Action                                                                                                           |
+| ------ | -------- | -------------------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Done   | P2       | Default protagonist is derived from title words, producing "Crown weaponizes a crown." | Review       | Added explicit protagonist input, safer fixture default, and sanity test.                                             |
+| Done   | P3       | Mechanism validation checks count, not uniqueness.                                     | Review       | Validates unique mechanism IDs and rejects duplicate selections.                                                      |
+| Done   | P3       | Root `node_modules/.package-lock.json` contains local macOS install state.             | Review       | Root installed-tree metadata is no longer modified in this patch.                                                     |
+| Done   | P3       | Root `package-lock.json` has accidental name casing churn.                             | Local status | Root package-lock is no longer modified in this patch.                                                                |
+| Done   | P3       | Quality guards and CI need review-hardening before merge.                              | PR #1 review | Inline disable checks, type-escape scanning, UI probe/browser timeout validation, and pinned CI actions are hardened. |
 
 ## Product Risks
 
@@ -31,6 +32,11 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Open   | Story-state contract is in-memory only.                | Add persistence after storage choice is made.                                                |
 | Open   | Fixture module prose still needs live quality review.  | Run prose rubric and AI council once provider output exists.                                 |
 | Open   | Future multi-hour work needs stricter execution plans. | Use `.agent/PLANS.md` and the global `exec-plan` skill for complex autonomous runs.          |
+| Open   | Main branch needs remote quality enforcement.          | Enable GitHub branch protection after the CI workflow is merged.                             |
+| Open   | Low npm audit finding exists through SvelteKit cookie. | Track upstream fix; CI should fail on moderate and higher vulnerabilities.                   |
+| Open   | Public MVP needs Vercel and Grok delivery plan.        | Execute `docs/MVP_EXECUTION_PLAN.md` through PRs with CI and preview deployments.            |
+| Open   | CI UI smoke currently relies on preview build output.  | Keep `npm run verify` before `npm run verify:ui` in CI or add an explicit build preflight.   |
+| Open   | CI UI smoke must not leave server children running.    | Keep process-group cleanup in `scripts/verify-ui.mjs` covered by local and remote smoke.     |
 
 ## Tracking Targets
 

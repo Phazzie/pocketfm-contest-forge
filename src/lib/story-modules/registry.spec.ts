@@ -22,8 +22,14 @@ describe('story module registry', () => {
 	});
 
 	it('rejects duplicate module ids', () => {
-		expect(() =>
-			createStoryModuleRegistry([defaultStoryModules[0], defaultStoryModules[0]])
-		).toThrow('Duplicate story module id: cold-open-lab');
+		const firstModule = defaultStoryModules[0];
+
+		if (!firstModule) {
+			throw new Error('Expected default story modules to include at least one module.');
+		}
+
+		expect(() => createStoryModuleRegistry([firstModule, firstModule])).toThrow(
+			`Duplicate story module id: ${firstModule.id}`
+		);
 	});
 });

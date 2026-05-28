@@ -3,6 +3,11 @@
 # AI Orchestration
 
 The app should be AI-native. The deterministic adapter is a test double, not the product.
+The test double is still held to the same TypeScript safety standards as live provider code: no
+implicit undefined reads, no unused parameters, and no undocumented type escapes.
+Quality guards must scan only executable type escapes outside comments and strings, while inline
+ESLint disable directives still require a rationale. This keeps live provider work from hiding
+unsafe output normalization behind casual suppressions.
 
 ## Production Flow
 
