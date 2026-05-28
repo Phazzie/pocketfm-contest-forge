@@ -12,18 +12,26 @@ const accessCode = process.env.LIVE_AI_SMOKE_ACCESS_CODE ?? requiredEnv('STORY_A
 const response = await fetch(liveActionUrl(targetUrl), {
 	method: 'POST',
 	headers: {
-		'Content-Type': 'application/x-www-form-urlencoded'
+		'Content-Type': 'application/x-www-form-urlencoded',
+		'x-sveltekit-action': 'true'
 	},
 	body: defaultLiveActionBody(accessCode)
 });
 const responseText = await response.text();
+
+if (!response.ok) {
+	throw new Error(
+		`Live AI smoke action failed with HTTP ${response.status}: ${httpFailureMessage(responseText)}`
+	);
+}
+
 const envelope = parseActionEnvelope(responseText);
 const actionData = parseActionData(envelope);
 const liveColdOpen = actionData?.liveColdOpen;
 
-if (!response.ok || envelope.type === 'failure') {
+if (envelope.type === 'failure') {
 	throw new Error(
-		`Live AI smoke action failed with HTTP ${response.status}: ${failureMessage(liveColdOpen)}`
+		`Live AI smoke action failed with action status ${actionStatus(envelope, response.status)}: ${failureMessage(liveColdOpen)}`
 	);
 }
 
@@ -119,6 +127,31 @@ function parseActionEnvelope(responseText) {
 	}
 }
 
+function httpFailureMessage(responseText) {
+	const envelope = parseOptionalActionEnvelope(responseText);
+	const liveColdOpen = parseOptionalActionData(envelope)?.liveColdOpen;
+
+	if (liveColdOpen) return failureMessage(liveColdOpen);
+
+	return responseExcerpt(responseText);
+}
+
+function parseOptionalActionEnvelope(responseText) {
+	try {
+		return JSON.parse(responseText);
+	} catch {
+		return undefined;
+	}
+}
+
+function parseOptionalActionData(envelope) {
+	try {
+		return parseActionData(envelope);
+	} catch {
+		return undefined;
+	}
+}
+
 function parseActionData(envelope) {
 	if (typeof envelope?.data !== 'string') return undefined;
 
@@ -137,8 +170,17 @@ function failureMessage(liveColdOpen) {
 	return `${liveColdOpen.error.code}: ${liveColdOpen.error.message}`;
 }
 
+function actionStatus(envelope, fallbackStatus) {
+	return typeof envelope?.status === 'number' ? envelope.status : fallbackStatus;
+}
+
 function issueMessages(moduleResult) {
 	return moduleResult.issues.map((issue) => `${issue.code}: ${issue.message}`).join('; ');
+}
+
+function responseExcerpt(responseText) {
+	const excerpt = responseText.replace(/\s+/g, ' ').trim().slice(0, 240);
+	return excerpt || 'Empty response body.';
 }
 
 function requiredEnv(name) {
