@@ -45,6 +45,11 @@
   panel results consistently with other failed modules.
 - Hardened live access review findings so denied access-code attempts are rate-limited, successful
   quota is consumed only after request validation, and live output clears when the story seed changes.
+- Added `npm run ai:smoke`, an opt-in live AI smoke script for deployed/local URLs that verifies an
+  accepted `xai` `cold-open-lab` result without running by default in CI.
+- Hardened the live AI smoke script so it uses the SvelteKit action request header, times out hung
+  requests, reports transport failures before parsing action envelopes, and exits with clean failure
+  messages.
 - Fixed review findings for explicit protagonist handling, unique mechanism validation, and root lockfile hygiene.
 - Updated the Svelte workbench to render module run results and fixture-demo provenance.
 - Added autonomous work spec for the Story Module Platform.

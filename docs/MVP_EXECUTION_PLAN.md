@@ -243,6 +243,11 @@ Local validation on `feature/live-cold-open-action`:
 - `npm audit --audit-level=moderate` (passes with tracked low SvelteKit/cookie advisory)
 - Manual server-action smoke with `STORY_AI_ACCESS_CODE=demo` and no `XAI_API_KEY`: live action
   returned a failed `cold-open-lab` module with `PROVIDER_UNAVAILABLE` and no fixture output.
+- `npm run ai:smoke` skips safely unless `RUN_LIVE_AI_SMOKE=1`, `LIVE_AI_SMOKE_URL`, and
+  `STORY_AI_ACCESS_CODE` are set. Use it after Vercel secrets are configured to prove the real Grok
+  path from the deployed URL.
+- Local parser smoke against a no-key dev server reached the `runLiveColdOpen` action and failed
+  correctly on `PROVIDER_UNAVAILABLE: XAI_API_KEY is not configured.`
 
 ## Interfaces and Dependencies
 

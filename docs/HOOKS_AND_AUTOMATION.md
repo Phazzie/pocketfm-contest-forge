@@ -14,6 +14,8 @@
 - `npm run guard:eslint-disable-rationale`: fail when `eslint-disable` comments do not include a rationale.
 - `npm run guard:type-escape-budget`: fail when explicit `any` usage exceeds the approved registry exception.
 - `npm run guard:docs-drift`: fail when code changes are not paired with expected docs updates.
+- `npm run ai:smoke`: opt-in live AI smoke against a deployed or local URL. Skips unless
+  `RUN_LIVE_AI_SMOKE=1`, `LIVE_AI_SMOKE_URL`, and `STORY_AI_ACCESS_CODE` are present.
 - `npm run hooks:install`: install `.githooks/pre-commit` and `.githooks/pre-push` into the parent repo.
 
 ## Recommended Git Hooks
@@ -60,6 +62,5 @@ Use branch protection so pull requests cannot merge unless CI is green.
 ## Future Scripts
 
 - `research:refresh`: pull current contest briefs and update retrieval dates.
-- `ai:smoke`: verify configured provider keys and schema round-trip.
 - `story:lint`: inspect generated prose for generic phrasing, fake cliffhangers, missing payoff windows, and audio-readability failures.
 - `ledger:check`: validate story bible continuity and unresolved promise age.
