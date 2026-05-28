@@ -151,6 +151,7 @@ export interface StoryModulePlanProvenance {
 	sourceContestBriefId: string;
 	sourceContestBriefVersion: string;
 	generatedAt: string;
+	repairAttempts?: number;
 }
 
 export interface StoryModulePlanTrackingEvent {

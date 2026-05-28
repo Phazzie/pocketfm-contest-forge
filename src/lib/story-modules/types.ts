@@ -1,6 +1,7 @@
 // Created: 2026-05-26 13:44
 
 import type { ContestBrief } from '$lib/core/contracts/contestForgeContract';
+import type { StoryModuleProviderName } from '$lib/core/ports/storyModuleProviderPort';
 import type { StoryState, StoryStateRequirement } from '$lib/core/story-state/storyStateContract';
 import type { z } from 'zod';
 
@@ -56,13 +57,14 @@ export interface ModuleProvenance {
 	moduleId: StoryModuleId;
 	moduleVersion: string;
 	promptVersion: string;
-	provider: 'fixture' | 'demo-deterministic' | 'xai' | 'openai' | 'anthropic' | 'google' | 'none';
+	provider: StoryModuleProviderName;
 	model: string;
 	mode: ModuleExecutionMode;
 	latencyMs: number;
 	sourceContestBriefId: string;
 	sourceContestBriefVersion: string;
 	generatedAt: string;
+	repairAttempts?: number;
 }
 
 export type ModuleTrackingEventType =

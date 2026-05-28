@@ -29,6 +29,14 @@ Reject or regenerate output when it:
 - repeats the same character dynamic under new labels;
 - hides uncertainty about contest rules or source freshness.
 
+`src/lib/core/domain/proseQuality.ts` implements the current deterministic minimum gate for live
+module output. It rejects obvious generic advice, abstract scene pressure, fake cliffhanger
+questions without payoff paths, missing named/concrete subjects, and missing cost/debt/status or
+relationship pressure. It may emit audio-readability warnings for long spoken sentences.
+
+This gate is intentionally a floor, not a taste engine. Passing it means output is structurally
+acceptable enough to show or critique; it does not prove that the story choice is excellent.
+
 ## AI Council Review
 
 Before accepting major creative output, run or simulate these review roles:
