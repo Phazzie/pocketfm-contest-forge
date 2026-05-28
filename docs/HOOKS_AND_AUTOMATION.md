@@ -7,6 +7,8 @@
 - `npm run verify`: run lint, unit tests, Svelte diagnostics, and production build.
 - `npm run test:browser`: run browser smoke test against a running dev server.
 - `npm run verify:ui`: start the dev server on an available local port and run browser smoke.
+- `npm run deploy:readiness`: fail until the main branch, GitHub workflow/secret, Vercel linkage,
+  and deployed live smoke URL are all ready for final demo proof.
 - `npm run format`: format source and docs.
 - `npm run guard:repo-hygiene`: fail on generated output, root lockfile churn, and local install metadata.
 - `npm run guard:module-shape`: fail when registered story modules are missing required files, schemas, quality gates, provenance, or tracking events.

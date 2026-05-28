@@ -189,6 +189,8 @@ Remote gates:
 - Vercel preview deployment succeeds on every app-impacting PR.
 - `main` is protected and requires CI before merge.
 - Manual `Live AI Smoke` workflow can prove a deployed URL after `LIVE_AI_SMOKE_ACCESS_CODE` is set.
+- `npm run deploy:readiness` fails until GitHub, Vercel linkage, and deployed smoke URL setup are
+  visible enough to support a final demo claim.
 
 MVP acceptance:
 
@@ -244,6 +246,8 @@ Local and remote validation:
 - `npm run verify`
 - `npm run verify:ui`
 - `npm run guard:docs-drift`
+- `npm run deploy:readiness` currently fails because Vercel linkage, the GitHub smoke secret, and a
+  deployed HTTPS URL are not configured in this shell/repo yet.
 - `npm audit --audit-level=moderate` (passes with tracked low SvelteKit/cookie advisory)
 - Manual server-action smoke with `STORY_AI_ACCESS_CODE=demo` and no `XAI_API_KEY`: live action
   returned a failed `cold-open-lab` module with `PROVIDER_UNAVAILABLE` and no fixture output.
