@@ -73,6 +73,27 @@ Current modules run in fixture/demo mode only:
 
 Live mode must fail closed until a provider adapter exists.
 
+`src/lib/core/ports/storyModuleProviderPort.ts` is the provider-facing contract for module JSON
+generation. Providers return raw model text plus diagnostics; they do not return accepted module
+output. `src/lib/application/liveModuleExecutor.ts` is the first live boundary implementation for
+fake-provider tests: it validates provider requests/results, performs one balanced-object JSON repair
+attempt, validates module output with the module-owned Zod schema, runs the prose quality gate, and
+returns a normal `ModuleRunResult`.
+
+The executor is not a fallback path. When a provider is unavailable, times out, throws, returns
+malformed JSON, returns schema-invalid JSON, or produces weak prose, the module result is failed and
+no fixture/demo output is substituted.
+
+Current live execution is intentionally enabled only for modules with configured quality gates. The
+default executor supports `cold-open-lab`; other modules must add module-specific prose extraction
+and acceptance rules before they can run through the provider boundary. Provider JSON repair handles
+raw JSON, markdown-fenced JSON, or the first balanced JSON object, but still records this as one
+repair attempt and fails closed if schema validation does not pass.
+
+The executor also enforces a configurable provider timeout. A hung provider returns a failed module
+result with `PROVIDER_TIMEOUT`; it must not leave the request pending indefinitely or backfill with
+fixture output.
+
 ## Provider Tracking
 
 Every live AI result should record:

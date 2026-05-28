@@ -29,3 +29,14 @@ The AI council runbook is now part of the core `ForgePlan` contract. This keeps 
 The mechanism prototype no longer depends on a private artifact switch for its module-like behavior. Four story modules now own schemas, prompts, fixtures, provenance, tracking events, and fail-closed live behavior.
 
 Remaining concern: fixture-demo prose is still not production creative judgment. The next serious quality step is a live provider adapter plus prose-rubric rejection before accepting generated recommendations.
+
+## Checkpoint 7: Live Boundary Discipline
+
+The first live story-module path is now testable without a real API key. `LiveModuleExecutor` keeps
+provider orchestration outside module fixtures, validates provider contracts with Zod, repairs
+malformed JSON exactly once, rejects schema-invalid output, and rejects obvious generic prose before
+returning accepted module output.
+
+Remaining concern: this is still a fake-provider boundary, not a real Grok adapter and not a public
+demo path. The next step must add server-side xAI integration and UI failure states without weakening
+the fail-closed rule or allowing fixture/demo provenance to masquerade as live AI.

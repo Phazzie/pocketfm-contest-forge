@@ -27,9 +27,9 @@ protection so future work cannot silently add type escapes, fallback prose, or b
 - [x] Enable GitHub branch protection for `main`.
 - [x] Add explicit Vercel adapter and project configuration.
 - [ ] Connect Vercel Git deployment and verify preview deployment.
-- [ ] Implement provider port and fake-provider live executor.
+- [x] Implement provider port and fake-provider live executor.
 - [ ] Implement Grok server-side adapter with env validation and no browser secrets.
-- [ ] Implement deterministic prose quality gate and module acceptance path.
+- [x] Implement deterministic prose quality gate and module acceptance path.
 - [ ] Add public-demo abuse controls before enabling paid live AI.
 - [ ] Ship public production Vercel deployment and verify real AI output.
 
@@ -39,6 +39,9 @@ protection so future work cannot silently add type escapes, fallback prose, or b
   Pinning Node 22 is part of the quality baseline.
 - 2026-05-28 01:52 - `npm audit --audit-level=moderate` passes, but low SvelteKit/cookie audit
   findings remain and should be tracked until upstream packages resolve them.
+- 2026-05-28 04:25 - The provider boundary can be tested without a real API key by fake-provider
+  responses. This proves schema/repair/prose failure behavior before introducing Grok cost and
+  secret handling.
 
 ## Decision Log
 

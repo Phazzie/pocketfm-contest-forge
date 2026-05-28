@@ -21,19 +21,35 @@ unchanged in the UI.
 ## Progress
 
 - [x] 2026-05-27 22:21 - Converted the earlier autonomous work outline into this strict ExecPlan.
-- [ ] Run the baseline verification commands from a clean checkout.
-- [ ] Complete the hostile architecture review and record findings.
-- [ ] Add the provider port and fake provider contract tests.
-- [ ] Add `cold-open-lab` live execution through the new boundary.
-- [ ] Add the deterministic prose quality gate.
+- [x] 2026-05-28 03:44 - Ran baseline `npm run verify` from clean `main`; it passed before
+      branch edits.
+- [x] 2026-05-28 04:25 - Completed architecture review notes in `docs/TRACKING.md`.
+- [x] 2026-05-28 04:25 - Added the provider port and fake-provider contract tests.
+- [x] 2026-05-28 04:25 - Added `cold-open-lab` live execution through `LiveModuleExecutor`.
+- [x] 2026-05-28 04:25 - Added the deterministic prose quality gate.
 - [ ] Render live failure states only if a route-level live affordance is added.
-- [ ] Update docs and record final validation evidence.
+- [x] 2026-05-28 04:25 - Updated docs for the live boundary.
+- [x] 2026-05-28 03:54 - Ran final `npm run verify`; lint, guards, 34 unit tests, Svelte
+      diagnostics, and production build passed.
+- [x] 2026-05-28 03:55 - Ran `npm run guard:docs-drift`; it passed for eight changed app
+      code/script files.
+- [x] 2026-05-28 04:08 - Addressed automated review findings for markdown-fenced JSON, module
+      gate selection, slug leakage in prose checks, single-word named subjects, and prompt enum samples.
+      Final focused tests now cover 40 cases.
+- [x] 2026-05-28 04:14 - Addressed follow-up review findings for blocked provider provenance and
+      hung provider timeout behavior.
 
 ## Surprises & Discoveries
 
 - 2026-05-27 22:21 - The previous plan was useful but not decision-complete: it allowed "or
   equivalent," an optional real provider adapter, and underspecified UI behavior. This version fixes
   those choices.
+- 2026-05-28 04:25 - Strict optional property checks caught provenance/review object construction
+  issues while the live executor was being added. Keeping `exactOptionalPropertyTypes` on is paying
+  off at provider boundaries.
+- 2026-05-28 04:08 - Review caught real boundary problems that green tests missed: model output often
+  arrives in markdown fences, prompt examples can accidentally teach invalid enum values, and quality
+  gates must not let IDs or metadata satisfy prose checks.
 
 ## Decision Log
 
@@ -51,9 +67,11 @@ unchanged in the UI.
 
 ## Outcomes & Retrospective
 
-Not started. At completion, summarize whether fake-provider live execution works, which failures are
-observable, which files changed, which tests passed, and what remains before a real provider can be
-introduced.
+Complete for the fake-provider live boundary. Fake-provider live execution now works for
+`cold-open-lab` in unit tests. Observable paths include success, provider unavailable, provider
+timeout, malformed JSON repaired once, malformed JSON rejected, schema-invalid JSON rejected, weak
+prose rejected, and unexpected provider exception. A real provider adapter, UI live state, Vercel
+auth/deploy verification, and public-demo abuse controls remain before MVP.
 
 ## Context and Orientation
 

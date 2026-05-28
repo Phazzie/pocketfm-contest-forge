@@ -28,6 +28,12 @@ Story modules are pluggable runtime-schema-backed tools. Each module owns:
 
 `src/lib/story-modules/registry.ts` is the static registry. `src/lib/application/moduleRunner.ts` validates story state, module input, and module output before a result can be accepted. The use case maps accepted module runs into `ForgePlan.moduleResults` for the UI.
 
+`src/lib/application/liveModuleExecutor.ts` is separate from `ModuleRunner`. It orchestrates
+provider-backed module execution by calling the core provider port, repairing malformed JSON exactly
+once, validating the module-owned output schema, applying the prose quality gate, and preserving
+provider diagnostics in provenance/tracking events. Keeping this service separate prevents provider
+diagnostics and repair policy from leaking into fixture/demo module implementations.
+
 ## Contract/Test Driven Development
 
 The primary seam is `ForgeRequest -> ForgePlan`, defined in `contestForgeContract.ts`. Module-level seams are defined by each module's Zod schema and are validated at runtime.
@@ -47,3 +53,7 @@ Tests assert:
 ## Adapter Strategy
 
 The current app uses deterministic local adapters and fixture-backed modules so it can run and test without API credentials. This is labeled as `fixture-demo` output. Live mode fails closed until provider adapters exist; it must not silently replace failed AI with deterministic prose.
+
+The first provider boundary is now testable with fake providers only. Real adapters still belong
+under `src/lib/adapters` and must implement the core port without exposing provider keys to the
+browser.
