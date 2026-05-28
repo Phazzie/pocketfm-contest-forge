@@ -25,11 +25,12 @@ Use this file for active issues, review findings, risks, and decisions that need
 
 ## Active Follow-Up
 
-| Status | Item                                                  | Next Action                                                                                  |
-| ------ | ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Open   | Live AI provider adapter is still absent.             | Choose provider/router and implement provider-facing module execution behind ports/adapters. |
-| Open   | Story-state contract is in-memory only.               | Add persistence after storage choice is made.                                                |
-| Open   | Fixture module prose still needs live quality review. | Run prose rubric and AI council once provider output exists.                                 |
+| Status | Item                                                   | Next Action                                                                                  |
+| ------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Open   | Live AI provider adapter is still absent.              | Choose provider/router and implement provider-facing module execution behind ports/adapters. |
+| Open   | Story-state contract is in-memory only.                | Add persistence after storage choice is made.                                                |
+| Open   | Fixture module prose still needs live quality review.  | Run prose rubric and AI council once provider output exists.                                 |
+| Open   | Future multi-hour work needs stricter execution plans. | Use `.agent/PLANS.md` and the global `exec-plan` skill for complex autonomous runs.          |
 
 ## Tracking Targets
 

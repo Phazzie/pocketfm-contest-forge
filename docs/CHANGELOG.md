@@ -12,6 +12,8 @@
 - Added installable git hook templates for pre-commit and pre-push checks.
 - Hardened pre-push checks so nested verification commands do not inherit Git hook stdin.
 - Added a deterministic lint runner that disables Node compile cache for ESLint on runtimes where it can hang.
+- Added repo-local OpenAI Cookbook-style ExecPlan governance in `.agent/PLANS.md`.
+- Converted the next autonomous execution plan into a living ExecPlan with progress, discoveries, decisions, recovery, and validation criteria.
 - Added a self-contained next autonomous execution plan for the first live-AI-capable story module path.
 - Fixed review findings for explicit protagonist handling, unique mechanism validation, and root lockfile hygiene.
 - Updated the Svelte workbench to render module run results and fixture-demo provenance.

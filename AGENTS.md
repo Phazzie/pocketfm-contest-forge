@@ -52,6 +52,13 @@ For any new feature:
 
 If a feature crosses AI, research, persistence, or UI boundaries, add an explicit port or contract.
 
+## ExecPlans
+
+For complex features, significant refactors, live AI provider work, story-module architecture
+changes, cross-boundary contracts, or multi-hour autonomous work, create or update an ExecPlan as
+described in `.agent/PLANS.md` before implementation. The ExecPlan is a living document and must be
+kept current through design, implementation, validation, and handoff.
+
 ## Prose Quality Rule
 
 Do not accept AI output just because it is well formatted. Good output must be specific, surprising, playable by voice, emotionally legible, and useful for a serial contest strategy.

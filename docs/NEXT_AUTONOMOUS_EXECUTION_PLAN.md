@@ -1,27 +1,68 @@
 <!-- Created: 2026-05-27 06:08 -->
 
-# Next Autonomous Execution Plan
+# ExecPlan: First Live-AI-Capable Story Module Path
 
-This plan is self-contained. A future agent should be able to start from a fresh checkout of
-`pocketfm-contest-forge`, read this file plus the referenced repo docs, and work for several
-hours without needing chat context.
+This plan follows `.agent/PLANS.md`. It is a living document for a future autonomous run that moves
+`pocketfm-contest-forge` from fixture-demo module output to the first fake-provider-backed live
+module path. Keep this file current while executing it.
 
-## Mission
+## Purpose / Big Picture
 
-Move the app from a fixture-demo story module platform toward the first live-AI-capable module
-without breaking the architecture:
+The app already demos a SvelteKit writing lab with fixture-backed story modules. The next outcome is
+not "wire a real model." The next outcome is a trustworthy live-mode execution path for one module,
+`cold-open-lab`, where provider output is accepted only after JSON parsing, schema validation, and
+prose quality checks.
 
-- keep fixture/demo behavior stable;
-- keep live mode fail-closed unless provider output is valid and accepted;
-- implement the provider boundary and failure handling before expanding product scope;
-- prove the path with `cold-open-lab` only;
-- document every architectural decision and remaining risk.
+After this plan is complete, a user or reviewer can switch the module execution path to live mode in
+tests, feed it fake provider responses, and observe success, provider failure, malformed JSON,
+schema rejection, and prose rejection without requiring an API key. Fixture/demo mode must remain
+unchanged in the UI.
 
-## Required Reading
+## Progress
+
+- [x] 2026-05-27 22:21 - Converted the earlier autonomous work outline into this strict ExecPlan.
+- [ ] Run the baseline verification commands from a clean checkout.
+- [ ] Complete the hostile architecture review and record findings.
+- [ ] Add the provider port and fake provider contract tests.
+- [ ] Add `cold-open-lab` live execution through the new boundary.
+- [ ] Add the deterministic prose quality gate.
+- [ ] Render live failure states only if a route-level live affordance is added.
+- [ ] Update docs and record final validation evidence.
+
+## Surprises & Discoveries
+
+- 2026-05-27 22:21 - The previous plan was useful but not decision-complete: it allowed "or
+  equivalent," an optional real provider adapter, and underspecified UI behavior. This version fixes
+  those choices.
+
+## Decision Log
+
+- 2026-05-27 22:21 - Do not implement a real provider adapter in this plan. Rationale: the next
+  architectural risk is provider-boundary correctness, not vendor selection or secrets handling.
+- 2026-05-27 22:21 - Add `src/lib/core/ports/storyModuleProviderPort.ts` as the provider boundary.
+  Rationale: ports belong in core and adapters can implement them later.
+- 2026-05-27 22:21 - Add `src/lib/application/liveModuleExecutor.ts` rather than extending
+  `ModuleRunner`. Rationale: `ModuleRunner` validates module-owned fixture/demo execution today;
+  live provider orchestration needs a separate application service so provider diagnostics do not
+  leak into module implementations.
+- 2026-05-27 22:21 - Keep UI live-mode controls out of this plan unless the application service is
+  already complete and verified. Rationale: live mode is not product-demo-ready until provider
+  selection and user-facing retry/setup states are designed.
+
+## Outcomes & Retrospective
+
+Not started. At completion, summarize whether fake-provider live execution works, which failures are
+observable, which files changed, which tests passed, and what remains before a real provider can be
+introduced.
+
+## Context and Orientation
+
+Work in `/Users/hbpheonix/fairytaleswithspice/pocketfm-contest-forge`.
 
 Read these files before editing:
 
 - `AGENTS.md`
+- `.agent/PLANS.md`
 - `src/lib/story-modules/AGENTS.md`
 - `docs/ARCHITECTURE.md`
 - `docs/AI_ORCHESTRATION.md`
@@ -30,225 +71,183 @@ Read these files before editing:
 - `docs/HOOKS_AND_AUTOMATION.md`
 - `docs/AUTONOMOUS_WORK_SPEC.md`
 
-Use local Codex skills when available:
+Key terms:
 
-- `pocketfm-story-module`
-- `pocketfm-live-ai-adapter`
-- `pocketfm-prose-quality-review`
-- `pocketfm-story-state-continuity`
+- "fixture/demo mode" means deterministic local module output used for stable tests and demo UI.
+- "live mode" means a provider-backed path. Live mode must fail closed when provider output is
+  missing, malformed, low quality, or invalid.
+- "module" means a runtime-schema-backed story tool under `src/lib/story-modules/modules`.
+- "provider" means an adapter that returns raw model text plus diagnostics. It does not return
+  accepted module output.
 
-## Non-Negotiables
+Current architecture:
 
-- Core must not import Svelte.
-- UI must not own domain rules.
-- Provider-facing code must stay behind ports/adapters.
-- Module contracts must use runtime schemas.
-- Prompt text must be versioned and module-owned.
-- Every module result must include status, issues, provenance, and tracking events.
-- Live mode must never silently return fixture, deterministic, or heuristic creative output.
-- Do not add a second module to live AI until `cold-open-lab` is correct.
-- Do not require a real API key for unit tests.
+- `src/lib/story-modules/types.ts` defines module IDs, execution modes, issues, provenance, tracking
+  events, and `StoryModule`.
+- `src/lib/application/moduleRunner.ts` validates story state, module input, module output, and
+  unexpected module exceptions.
+- `src/lib/story-modules/modules/cold-open-lab` owns the first target module contract, prompt
+  version, fixture output, and demo module implementation.
+- `src/routes/+page.svelte` renders fixture-demo forge output. Do not move domain rules into this
+  route.
 
-## Baseline Commands
+## Plan of Work
 
-Run before meaningful edits:
+First, review the existing module platform and record real risks or confirmed non-issues in
+`docs/TRACKING.md`. Fix only bugs that block the live boundary.
 
-```sh
-npm install
-npm run verify
-npm run verify:ui
-```
+Second, add `src/lib/core/ports/storyModuleProviderPort.ts`. The port must expose one method,
+`generateModuleJson(request)`, that accepts module ID, module version, prompt version, execution
+mode, provider prompt messages, and a serializable provider input object. It returns a discriminated
+union with either raw JSON text and diagnostics or one provider failure code.
 
-If `verify:ui` uses a port other than `5173`, that is acceptable. The script chooses an
-available local port.
+Third, add `src/lib/application/liveModuleExecutor.ts`. This service takes a `StoryModule`, a
+validated module context, prompt messages, and a `StoryModuleProvider`. It calls the provider,
+performs one JSON repair attempt for malformed JSON, validates the parsed object with the module's
+output schema, runs the prose quality gate, and returns a `ModuleRunResult`.
 
-## Work Package A: Hostile Architecture Review
+Fourth, make `cold-open-lab` the only live-capable module in this plan. Add prompt assembly beside
+`cold-open-lab/prompts.ts`, use `coldOpenLabOutputSchema` as the only accepted output schema, and
+write tests with fake provider responses. Do not add live paths for `cliffhanger-futures`,
+`binge-debt-ledger`, or `trope-mutation-lab`.
 
-Goal: identify issues before adding provider complexity.
+Fifth, add a deterministic prose quality gate in `src/lib/core/domain/proseQuality.ts`. It is a
+first-pass blocker for obviously generic output, not a replacement for human taste or later AI
+council review.
 
-Tasks:
+Sixth, update docs and verification evidence. UI changes are allowed only when live failure state is
+exposed through an application contract; if no UI contract changes, skip route edits and do not run
+UI work merely for decoration.
 
-1. Review `src/lib/application/moduleRunner.ts`.
-2. Review `src/lib/story-modules/types.ts`.
-3. Review `src/lib/story-modules/registry.ts`.
-4. Review the four registered module implementations.
-5. Review all guard scripts under `scripts/`.
-6. Add findings to `docs/TRACKING.md`.
-7. Add durable lessons to `docs/LESSONS_LEARNED.md` only when the finding changes future behavior.
+## Concrete Steps
 
-Acceptance:
+Run baseline commands from the app root:
 
-- `docs/TRACKING.md` has any new risks, decisions, or confirmed non-issues.
-- No code changes are made merely for style.
-- If a real bug is found, fix it with a focused test.
+    npm install
+    npm run verify
+    npm run verify:ui
 
-## Work Package B: Provider Port And Result Contract
+Review these files and update `docs/TRACKING.md` with findings:
 
-Goal: define the live AI boundary without binding the product to one provider yet.
+- `src/lib/application/moduleRunner.ts`
+- `src/lib/story-modules/types.ts`
+- `src/lib/story-modules/registry.ts`
+- `src/lib/story-modules/modules/cold-open-lab/*`
+- `scripts/guard-module-shape.mjs`
+- `scripts/guard-no-live-fallback.mjs`
 
-Add or update:
+Create `src/lib/core/ports/storyModuleProviderPort.ts` with these exported types:
 
-- `src/lib/core/ports/storyModuleProviderPort.ts`
-- `src/lib/application/liveModuleExecutor.ts` or equivalent if it fits better than extending
-  `ModuleRunner`.
-- Provider result/error types for:
-  - unavailable provider;
-  - timeout;
-  - malformed JSON;
-  - schema validation failure;
-  - prose quality rejection;
-  - partial provider output;
-  - unexpected provider exception.
+- `StoryModuleProviderRequest`
+- `StoryModuleProviderSuccess`
+- `StoryModuleProviderFailure`
+- `StoryModuleProviderResult`
+- `StoryModuleProvider`
+- `StoryModuleProviderFailureCode`
 
-Rules:
+Use these failure codes exactly: `PROVIDER_UNAVAILABLE`, `PROVIDER_TIMEOUT`, `MALFORMED_JSON`,
+`SCHEMA_VALIDATION_FAILED`, `PROSE_QUALITY_REJECTION`, `PARTIAL_MODULE_RESULT`,
+`UNEXPECTED_EXCEPTION`.
 
-- Contracts first.
-- Runtime schema validation remains module-owned.
-- Provider adapters return diagnostics, not accepted module output.
-- Accepted module output must still pass the module runner's output schema.
+Create `src/lib/application/liveModuleExecutor.ts` and
+`src/lib/application/liveModuleExecutor.spec.ts`. The executor must map provider and validation
+failures to existing `ModuleIssueCode` values in `src/lib/story-modules/types.ts`. For malformed
+JSON, perform exactly one repair attempt by extracting the first balanced JSON object from the raw
+provider text. If no balanced object exists, fail closed with `SCHEMA_VALIDATION_FAILED`.
 
-Tests:
+Create `src/lib/core/domain/proseQuality.ts` and `src/lib/core/domain/proseQuality.spec.ts`. The
+gate should return accepted/warnings/rejections for these checks:
 
-- fake provider success;
-- fake provider unavailable;
-- fake provider timeout;
-- malformed JSON;
-- schema failure;
-- unexpected exception.
+- protagonist or concrete subject is named;
+- first-minute scene pressure is concrete;
+- average sentence length is audio-readable or emits a warning;
+- generic writing-advice phrases are rejected;
+- a cliffhanger includes a payoff path when present;
+- output includes at least one specific cost, debt, status wound, or relationship pressure.
 
-Acceptance:
+Update `src/lib/story-modules/modules/cold-open-lab/prompts.ts` with a prompt assembly function that
+returns provider messages and embeds `COLD_OPEN_LAB_PROMPT_VERSION`. Keep `contract.ts` as the
+source of truth for accepted output.
 
-- Live provider boundary exists.
-- No real API key is required.
-- `npm run verify` passes.
+Add fake provider tests covering:
 
-## Work Package C: Cold Open Lab Live Path
+- success with valid JSON;
+- provider unavailable;
+- timeout;
+- malformed text that repair can recover;
+- malformed text that repair cannot recover;
+- schema-invalid JSON;
+- weak prose rejected by the quality gate;
+- unexpected provider exception.
 
-Goal: make `cold-open-lab` the first live-capable module.
-
-Tasks:
-
-1. Keep `cold-open-lab/contract.ts` as the source output schema.
-2. Add provider prompt assembly using `cold-open-lab/prompts.ts`.
-3. Add a fake provider adapter for tests.
-4. Add an optional real provider adapter only if it can be implemented without committing secrets.
-5. Add one schema repair pass for malformed provider JSON.
-6. Preserve fixture/demo mode behavior exactly.
-7. In live mode:
-   - call provider;
-   - parse/repair output;
-   - validate against Zod schema;
-   - run prose quality checks;
-   - return accepted output or failed result with issues.
-
-Acceptance:
-
-- `cold-open-lab` live success works with fake provider.
-- provider unavailable returns failed result, not fixture output.
-- malformed JSON tries one repair pass and then fails closed if still invalid.
-- accepted result records provider/model/prompt version/latency.
-- `guard:no-live-fallback` still passes.
-
-## Work Package D: Prose Quality Gate
-
-Goal: stop generic prose from becoming accepted advice.
-
-Implement a lightweight deterministic quality gate first. Do not pretend this replaces human taste or
-AI council review.
-
-Possible files:
-
-- `src/lib/core/domain/proseQuality.ts`
-- `src/lib/core/domain/proseQuality.spec.ts`
-
-Minimum checks:
-
-- named protagonist or concrete subject;
-- first-minute scene pressure;
-- audio-readable sentence length warning;
-- no generic writing-advice phrases;
-- cliffhanger has a payoff path when applicable;
-- output contains a specific cost, debt, status wound, or relationship pressure.
-
-Acceptance:
-
-- quality gate can reject weak fake provider output in tests;
-- rejected output becomes module issue `PROSE_QUALITY_REJECTION`;
-- docs explain this is a first-pass guard, not final creative judgment.
-
-## Work Package E: UI Failure States
-
-Goal: show live AI failure states without hiding user input.
-
-Tasks:
-
-1. Add UI affordance for generation mode if not already sufficient.
-2. Show module statuses clearly: success, partial, failed.
-3. Show provider unavailable/schema/prose issues without overwriting the draft.
-4. Keep module output rendering dense and inspectable.
-5. Add or update browser smoke assertions if the UI changes materially.
-
-Acceptance:
-
-- `npm run verify:ui` passes.
-- The page visibly distinguishes fixture-demo from live failure.
-- No domain rules move into Svelte.
-
-## Work Package F: Documentation And Hooks
-
-Update:
+Update docs:
 
 - `docs/CHANGELOG.md`
 - `docs/TRACKING.md`
 - `docs/AI_ORCHESTRATION.md`
-- `docs/ARCHITECTURE.md` if boundaries changed
-- `docs/LESSONS_LEARNED.md` for durable process changes
+- `docs/ARCHITECTURE.md` if the new application service changes boundaries;
+- `docs/LESSONS_LEARNED.md` only for durable process changes.
 
-Run:
+Suggested commits:
 
-```sh
-npm run guard:module-shape
-npm run guard:no-live-fallback
-npm run guard:repo-hygiene
-npm run guard:docs-drift
-npm run verify
-npm run verify:ui
-```
-
-## Suggested Commit Sequence
-
-Prefer small commits:
-
-1. `Review module platform architecture`
+1. `Review live module architecture`
 2. `Add story module provider port`
-3. `Add cold open live provider path`
+3. `Add cold open live executor path`
 4. `Add prose quality gate`
-5. `Render live module failure states`
-6. `Update docs for live AI module path`
+5. `Update docs for live module execution`
 
-## Stop Conditions
+## Validation and Acceptance
 
-Stop and report clearly if:
+Run from the app root:
 
-- a real provider API key is required to continue;
-- provider choice changes architecture materially;
-- tests require network access;
-- a guard blocks but the correct fix is a product decision rather than a code decision;
-- GitHub auth or remote permissions fail.
+    npm run guard:module-shape
+    npm run guard:no-live-fallback
+    npm run guard:repo-hygiene
+    npm run guard:docs-drift
+    npm run verify
 
-Do not stop merely because a test is failing. Fix it unless the failure exposes one of the stop
-conditions above.
+Run `npm run verify:ui` only if route files or user-visible UI state changed.
 
-## Final Handoff Requirements
+Acceptance criteria:
 
-Before final response:
+- Fixture/demo behavior is unchanged.
+- Unit tests require no real API key and no network access.
+- `cold-open-lab` fake-provider live success returns `status: "success"` with accepted output,
+  provider/model/prompt version/latency provenance, and tracking events.
+- Provider unavailable and timeout return `status: "failed"` without fixture output.
+- Malformed JSON gets exactly one repair attempt and then fails closed if still invalid.
+- Schema-invalid provider JSON returns `SCHEMA_VALIDATION_FAILED`.
+- Weak prose returns `PROSE_QUALITY_REJECTION`.
+- `guard:no-live-fallback` still passes.
 
-- `git status --short` is understood and only intentional changes remain.
-- `npm run verify` passes.
-- `npm run verify:ui` passes if UI changed.
-- Summarize:
-  - changed files;
-  - provider boundary decisions;
-  - tests run;
-  - remaining risks;
-  - next recommended work package.
+## Idempotence and Recovery
+
+All new tests should use fake providers and deterministic clocks. Re-running tests must not require
+secrets, network access, or prior local state.
+
+If a baseline command fails before edits, stop and record the failure in `Progress` and
+`Surprises & Discoveries`. If a failure appears after edits, fix it unless it requires a product
+decision, real API key, network-only test, or provider choice.
+
+If the live executor design exposes a missing existing contract, update this ExecPlan before coding
+the new direction. Do not hide that decision inside implementation.
+
+## Artifacts and Notes
+
+Keep concise evidence here while executing:
+
+- command outputs that prove verification passed;
+- any changed assumptions;
+- links to commits or pull requests if the work is pushed.
+
+No execution evidence yet.
+
+## Interfaces and Dependencies
+
+No new runtime dependency is expected for this plan. Use existing TypeScript, Zod, Vitest, and
+SvelteKit tooling.
+
+The provider port is internal TypeScript API only. It must not introduce a public HTTP API, new
+environment variable, real provider SDK, or committed secret.
+
+The UI contract remains fixture-demo unless a later ExecPlan explicitly designs live AI controls.
