@@ -40,6 +40,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Open    | CI UI smoke must not leave server children running.    | Keep process-group cleanup in `scripts/verify-ui.mjs` covered by local and remote smoke.                                                  |
 | Open    | Vercel project is not yet proven from public URL.      | Deploy this branch, verify preview URL, then connect production deployment from `main`.                                                   |
 | Blocked | Vercel CLI is not authenticated in the local shell.    | Run `vercel login` or provide `VERCEL_TOKEN`, then deploy from the repo root.                                                             |
+| Open    | Real deployed Grok smoke is not yet proven.            | After Vercel env is configured, run `RUN_LIVE_AI_SMOKE=1 LIVE_AI_SMOKE_URL=<url> npm run ai:smoke`.                                       |
 | Done    | Live Grok adapter is not wired into UI/server action.  | Added server-only `runLiveColdOpen` action, preserves submitted input, and renders live module success/failure separately.                |
 | Open    | GitHub Actions warns about Node 20 action runtime.     | Watch pinned `actions/checkout` and `actions/setup-node` runtime migration before GitHub forces Node 24 action runtime.                   |
 
