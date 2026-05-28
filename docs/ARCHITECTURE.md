@@ -34,6 +34,12 @@ once, validating the module-owned output schema, applying the prose quality gate
 provider diagnostics in provenance/tracking events. Keeping this service separate prevents provider
 diagnostics and repair policy from leaking into fixture/demo module implementations.
 
+`src/lib/application/runLiveColdOpenLab.ts` is the first narrow live use case. It validates a
+`ForgeRequest`, builds the `cold-open-lab` input and story state, calls `LiveModuleExecutor`, and
+returns a `LiveColdOpenResponse` for the route action. The Svelte page submits to
+`runLiveColdOpen`; the route layer owns access-code/rate-limit checks and passes private env values
+to the xAI adapter without exposing them to the browser.
+
 ## Contract/Test Driven Development
 
 The primary seam is `ForgeRequest -> ForgePlan`, defined in `contestForgeContract.ts`. Module-level seams are defined by each module's Zod schema and are validated at runtime.
@@ -54,6 +60,6 @@ Tests assert:
 
 The current app uses deterministic local adapters and fixture-backed modules so it can run and test without API credentials. This is labeled as `fixture-demo` output. Live mode fails closed until provider adapters exist; it must not silently replace failed AI with deterministic prose.
 
-The first provider boundary is now testable with fake providers only. Real adapters still belong
-under `src/lib/adapters` and must implement the core port without exposing provider keys to the
-browser.
+The first provider boundary is testable with fake providers and can now be called by a server-side
+route action for `cold-open-lab`. Real adapters still belong under `src/lib/adapters` and must
+implement the core port without exposing provider keys to the browser.

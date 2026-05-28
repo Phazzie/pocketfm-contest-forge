@@ -36,6 +36,15 @@
   a module run indefinitely.
 - Added a server-side xAI Responses API story-module provider for `grok-4.20-multi-agent` with env
   validation, provider metadata, timeout handling, nested output extraction, and secret-safe tests.
+- Added the first server-side live Grok UI path for `cold-open-lab`, including access-code gating,
+  per-client demo rate limiting, preserved submitted input, and live module success/failure
+  rendering.
+- Updated story-state creation so live cold-open runs record their limited provider-backed scope
+  instead of carrying the older fixture-only writer decision.
+- Hardened the live demo rate limiter to prune expired client buckets and styled failed live Grok
+  panel results consistently with other failed modules.
+- Hardened live access review findings so denied access-code attempts are rate-limited, successful
+  quota is consumed only after request validation, and live output clears when the story seed changes.
 - Fixed review findings for explicit protagonist handling, unique mechanism validation, and root lockfile hygiene.
 - Updated the Svelte workbench to render module run results and fixture-demo provenance.
 - Added autonomous work spec for the Story Module Platform.

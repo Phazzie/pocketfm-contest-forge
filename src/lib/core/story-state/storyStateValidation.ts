@@ -8,8 +8,15 @@ import type {
 import {
 	storyStateSchema,
 	type StoryDebt,
+	type WriterDecision,
 	type StoryState
 } from '$lib/core/story-state/storyStateContract';
+
+export type StoryStateGenerationMode = 'fixture-demo' | 'live-ai';
+
+export interface StoryStateCreationOptions {
+	generationMode?: StoryStateGenerationMode;
+}
 
 export type StoryStateValidationResult =
 	| { success: true; data: StoryState }
@@ -31,7 +38,8 @@ export function validateStoryState(value: unknown): StoryStateValidationResult {
 export function createStoryStateFromForgeRequest(
 	request: ForgeRequest,
 	brief: ContestBrief,
-	pilot?: EpisodeBlueprint
+	pilot?: EpisodeBlueprint,
+	options: StoryStateCreationOptions = {}
 ): StoryState {
 	const leadName = request.seed.protagonistName.trim();
 	const antagonistName = 'the false heir';
@@ -129,15 +137,27 @@ export function createStoryStateFromForgeRequest(
 				lockedBy: 'seed'
 			}
 		],
-		writerDecisions: [
-			{
-				id: 'demo-mode',
-				decision: 'Use fixture-backed modules until live AI adapters are wired.',
-				rationale: 'The app must not pretend deterministic prose is production AI.',
-				madeAt: '2026-05-26'
-			}
-		],
+		writerDecisions: [writerDecisionForGenerationMode(options.generationMode ?? 'fixture-demo')],
 		aiSuggestions: []
+	};
+}
+
+function writerDecisionForGenerationMode(mode: StoryStateGenerationMode): WriterDecision {
+	if (mode === 'live-ai') {
+		return {
+			id: 'live-cold-open-only',
+			decision: 'Run only the provider-backed cold-open module through the live AI boundary.',
+			rationale:
+				'The full forge remains fixture-demo until every live module has provider, schema, and prose gates.',
+			madeAt: '2026-05-28'
+		};
+	}
+
+	return {
+		id: 'demo-mode',
+		decision: 'Use fixture-backed modules until live AI adapters are wired.',
+		rationale: 'The app must not pretend deterministic prose is production AI.',
+		madeAt: '2026-05-26'
 	};
 }
 

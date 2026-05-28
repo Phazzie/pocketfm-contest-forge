@@ -30,8 +30,8 @@ protection so future work cannot silently add type escapes, fallback prose, or b
 - [x] Implement provider port and fake-provider live executor.
 - [x] Implement Grok server-side adapter with env validation and no browser secrets.
 - [x] Implement deterministic prose quality gate and module acceptance path.
-- [ ] Add public-demo abuse controls before enabling paid live AI.
-- [ ] Wire Grok adapter into a server-side live `cold-open-lab` action.
+- [x] Add public-demo abuse controls before enabling paid live AI.
+- [x] Wire Grok adapter into a server-side live `cold-open-lab` action.
 - [ ] Ship public production Vercel deployment and verify real AI output.
 
 ## Surprises & Discoveries
@@ -166,6 +166,14 @@ Public MVP PR:
 - Add UI mode controls, live result rendering, failure states, access gate, and local/export option.
 - Verify preview deployment with real Grok output before merging.
 
+Live cold-open action PR:
+
+- Create branch `feature/live-cold-open-action`.
+- Add `LiveColdOpenResponse` contract and `RunLiveColdOpenLab` use case.
+- Add server-only `runLiveColdOpen` form action using the xAI provider and `STORY_AI_ACCESS_CODE`.
+- Add in-memory per-client rate limiting for public-demo calls.
+- Render live success/failure module results separately from fixture-demo full-plan output.
+
 ## Validation and Acceptance
 
 Repo gates:
@@ -220,17 +228,21 @@ Merged PRs under this MVP plan:
 - PR #1: quality enforcement and CI.
 - PR #2: explicit Vercel adapter and deployment docs.
 - PR #3: live story-module provider boundary and prose gate.
+- PR #4: xAI Grok story-module provider adapter.
 
 Current open branch:
 
-- `feature/xai-grok-provider`: server-side xAI Responses API adapter and secret-safe tests.
+- `feature/live-cold-open-action`: server-side live cold-open form action, access gate, UI result
+  panel, and tests.
 
-Local validation on `feature/xai-grok-provider`:
+Local validation on `feature/live-cold-open-action`:
 
 - `npm run verify`
 - `npm run verify:ui`
 - `npm run guard:docs-drift`
 - `npm audit --audit-level=moderate` (passes with tracked low SvelteKit/cookie advisory)
+- Manual server-action smoke with `STORY_AI_ACCESS_CODE=demo` and no `XAI_API_KEY`: live action
+  returned a failed `cold-open-lab` module with `PROVIDER_UNAVAILABLE` and no fixture output.
 
 ## Interfaces and Dependencies
 

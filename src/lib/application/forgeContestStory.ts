@@ -7,18 +7,14 @@ import type {
 	EpisodeBlueprint,
 	ForgePlan,
 	ForgeRequest,
-	StoryModulePlanResult,
 	UseCaseResponse
 } from '$lib/core/contracts/contestForgeContract';
 import { validateForgeRequest } from '$lib/core/contracts/contestForgeContract';
 import { createStoryStateFromForgeRequest } from '$lib/core/story-state/storyStateValidation';
 import { ModuleRunner } from '$lib/application/moduleRunner';
+import { toStoryModulePlanResult } from '$lib/application/storyModulePlanResult';
 import type { StoryModuleRegistry } from '$lib/story-modules/registry';
-import type {
-	AnyStoryModule,
-	ModuleExecutionMode,
-	ModuleRunResult
-} from '$lib/story-modules/types';
+import type { ModuleExecutionMode } from '$lib/story-modules/types';
 
 export class ForgeContestStory {
 	constructor(
@@ -85,7 +81,7 @@ export class ForgeContestStory {
 					now
 				});
 
-				return toPlanModuleResult(module, result);
+				return toStoryModulePlanResult(module, result);
 			})
 		);
 
@@ -222,22 +218,5 @@ function toLedgerDebt(
 		openedInEpisode: debt.openedInEpisode,
 		payoffWindow: debt.payoffWindow,
 		interest: debt.notes ?? `Debt pressure carries into ${debt.payoffWindow}.`
-	};
-}
-
-function toPlanModuleResult<TOutput>(
-	module: AnyStoryModule,
-	result: ModuleRunResult<TOutput>
-): StoryModulePlanResult {
-	return {
-		moduleId: module.id,
-		label: module.label,
-		category: module.category,
-		status: result.status,
-		summary: result.summary,
-		issues: result.issues,
-		provenance: result.provenance,
-		trackingEvents: result.trackingEvents,
-		output: result.output
 	};
 }

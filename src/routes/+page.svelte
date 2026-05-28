@@ -3,13 +3,15 @@
 	import type {
 		ContestGenre,
 		ForgePlan,
+		LiveColdOpenResponse,
 		MechanismId,
 		RiskTolerance,
 		UseCaseResponse
 	} from '$lib/core/contracts/contestForgeContract';
-	import type { PageData } from './$types';
+	import { coldOpenLabOutputSchema } from '$lib/story-modules/modules/cold-open-lab/contract';
+	import type { ActionData, PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form?: ActionData } = $props();
 
 	const forge = createDefaultForge();
 	let selectedGenre = $state<ContestGenre>(defaultForgeRequest.contestId);
@@ -22,6 +24,8 @@
 	let minutesPerEpisode = $state(defaultForgeRequest.seed.minutesPerEpisode);
 	let riskLevel = $state<number>(defaultForgeRequest.riskTolerance);
 	let selectedMechanisms = $state<MechanismId[]>([...defaultForgeRequest.selectedMechanisms]);
+	let liveAccessCode = $state('');
+	let isLiveSubmitting = $state(false);
 
 	const request = $derived({
 		...defaultForgeRequest,
@@ -63,7 +67,19 @@
 		};
 	});
 
+	$effect(() => {
+		if (form?.submittedRequest) {
+			syncRequest(form.submittedRequest);
+			isLiveSubmitting = false;
+		}
+	});
+
 	const plan = $derived(result?.success ? result.data : data.initialPlan);
+	const liveColdOpen = $derived<LiveColdOpenResponse | null>(
+		form?.submittedRequest && requestsMatch(request, form.submittedRequest)
+			? (form.liveColdOpen ?? null)
+			: null
+	);
 	const issues = $derived(result && !result.success ? (result.error.issues ?? []) : []);
 	const scoreRows = $derived([
 		['Contest score', plan.score.score],
@@ -77,6 +93,48 @@
 		selectedMechanisms = selectedMechanisms.includes(id)
 			? selectedMechanisms.filter((mechanism) => mechanism !== id)
 			: [...selectedMechanisms, id];
+	}
+
+	function markLiveSubmit() {
+		isLiveSubmitting = true;
+	}
+
+	function syncRequest(nextRequest: typeof defaultForgeRequest) {
+		selectedGenre = nextRequest.contestId;
+		workingTitle = nextRequest.seed.workingTitle;
+		protagonistName = nextRequest.seed.protagonistName;
+		logline = nextRequest.seed.logline;
+		emotionalPromise = nextRequest.seed.emotionalPromise;
+		tabooLever = nextRequest.seed.tabooLever;
+		episodeCountTarget = nextRequest.seed.episodeCountTarget;
+		minutesPerEpisode = nextRequest.seed.minutesPerEpisode;
+		riskLevel = nextRequest.riskTolerance;
+		selectedMechanisms = [...nextRequest.selectedMechanisms];
+	}
+
+	function requestsMatch(
+		currentRequest: typeof defaultForgeRequest,
+		submittedRequest: typeof defaultForgeRequest
+	) {
+		return (
+			currentRequest.contestId === submittedRequest.contestId &&
+			currentRequest.riskTolerance === submittedRequest.riskTolerance &&
+			currentRequest.seed.workingTitle === submittedRequest.seed.workingTitle &&
+			currentRequest.seed.protagonistName === submittedRequest.seed.protagonistName &&
+			currentRequest.seed.logline === submittedRequest.seed.logline &&
+			currentRequest.seed.emotionalPromise === submittedRequest.seed.emotionalPromise &&
+			currentRequest.seed.tabooLever === submittedRequest.seed.tabooLever &&
+			currentRequest.seed.episodeCountTarget === submittedRequest.seed.episodeCountTarget &&
+			currentRequest.seed.minutesPerEpisode === submittedRequest.seed.minutesPerEpisode &&
+			mechanismsMatch(currentRequest.selectedMechanisms, submittedRequest.selectedMechanisms)
+		);
+	}
+
+	function mechanismsMatch(currentMechanisms: MechanismId[], submittedMechanisms: MechanismId[]) {
+		return (
+			currentMechanisms.length === submittedMechanisms.length &&
+			currentMechanisms.every((mechanism, index) => mechanism === submittedMechanisms[index])
+		);
 	}
 </script>
 
@@ -276,6 +334,92 @@
 						</article>
 					{/each}
 				</div>
+			</section>
+
+			<section
+				class="panel live-ai-panel"
+				class:failed={liveColdOpen?.success && liveColdOpen.data.moduleResult.status === 'failed'}
+			>
+				<div class="module-header">
+					<span>{liveColdOpen?.success ? liveColdOpen.data.moduleResult.status : 'locked'}</span>
+					<h3>Grok cold open</h3>
+				</div>
+
+				<form
+					method="POST"
+					action="?/runLiveColdOpen"
+					class="live-action"
+					onsubmit={markLiveSubmit}
+				>
+					<input type="hidden" name="contestId" value={selectedGenre} />
+					<input type="hidden" name="workingTitle" value={workingTitle} />
+					<input type="hidden" name="protagonistName" value={protagonistName} />
+					<input type="hidden" name="logline" value={logline} />
+					<input type="hidden" name="emotionalPromise" value={emotionalPromise} />
+					<input type="hidden" name="tabooLever" value={tabooLever} />
+					<input type="hidden" name="episodeCountTarget" value={episodeCountTarget} />
+					<input type="hidden" name="minutesPerEpisode" value={minutesPerEpisode} />
+					<input type="hidden" name="riskTolerance" value={Math.round(riskLevel)} />
+					{#each selectedMechanisms as mechanism (mechanism)}
+						<input type="hidden" name="selectedMechanisms" value={mechanism} />
+					{/each}
+
+					<label>
+						<span>Live access code</span>
+						<input
+							type="password"
+							name="accessCode"
+							autocomplete="one-time-code"
+							bind:value={liveAccessCode}
+						/>
+					</label>
+
+					<button type="submit" disabled={isLiveSubmitting}>
+						{isLiveSubmitting ? 'Running Grok' : 'Run Grok cold open'}
+					</button>
+				</form>
+
+				{#if liveColdOpen}
+					{#if liveColdOpen.success}
+						{@const module = liveColdOpen.data.moduleResult}
+						<p>{module.summary}</p>
+						<small>
+							{module.provenance.provider} · {module.provenance.model} ·
+							{module.provenance.promptVersion} · {module.provenance.latencyMs}ms
+						</small>
+
+						{#if module.issues.length}
+							<ul>
+								{#each module.issues as issue (`live-${issue.code}-${issue.message}`)}
+									<li>{issue.message}</li>
+								{/each}
+							</ul>
+						{/if}
+
+						{@const parsedOutput = coldOpenLabOutputSchema.safeParse(module.output)}
+						{#if parsedOutput.success}
+							<ul class="clean-list live-variant-list">
+								{#each parsedOutput.data.variants as variant (variant.id)}
+									<li>
+										<strong>{variant.text}</strong>
+										<span>{variant.firstMinuteQuestion}</span>
+										<em>{variant.audioNote}</em>
+									</li>
+								{/each}
+							</ul>
+							<p>{parsedOutput.data.winnerRationale}</p>
+						{/if}
+					{:else}
+						<p>{liveColdOpen.error.message}</p>
+						{#if liveColdOpen.error.issues?.length}
+							<ul>
+								{#each liveColdOpen.error.issues as issue (`live-error-${issue.field}-${issue.message}`)}
+									<li>{issue.field}: {issue.message}</li>
+								{/each}
+							</ul>
+						{/if}
+					{/if}
+				{/if}
 			</section>
 
 			<section class="panel">
@@ -479,6 +623,11 @@
 	button.active {
 		background: #11706c;
 		border-color: #78d4c8;
+	}
+
+	button:disabled {
+		cursor: wait;
+		opacity: 0.66;
 	}
 
 	.output-rail {
@@ -801,6 +950,76 @@
 		padding-left: 18px;
 	}
 
+	.live-ai-panel {
+		display: grid;
+		gap: 14px;
+		border-color: rgba(17, 112, 108, 0.26);
+	}
+
+	.live-ai-panel.failed {
+		border-color: rgba(226, 77, 61, 0.4);
+		background: #fff2ee;
+	}
+
+	.live-action {
+		display: grid;
+		grid-template-columns: minmax(220px, 1fr) auto;
+		gap: 12px;
+		align-items: end;
+		padding: 14px;
+		border: 1px solid rgba(17, 112, 108, 0.18);
+		border-radius: 8px;
+		background: rgba(17, 112, 108, 0.06);
+	}
+
+	.live-action label {
+		margin: 0;
+	}
+
+	.live-action label span {
+		color: #504a43;
+	}
+
+	.live-action input {
+		border-color: rgba(24, 23, 22, 0.16);
+		background: #fff;
+		color: #181716;
+	}
+
+	.live-action button {
+		min-width: 180px;
+		background: #7e2632;
+		border-color: #7e2632;
+	}
+
+	.live-ai-panel small,
+	.live-variant-list span,
+	.live-variant-list em {
+		display: block;
+		color: #504a43;
+		font-size: 0.88rem;
+	}
+
+	.live-variant-list {
+		gap: 14px;
+		margin-top: 4px;
+	}
+
+	.live-variant-list li {
+		display: grid;
+		gap: 5px;
+	}
+
+	.live-variant-list strong {
+		color: #181716;
+	}
+
+	.live-variant-list em {
+		color: #7e2632;
+		font-style: normal;
+		font-weight: 700;
+	}
+
 	.council-grid article {
 		display: grid;
 		gap: 10px;
@@ -866,7 +1085,8 @@
 		.mechanism-picker,
 		.metric,
 		.mechanisms,
-		.module-grid {
+		.module-grid,
+		.live-action {
 			grid-template-columns: 1fr;
 		}
 
