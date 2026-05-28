@@ -28,9 +28,10 @@ protection so future work cannot silently add type escapes, fallback prose, or b
 - [x] Add explicit Vercel adapter and project configuration.
 - [ ] Connect Vercel Git deployment and verify preview deployment.
 - [x] Implement provider port and fake-provider live executor.
-- [ ] Implement Grok server-side adapter with env validation and no browser secrets.
+- [x] Implement Grok server-side adapter with env validation and no browser secrets.
 - [x] Implement deterministic prose quality gate and module acceptance path.
 - [ ] Add public-demo abuse controls before enabling paid live AI.
+- [ ] Wire Grok adapter into a server-side live `cold-open-lab` action.
 - [ ] Ship public production Vercel deployment and verify real AI output.
 
 ## Surprises & Discoveries
@@ -42,6 +43,9 @@ protection so future work cannot silently add type escapes, fallback prose, or b
 - 2026-05-28 04:25 - The provider boundary can be tested without a real API key by fake-provider
   responses. This proves schema/repair/prose failure behavior before introducing Grok cost and
   secret handling.
+- 2026-05-28 05:01 - Official xAI docs currently show `grok-4.20-multi-agent` on the Responses API
+  with REST `reasoning.effort` values `low`, `medium`, `high`, and `xhigh`. The MVP adapter uses
+  `medium` by default to keep early demo cost and latency lower than the 16-agent options.
 
 ## Decision Log
 
@@ -152,7 +156,8 @@ Grok PR:
 - Create branch `feature/xai-grok-provider`.
 - Add a server-side xAI adapter under `src/lib/adapters/ai`.
 - Add env validation and provider metadata.
-- Add integration smoke behind an explicit env flag so CI does not require secrets.
+- Add secret-safe unit tests for no key, invalid env, timeout, HTTP failure, malformed provider
+  response, missing provider output, nested output extraction, and network exceptions.
 - Add Vercel env vars for preview/production outside the repo.
 
 Public MVP PR:
@@ -210,7 +215,22 @@ Record here as work proceeds:
 - real Grok smoke-test timestamps;
 - review comments and how they were addressed.
 
-No PRs are merged under this MVP plan yet.
+Merged PRs under this MVP plan:
+
+- PR #1: quality enforcement and CI.
+- PR #2: explicit Vercel adapter and deployment docs.
+- PR #3: live story-module provider boundary and prose gate.
+
+Current open branch:
+
+- `feature/xai-grok-provider`: server-side xAI Responses API adapter and secret-safe tests.
+
+Local validation on `feature/xai-grok-provider`:
+
+- `npm run verify`
+- `npm run verify:ui`
+- `npm run guard:docs-drift`
+- `npm audit --audit-level=moderate` (passes with tracked low SvelteKit/cookie advisory)
 
 ## Interfaces and Dependencies
 

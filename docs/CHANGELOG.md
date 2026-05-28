@@ -34,6 +34,8 @@
   restricted to modules with configured quality gates.
 - Added an executor-level provider timeout so a hung live provider fails closed instead of blocking
   a module run indefinitely.
+- Added a server-side xAI Responses API story-module provider for `grok-4.20-multi-agent` with env
+  validation, provider metadata, timeout handling, nested output extraction, and secret-safe tests.
 - Fixed review findings for explicit protagonist handling, unique mechanism validation, and root lockfile hygiene.
 - Updated the Svelte workbench to render module run results and fixture-demo provenance.
 - Added autonomous work spec for the Story Module Platform.

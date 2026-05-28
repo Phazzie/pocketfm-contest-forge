@@ -77,7 +77,7 @@ export class LiveModuleExecutor {
 		private readonly provider: StoryModuleProvider,
 		config: LiveModuleExecutorConfig = {}
 	) {
-		this.providerTimeoutMs = Math.max(1, config.providerTimeoutMs ?? 15_000);
+		this.providerTimeoutMs = Math.max(1, config.providerTimeoutMs ?? 120_000);
 		this.qualityGate = config.qualityGate ?? evaluateModuleProseQuality;
 		this.supportedModuleIds = config.supportedModuleIds ?? new Set(['cold-open-lab']);
 	}

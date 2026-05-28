@@ -24,7 +24,7 @@ Deployment currently needs one of:
 
 Current fixture-demo mode requires no secrets. Live AI work must keep secrets server-side only.
 
-Planned production variables:
+Live xAI variables:
 
 - `XAI_API_KEY`
 - `STORY_AI_PROVIDER=xai`
@@ -33,6 +33,10 @@ Planned production variables:
 - `STORY_AI_ACCESS_CODE`
 
 Do not expose provider credentials through `PUBLIC_` variables.
+
+The xAI adapter calls `https://api.x.ai/v1/responses` from server-side code and returns raw model
+text plus provider diagnostics. Client components must not import provider creation helpers or read
+private env values.
 
 ## Verification
 
