@@ -125,6 +125,12 @@ Required server-side environment:
 No xAI call is allowed from Svelte client code. The next public-MVP slice must instantiate this
 adapter only from server-side load/action code or a server-only application service.
 
+`src/routes/+page.server.ts` now exposes the first server-side live path through the
+`runLiveColdOpen` form action. It passes private env values into the xAI adapter on the server,
+authorizes the request with `STORY_AI_ACCESS_CODE`, applies a small per-client in-memory rate limit,
+and returns a `LiveColdOpenResponse` for the UI to render. Provider failures remain visible as failed
+module results; the action does not replace them with fixture prose.
+
 ## Provider Tracking
 
 Every live AI result should record:

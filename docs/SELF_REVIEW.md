@@ -51,3 +51,14 @@ failure, timeout, malformed response, missing output, and network exceptions.
 Remaining concern: the adapter is not yet wired into a server-side live UI action, and there is no
 public-demo access gate yet. The app is closer to a real AI MVP, but it is still not ready to expose
 paid Grok calls from a public URL.
+
+## Checkpoint 9: Server-Side Live Demo Path
+
+The first paid-AI path is now isolated to a server-side `runLiveColdOpen` action. It preserves the
+writer's submitted seed, checks `STORY_AI_ACCESS_CODE`, applies a small in-memory rate limit, passes
+private env values into the xAI adapter on the server, and renders the resulting live module status
+separately from the fixture-demo full plan.
+
+Remaining concern: real Grok output has not yet been verified from Vercel preview or production, and
+the access/rate-limit layer is intentionally temporary. The MVP still needs deployment env vars and
+one real public URL smoke run before it is girlfriend-demo ready.

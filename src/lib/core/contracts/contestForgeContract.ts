@@ -75,6 +75,32 @@ export type UseCaseResponse<T> =
 			};
 	  };
 
+export type LiveColdOpenErrorCode =
+	| 'ACCESS_DENIED'
+	| 'ACCESS_NOT_CONFIGURED'
+	| 'RATE_LIMITED'
+	| 'CONTRACT_INVALID'
+	| 'CONTEST_NOT_FOUND';
+
+export interface LiveColdOpenResult {
+	generationMode: 'live-ai';
+	brief: ContestBrief;
+	moduleResult: StoryModulePlanResult;
+	requestedAt: string;
+}
+
+export type LiveColdOpenResponse =
+	| { success: true; data: LiveColdOpenResult }
+	| {
+			success: false;
+			error: {
+				code: LiveColdOpenErrorCode;
+				message: string;
+				issues?: ContractIssue[];
+				retryAfterSeconds?: number;
+			};
+	  };
+
 export interface EpisodeBeat {
 	id: string;
 	minute: number;
@@ -200,6 +226,18 @@ const mechanismIds: MechanismId[] = [
 	'cold-open-split-test',
 	'serial-dna'
 ];
+
+const contestGenres: ContestGenre[] = [
+	'medieval-fantasy',
+	'werewolf-saga',
+	'romantasy',
+	'thriller-system',
+	'dark-academy'
+];
+
+export function isContestGenre(value: string): value is ContestGenre {
+	return contestGenres.includes(value as ContestGenre);
+}
 
 export function isMechanismId(value: string): value is MechanismId {
 	return mechanismIds.includes(value as MechanismId);

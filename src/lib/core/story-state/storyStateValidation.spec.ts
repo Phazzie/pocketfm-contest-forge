@@ -24,4 +24,20 @@ describe('story state validation', () => {
 		expect(state.debts.open.length).toBeGreaterThan(0);
 		expect(state.aiSuggestions).toEqual([]);
 	});
+
+	it('records live cold-open scope without claiming fixture-only execution', () => {
+		const brief = new InMemoryContestResearchRepository().findById(defaultForgeRequest.contestId);
+		expect(brief).toBeDefined();
+		if (!brief) return;
+
+		const state = createStoryStateFromForgeRequest(defaultForgeRequest, brief, undefined, {
+			generationMode: 'live-ai'
+		});
+		const result = validateStoryState(state);
+
+		expect(result.success).toBe(true);
+		expect(state.writerDecisions[0]?.id).toBe('live-cold-open-only');
+		expect(state.writerDecisions[0]?.decision).toContain('provider-backed cold-open');
+		expect(state.writerDecisions[0]?.decision).not.toContain('fixture-backed');
+	});
 });
