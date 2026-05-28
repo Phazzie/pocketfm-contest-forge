@@ -14,7 +14,8 @@
 - Added stricter TypeScript and ESLint quality gates with documented escape-hatch enforcement.
 - Hardened quality guard scripts so they do not count their own diagnostic strings as violations.
 - Hardened quality PR review fixes for inline ESLint disable detection, explicit type-escape scanning,
-  UI verification timeout validation, and pinned least-privilege CI actions.
+  UI verification timeout validation, bounded browser smoke commands, and pinned least-privilege CI
+  actions.
 - Extended UI verification startup tolerance for slower cold Vite starts.
 - Hardened pre-push checks so nested verification commands do not inherit Git hook stdin.
 - Added a deterministic lint runner that disables Node compile cache for ESLint on runtimes where it can hang.

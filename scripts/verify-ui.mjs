@@ -6,6 +6,7 @@ import { createServer } from 'node:net';
 const host = '127.0.0.1';
 const port = await findOpenPort(Number(process.env.VERIFY_UI_PORT ?? 5173));
 const timeoutMs = positiveIntegerFromEnv(process.env.VERIFY_UI_TIMEOUT_MS, 180_000);
+const browserTimeoutMs = positiveIntegerFromEnv(process.env.VERIFY_UI_BROWSER_TIMEOUT_MS, 120_000);
 const url = `http://${host}:${port}/`;
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const devServer = spawn(
@@ -23,7 +24,8 @@ devServer.stderr.on('data', (chunk) => process.stderr.write(chunk));
 try {
 	await waitForHttp(url, timeoutMs, devServer);
 	await run(npmCommand, ['run', 'test:browser'], {
-		env: { ...process.env, BROWSER_SMOKE_URL: url }
+		env: { ...process.env, BROWSER_SMOKE_URL: url },
+		timeoutMs: browserTimeoutMs
 	});
 	console.log(`UI verification passed at ${url}`);
 } finally {
@@ -80,24 +82,58 @@ async function waitForHttp(targetUrl, timeoutMs, devServerProcess) {
 
 function run(command, args, options = {}) {
 	return new Promise((resolve, reject) => {
+		let settled = false;
 		const child = spawn(command, args, {
 			stdio: 'inherit',
-			env: options.env ?? process.env
+			env: options.env ?? process.env,
+			detached: process.platform !== 'win32'
 		});
+		const timeout =
+			options.timeoutMs === undefined
+				? undefined
+				: setTimeout(() => {
+						terminate(child);
+						settle(
+							reject,
+							new Error(`${command} ${args.join(' ')} timed out after ${options.timeoutMs}ms`)
+						);
+					}, options.timeoutMs);
 
-		child.on('error', reject);
+		child.on('error', (error) => settle(reject, error));
 		child.on('close', (code) => {
 			if (code === 0) {
-				resolve();
+				settle(resolve);
 				return;
 			}
 
-			reject(new Error(`${command} ${args.join(' ')} exited with ${code}`));
+			settle(reject, new Error(`${command} ${args.join(' ')} exited with ${code}`));
 		});
+
+		function settle(done, value) {
+			if (settled) return;
+			settled = true;
+			if (timeout) clearTimeout(timeout);
+			done(value);
+		}
 	});
 }
 
 function positiveIntegerFromEnv(value, fallback) {
 	const parsed = Number.parseInt(value ?? '', 10);
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function terminate(child) {
+	if (!child.pid) return;
+
+	if (process.platform === 'win32') {
+		child.kill('SIGTERM');
+		return;
+	}
+
+	try {
+		process.kill(-child.pid, 'SIGTERM');
+	} catch (error) {
+		if (error?.code !== 'ESRCH') throw error;
+	}
 }
