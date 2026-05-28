@@ -3,9 +3,7 @@
 import { readFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 
-const allowedAnyLines = new Set([
-	'src/lib/story-modules/types.ts::export type AnyStoryModule = StoryModule<any, any>;'
-]);
+const allowedAnyLines = new Set();
 const trackedFiles = git(['ls-files'])
 	.split('\n')
 	.filter((filePath) => /^(src|scripts)\/|^(eslint|svelte|vite)\.config\./.test(filePath))
@@ -35,7 +33,7 @@ if (issues.length > 0) {
 	process.exit(1);
 }
 
-console.log(`Type escape budget guard passed with ${allowedAnyLines.size} approved any line.`);
+console.log('Type escape budget guard passed with no approved explicit any lines.');
 
 function hasNoExplicitAnyDisable(line) {
 	const directiveSearchRegex =
