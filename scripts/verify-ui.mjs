@@ -5,6 +5,7 @@ import { createServer } from 'node:net';
 
 const host = '127.0.0.1';
 const port = await findOpenPort(Number(process.env.VERIFY_UI_PORT ?? 5173));
+const timeoutMs = Number(process.env.VERIFY_UI_TIMEOUT_MS ?? 180_000);
 const url = `http://${host}:${port}/`;
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const devServer = spawn(
@@ -20,7 +21,7 @@ devServer.stdout.on('data', (chunk) => process.stdout.write(chunk));
 devServer.stderr.on('data', (chunk) => process.stderr.write(chunk));
 
 try {
-	await waitForHttp(url, 90_000);
+	await waitForHttp(url, timeoutMs, devServer);
 	await run(npmCommand, ['run', 'test:browser'], {
 		env: { ...process.env, BROWSER_SMOKE_URL: url }
 	});
@@ -50,11 +51,15 @@ function findOpenPort(startPort) {
 	});
 }
 
-async function waitForHttp(targetUrl, timeoutMs) {
+async function waitForHttp(targetUrl, timeoutMs, devServerProcess) {
 	const startedAt = Date.now();
 	let lastError;
 
 	while (Date.now() - startedAt < timeoutMs) {
+		if (devServerProcess.exitCode !== null) {
+			throw new Error(`Dev server exited before ${targetUrl} became available.`);
+		}
+
 		try {
 			const response = await fetch(targetUrl);
 			if (response.ok) return;

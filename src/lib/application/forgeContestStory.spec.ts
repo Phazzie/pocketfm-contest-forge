@@ -36,7 +36,7 @@ describe('forge contest story use case', () => {
 
 		expect(result.data.oneSentencePremise).toContain('Mara Vey weaponizes');
 		expect(result.data.oneSentencePremise).not.toContain('Crown weaponizes a crown');
-		expect(result.data.pilot.beats[0].text).toContain('Mara Vey wakes');
+		expect(result.data.pilot.beats[0]?.text).toContain('Mara Vey wakes');
 	});
 
 	it('fails closed for live mode until a real AI adapter exists', async () => {

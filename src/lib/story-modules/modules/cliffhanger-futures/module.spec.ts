@@ -14,8 +14,14 @@ describe('cliffhanger futures module', () => {
 		);
 
 		expect(result.status).toBe('success');
-		expect(result.output?.recommendationId).toBe('enemy-knows-name');
-		expect(result.output?.candidates[0].futuresScore).toBeGreaterThan(80);
+		expect(result.output).toBeDefined();
+
+		if (!result.output) {
+			throw new Error('Expected cliffhanger futures output.');
+		}
+
+		expect(result.output.recommendationId).toBe('enemy-knows-name');
+		expect(result.output.candidates[0]?.futuresScore).toBeGreaterThan(80);
 		expect(result.trackingEvents.map((event) => event.type)).toContain('promise-created');
 	});
 });

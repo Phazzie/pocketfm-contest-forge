@@ -11,6 +11,8 @@
 - `npm run guard:repo-hygiene`: fail on generated output, root lockfile churn, and local install metadata.
 - `npm run guard:module-shape`: fail when registered story modules are missing required files, schemas, quality gates, provenance, or tracking events.
 - `npm run guard:no-live-fallback`: fail when live mode can silently return fixture/deterministic creative output.
+- `npm run guard:eslint-disable-rationale`: fail when `eslint-disable` comments do not include a rationale.
+- `npm run guard:type-escape-budget`: fail when explicit `any` usage exceeds the approved registry exception.
 - `npm run guard:docs-drift`: fail when code changes are not paired with expected docs updates.
 - `npm run hooks:install`: install `.githooks/pre-commit` and `.githooks/pre-push` into the parent repo.
 
@@ -28,6 +30,8 @@ Pre-commit:
 - `npm run guard:repo-hygiene`
 - `npm run guard:module-shape`
 - `npm run guard:no-live-fallback`
+- `npm run guard:eslint-disable-rationale`
+- `npm run guard:type-escape-budget`
 - `npm run guard:docs-drift -- --staged`
 - `npm run test`
 
@@ -40,6 +44,18 @@ Pre-push:
 UI change check:
 
 - Run `npm run verify:ui`.
+
+## CI
+
+GitHub Actions runs on pull requests and pushes to `main`:
+
+- `npm ci`
+- `npx playwright install --with-deps chromium`
+- `npm run verify`
+- `npm run verify:ui`
+- `npm audit --audit-level=moderate`
+
+Use branch protection so pull requests cannot merge unless CI is green.
 
 ## Future Scripts
 

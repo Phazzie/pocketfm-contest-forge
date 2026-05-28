@@ -3,6 +3,9 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"engines": {
+		"node": "22.x"
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -14,12 +17,14 @@
 		"test": "npm run test:unit -- --run",
 		"test:browser": "node scripts/browser-smoke.mjs",
 		"verify": "node scripts/verify-all.mjs",
-		"verify:guards": "npm run guard:repo-hygiene && npm run guard:module-shape && npm run guard:no-live-fallback",
+		"verify:guards": "npm run guard:repo-hygiene && npm run guard:module-shape && npm run guard:no-live-fallback && npm run guard:eslint-disable-rationale && npm run guard:type-escape-budget",
 		"verify:ui": "node scripts/verify-ui.mjs",
 		"scaffold:module": "node scripts/scaffold-story-module.mjs",
 		"guard:repo-hygiene": "node scripts/guard-repo-hygiene.mjs",
 		"guard:module-shape": "node scripts/guard-module-shape.mjs",
 		"guard:no-live-fallback": "node scripts/guard-no-live-fallback.mjs",
+		"guard:eslint-disable-rationale": "node scripts/guard-eslint-disable-rationale.mjs",
+		"guard:type-escape-budget": "node scripts/guard-type-escape-budget.mjs",
 		"guard:docs-drift": "node scripts/guard-docs-drift.mjs",
 		"hooks:install": "node scripts/install-git-hooks.mjs",
 		"prepush": "node scripts/pre-push-check.mjs",

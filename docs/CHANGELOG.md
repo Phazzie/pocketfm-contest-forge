@@ -10,10 +10,15 @@
 - Added `npm run scaffold:module` for generating new story module folders and tests.
 - Added guard scripts for repo hygiene, registered module shape, live-mode fallback prevention, docs drift, and one-command UI verification.
 - Added installable git hook templates for pre-commit and pre-push checks.
+- Added GitHub Actions CI for `npm run verify` and UI smoke verification.
+- Added stricter TypeScript and ESLint quality gates with documented escape-hatch enforcement.
+- Hardened quality guard scripts so they do not count their own diagnostic strings as violations.
+- Extended UI verification startup tolerance for slower cold Vite starts.
 - Hardened pre-push checks so nested verification commands do not inherit Git hook stdin.
 - Added a deterministic lint runner that disables Node compile cache for ESLint on runtimes where it can hang.
 - Added repo-local OpenAI Cookbook-style ExecPlan governance in `.agent/PLANS.md`.
 - Converted the next autonomous execution plan into a living ExecPlan with progress, discoveries, decisions, recovery, and validation criteria.
+- Added a public hosted Grok MVP ExecPlan covering PRs, CI, Vercel, provider boundaries, quality gates, and public-demo abuse controls.
 - Added a self-contained next autonomous execution plan for the first live-AI-capable story module path.
 - Fixed review findings for explicit protagonist handling, unique mechanism validation, and root lockfile hygiene.
 - Updated the Svelte workbench to render module run results and fixture-demo provenance.

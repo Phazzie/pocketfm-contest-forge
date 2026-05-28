@@ -41,7 +41,7 @@ export class DeterministicStoryIntelligence implements StoryIntelligencePort {
 		);
 	}
 
-	thesis(request: ForgeRequest, brief: ContestBrief): string {
+	thesis(_request: ForgeRequest, brief: ContestBrief): string {
 		return compact(
 			`Win by sounding familiar in the first ten seconds, then turning ${brief.mandatoryElements[0]} into a repeatable addiction loop: each episode grants one intimate answer, creates one public status wound, and ends on a choice the listener can argue with.`
 		);
@@ -117,6 +117,11 @@ export class DeterministicStoryIntelligence implements StoryIntelligencePort {
 				retentionRisk: 'low'
 			}
 		];
+		const finalBeat = beats.at(-1);
+
+		if (!finalBeat) {
+			throw new Error('Pilot blueprint requires at least one beat.');
+		}
 
 		return {
 			episodeNumber: 1,
@@ -127,7 +132,7 @@ export class DeterministicStoryIntelligence implements StoryIntelligencePort {
 				`The magic object works perfectly, which is how everyone learns the lead is lying.`
 			],
 			beats,
-			cliffhanger: beats[beats.length - 1].text,
+			cliffhanger: finalBeat.text,
 			bingeDebtAdded: [
 				'the stolen name',
 				'the witness who needs the lead alive',
