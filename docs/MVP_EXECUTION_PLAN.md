@@ -63,7 +63,7 @@ review comments are resolved, and all required PRs are merged.
 
 ## Context and Orientation
 
-Work in `/Users/hbpheonix/fairytaleswithspice/pocketfm-contest-forge`.
+Work in the repository root.
 
 Current state:
 

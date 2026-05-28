@@ -5,7 +5,7 @@ import { createServer } from 'node:net';
 
 const host = '127.0.0.1';
 const port = await findOpenPort(Number(process.env.VERIFY_UI_PORT ?? 5173));
-const timeoutMs = Number(process.env.VERIFY_UI_TIMEOUT_MS ?? 180_000);
+const timeoutMs = positiveIntegerFromEnv(process.env.VERIFY_UI_TIMEOUT_MS, 180_000);
 const url = `http://${host}:${port}/`;
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const devServer = spawn(
@@ -56,8 +56,11 @@ async function waitForHttp(targetUrl, timeoutMs, devServerProcess) {
 	let lastError;
 
 	while (Date.now() - startedAt < timeoutMs) {
-		if (devServerProcess.exitCode !== null) {
-			throw new Error(`Dev server exited before ${targetUrl} became available.`);
+		if (devServerProcess.exitCode !== null || devServerProcess.signalCode) {
+			const reason = devServerProcess.signalCode
+				? `signal ${devServerProcess.signalCode}`
+				: `exit code ${devServerProcess.exitCode}`;
+			throw new Error(`Dev server exited with ${reason} before ${targetUrl} became available.`);
 		}
 
 		try {
@@ -92,4 +95,9 @@ function run(command, args, options = {}) {
 			reject(new Error(`${command} ${args.join(' ')} exited with ${code}`));
 		});
 	});
+}
+
+function positiveIntegerFromEnv(value, fallback) {
+	const parsed = Number.parseInt(value ?? '', 10);
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }

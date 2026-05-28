@@ -14,14 +14,10 @@ for (const filePath of trackedFiles) {
 	const lines = source.split('\n');
 
 	lines.forEach((line, index) => {
-		const trimmed = line.trim();
+		const comment = eslintDisableComment(line);
+		if (!comment) return;
 
-		if (!trimmed.startsWith('//') && !trimmed.startsWith('/*') && !trimmed.startsWith('*')) {
-			return;
-		}
-
-		if (!trimmed.includes('eslint-disable')) return;
-		if (line.includes(' -- ') && line.split(' -- ')[1]?.trim()) return;
+		if (comment.includes(' -- ') && comment.split(' -- ')[1]?.trim()) return;
 
 		issues.push(
 			`${filePath}:${index + 1}: eslint-disable comments require a rationale after " -- ".`
@@ -38,6 +34,38 @@ if (issues.length > 0) {
 }
 
 console.log(`ESLint disable rationale guard passed for ${trackedFiles.length} tracked files.`);
+
+function eslintDisableComment(line) {
+	let searchFrom = 0;
+
+	while (searchFrom < line.length) {
+		const disableIndex = line.indexOf('eslint-disable', searchFrom);
+		if (disableIndex === -1) return undefined;
+
+		const comment = commentContainingIndex(line, disableIndex);
+		if (comment) return comment;
+
+		searchFrom = disableIndex + 'eslint-disable'.length;
+	}
+
+	return undefined;
+}
+
+function commentContainingIndex(line, targetIndex) {
+	const beforeDisable = line.slice(0, targetIndex);
+	const lineCommentIndex = beforeDisable.lastIndexOf('//');
+	const blockCommentIndex = beforeDisable.lastIndexOf('/*');
+	const blockContinuationMatch = beforeDisable.match(/(^|\s)\*/);
+	const commentStarts = [lineCommentIndex, blockCommentIndex].filter((start) => start >= 0);
+
+	if (blockContinuationMatch?.index !== undefined) {
+		commentStarts.push(blockContinuationMatch.index + blockContinuationMatch[1].length);
+	}
+
+	if (commentStarts.length === 0) return undefined;
+
+	return line.slice(Math.max(...commentStarts)).trim();
+}
 
 function git(args) {
 	const result = spawnSync('git', args, { cwd: process.cwd(), encoding: 'utf8' });

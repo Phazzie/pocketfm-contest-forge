@@ -29,7 +29,7 @@ describe('story module registry', () => {
 		}
 
 		expect(() => createStoryModuleRegistry([firstModule, firstModule])).toThrow(
-			'Duplicate story module id: cold-open-lab'
+			`Duplicate story module id: ${firstModule.id}`
 		);
 	});
 });
