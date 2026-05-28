@@ -20,6 +20,7 @@
 		"verify:guards": "npm run guard:repo-hygiene && npm run guard:module-shape && npm run guard:no-live-fallback && npm run guard:eslint-disable-rationale && npm run guard:type-escape-budget",
 		"verify:ui": "node scripts/verify-ui.mjs",
 		"ai:smoke": "node scripts/live-ai-smoke.mjs",
+		"deploy:readiness": "node scripts/check-deploy-readiness.mjs",
 		"scaffold:module": "node scripts/scaffold-story-module.mjs",
 		"guard:repo-hygiene": "node scripts/guard-repo-hygiene.mjs",
 		"guard:module-shape": "node scripts/guard-module-shape.mjs",

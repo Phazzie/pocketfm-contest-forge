@@ -39,7 +39,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Doing   | Public MVP needs Vercel and Grok delivery plan.        | Vercel adapter, Grok transport, server action, and access gate exist; next step is preview deployment with real Grok output.                |
 | Open    | CI UI smoke currently relies on preview build output.  | Keep `npm run verify` before `npm run verify:ui` in CI or add an explicit build preflight.                                                  |
 | Open    | CI UI smoke must not leave server children running.    | Keep process-group cleanup in `scripts/verify-ui.mjs` covered by local and remote smoke.                                                    |
-| Open    | Vercel project is not yet proven from public URL.      | Deploy this branch, verify preview URL, then connect production deployment from `main`.                                                     |
+| Open    | Vercel project is not yet proven from public URL.      | Deploy `main`, verify preview/production URL, then run `npm run deploy:readiness` and live smoke.                                           |
 | Blocked | Vercel CLI is not authenticated in the local shell.    | Run `vercel login` or provide `VERCEL_TOKEN`, then deploy from the repo root.                                                               |
 | Open    | Real deployed Grok smoke is not yet proven.            | After Vercel env is configured, run `npm run ai:smoke` locally with live env or trigger the `Live AI Smoke` workflow with the deployed URL. |
 | Done    | Live Grok adapter is not wired into UI/server action.  | Added server-only `runLiveColdOpen` action, preserves submitted input, and renders live module success/failure separately.                  |

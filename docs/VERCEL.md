@@ -50,7 +50,8 @@ Before merging deployment changes:
 2. Run `npm run build`.
 3. Run `VERIFY_UI_SERVER_SCRIPT=preview npm run verify:ui`.
 4. Confirm the Vercel preview deployment loads the app.
-5. After `XAI_API_KEY` and `STORY_AI_ACCESS_CODE` are set in Vercel, run:
+5. Run `LIVE_AI_SMOKE_URL=https://your-preview-or-production-url.vercel.app npm run deploy:readiness`.
+6. After `XAI_API_KEY` and `STORY_AI_ACCESS_CODE` are set in Vercel, run:
 
 ```sh
 RUN_LIVE_AI_SMOKE=1 LIVE_AI_SMOKE_URL=https://your-preview-or-production-url.vercel.app LIVE_AI_SMOKE_ACCESS_CODE=<your-access-code> npm run ai:smoke
