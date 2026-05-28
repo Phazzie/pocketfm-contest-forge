@@ -188,6 +188,7 @@ Remote gates:
 - GitHub Actions CI passes on every PR.
 - Vercel preview deployment succeeds on every app-impacting PR.
 - `main` is protected and requires CI before merge.
+- Manual `Live AI Smoke` workflow can prove a deployed URL after `LIVE_AI_SMOKE_ACCESS_CODE` is set.
 
 MVP acceptance:
 
@@ -229,13 +230,16 @@ Merged PRs under this MVP plan:
 - PR #2: explicit Vercel adapter and deployment docs.
 - PR #3: live story-module provider boundary and prose gate.
 - PR #4: xAI Grok story-module provider adapter.
+- PR #5: server-side live Grok cold-open action, access gate, rate limiting, and UI result state.
+- PR #6: opt-in local/deployed `npm run ai:smoke` verification script.
+- PR #7: zero explicit `any` enforcement and Node 24-compatible pinned CI actions.
 
-Current open branch:
+Current branch status:
 
-- `feature/live-cold-open-action`: server-side live cold-open form action, access gate, UI result
-  panel, and tests.
+- `main` has no open PRs and latest CI is green as of the PR #7 merge.
+- Public Vercel deployment, Vercel project linkage, and real deployed Grok smoke remain unproven.
 
-Local validation on `feature/live-cold-open-action`:
+Local and remote validation:
 
 - `npm run verify`
 - `npm run verify:ui`
@@ -248,6 +252,8 @@ Local validation on `feature/live-cold-open-action`:
   path from the deployed URL.
 - Local parser smoke against a no-key dev server reached the `runLiveColdOpen` action and failed
   correctly on `PROVIDER_UNAVAILABLE: XAI_API_KEY is not configured.`
+- The manual `Live AI Smoke` GitHub Actions workflow requires a deployed URL input and repository
+  secret `LIVE_AI_SMOKE_ACCESS_CODE`; it runs `npm run guard:no-live-fallback` before the live smoke.
 
 ## Interfaces and Dependencies
 

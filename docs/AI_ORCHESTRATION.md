@@ -152,4 +152,6 @@ Every module result should additionally record module ID, module version, qualit
 - Unit tests use deterministic test doubles.
 - Contract tests assert schema and error behavior.
 - Integration tests may use live providers behind explicit env flags.
+- Deployed live smoke runs through the manual `Live AI Smoke` GitHub Actions workflow after Vercel
+  env vars and the repo access-code secret are configured.
 - Browser tests should verify unavailable, loading, partial, and success states.

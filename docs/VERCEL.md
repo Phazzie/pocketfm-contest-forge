@@ -60,5 +60,10 @@ The smoke submits the server-side `runLiveColdOpen` action, expects an accepted 
 `cold-open-lab` result from provider `xai`, and fails if the action falls back to fixture output or
 returns a provider/schema/prose rejection.
 
+The same proof can be run from GitHub after adding the repository secret
+`LIVE_AI_SMOKE_ACCESS_CODE`. Open the `Live AI Smoke` workflow, choose "Run workflow", and provide
+the deployed Vercel URL as `live_ai_smoke_url`. The workflow does not store provider credentials; it
+only submits the access code to the deployed server-side action.
+
 CI runs the same production-preview UI smoke after `npm run verify` so deployment regressions are caught
 before merge.
