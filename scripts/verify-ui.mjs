@@ -6,7 +6,8 @@ import { createServer } from 'node:net';
 const host = '127.0.0.1';
 const port = await findOpenPort(Number(process.env.VERIFY_UI_PORT ?? 5173));
 const timeoutMs = positiveIntegerFromEnv(process.env.VERIFY_UI_TIMEOUT_MS, 180_000);
-const browserTimeoutMs = positiveIntegerFromEnv(process.env.VERIFY_UI_BROWSER_TIMEOUT_MS, 120_000);
+const probeTimeoutMs = positiveIntegerFromEnv(process.env.VERIFY_UI_PROBE_TIMEOUT_MS, 2_000);
+const browserTimeoutMs = positiveIntegerFromEnv(process.env.VERIFY_UI_BROWSER_TIMEOUT_MS, 240_000);
 const url = `http://${host}:${port}/`;
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const devServer = spawn(
@@ -66,7 +67,7 @@ async function waitForHttp(targetUrl, timeoutMs, devServerProcess) {
 		}
 
 		try {
-			const response = await fetch(targetUrl);
+			const response = await fetchWithTimeout(targetUrl, probeTimeoutMs);
 			if (response.ok) return;
 		} catch (error) {
 			lastError = error;
@@ -78,6 +79,17 @@ async function waitForHttp(targetUrl, timeoutMs, devServerProcess) {
 	throw new Error(
 		`Timed out waiting for ${targetUrl}${lastError instanceof Error ? `: ${lastError.message}` : ''}`
 	);
+}
+
+async function fetchWithTimeout(targetUrl, timeoutMs) {
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+	try {
+		return await fetch(targetUrl, { signal: controller.signal });
+	} finally {
+		clearTimeout(timeout);
+	}
 }
 
 function run(command, args, options = {}) {

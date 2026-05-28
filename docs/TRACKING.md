@@ -6,13 +6,13 @@ Use this file for active issues, review findings, risks, and decisions that need
 
 ## Active Review Findings
 
-| Status | Priority | Item                                                                                   | Source       | Next Action                                                                                                     |
-| ------ | -------- | -------------------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------- |
-| Done   | P2       | Default protagonist is derived from title words, producing "Crown weaponizes a crown." | Review       | Added explicit protagonist input, safer fixture default, and sanity test.                                       |
-| Done   | P3       | Mechanism validation checks count, not uniqueness.                                     | Review       | Validates unique mechanism IDs and rejects duplicate selections.                                                |
-| Done   | P3       | Root `node_modules/.package-lock.json` contains local macOS install state.             | Review       | Root installed-tree metadata is no longer modified in this patch.                                               |
-| Done   | P3       | Root `package-lock.json` has accidental name casing churn.                             | Local status | Root package-lock is no longer modified in this patch.                                                          |
-| Done   | P3       | Quality guards and CI need review-hardening before merge.                              | PR #1 review | Inline disable checks, type-escape scanning, UI/browser timeout validation, and pinned CI actions are hardened. |
+| Status | Priority | Item                                                                                   | Source       | Next Action                                                                                                           |
+| ------ | -------- | -------------------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Done   | P2       | Default protagonist is derived from title words, producing "Crown weaponizes a crown." | Review       | Added explicit protagonist input, safer fixture default, and sanity test.                                             |
+| Done   | P3       | Mechanism validation checks count, not uniqueness.                                     | Review       | Validates unique mechanism IDs and rejects duplicate selections.                                                      |
+| Done   | P3       | Root `node_modules/.package-lock.json` contains local macOS install state.             | Review       | Root installed-tree metadata is no longer modified in this patch.                                                     |
+| Done   | P3       | Root `package-lock.json` has accidental name casing churn.                             | Local status | Root package-lock is no longer modified in this patch.                                                                |
+| Done   | P3       | Quality guards and CI need review-hardening before merge.                              | PR #1 review | Inline disable checks, type-escape scanning, UI probe/browser timeout validation, and pinned CI actions are hardened. |
 
 ## Product Risks
 
