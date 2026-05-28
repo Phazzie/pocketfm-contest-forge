@@ -14,6 +14,7 @@ Docs are part of the product architecture. Keep them current when code or produc
 - `LESSONS_LEARNED.md`: principles learned from mistakes and review
 - `RESEARCH.md`: contest evidence and interpretation
 - `SELF_REVIEW.md`: periodic self-review checkpoints
+- `VERCEL.md`: hosting setup, runtime, env vars, and deployment verification
 
 ## Update Rules
 

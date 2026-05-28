@@ -18,6 +18,8 @@
   least-privilege CI actions.
 - Switched CI UI smoke verification to production preview mode after the verified build.
 - Hardened UI verification cleanup so preview/dev server process groups are terminated after smoke.
+- Replaced `adapter-auto` with explicit Vercel adapter configuration on Node 22.
+- Added Vercel deployment runbook and server-only environment variable guidance.
 - Extended UI verification startup tolerance for slower cold Vite starts.
 - Hardened pre-push checks so nested verification commands do not inherit Git hook stdin.
 - Added a deterministic lint runner that disables Node compile cache for ESLint on runtimes where it can hang.

@@ -23,9 +23,9 @@ protection so future work cannot silently add type escapes, fallback prose, or b
 - [x] 2026-05-28 01:52 - Public hosted target chosen: Vercel.
 - [x] 2026-05-28 01:52 - Primary provider chosen: Grok 4.20 multi-agent reasoning.
 - [x] 2026-05-28 01:52 - First quality-enforcement branch started: `chore/quality-enforcement-ci`.
-- [ ] Merge quality enforcement and CI PR.
-- [ ] Enable GitHub branch protection for `main`.
-- [ ] Add explicit Vercel adapter and project configuration.
+- [x] Merge quality enforcement and CI PR.
+- [x] Enable GitHub branch protection for `main`.
+- [x] Add explicit Vercel adapter and project configuration.
 - [ ] Connect Vercel Git deployment and verify preview deployment.
 - [ ] Implement provider port and fake-provider live executor.
 - [ ] Implement Grok server-side adapter with env validation and no browser secrets.

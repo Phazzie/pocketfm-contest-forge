@@ -26,17 +26,19 @@ Use this file for active issues, review findings, risks, and decisions that need
 
 ## Active Follow-Up
 
-| Status | Item                                                   | Next Action                                                                                  |
-| ------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| Open   | Live AI provider adapter is still absent.              | Choose provider/router and implement provider-facing module execution behind ports/adapters. |
-| Open   | Story-state contract is in-memory only.                | Add persistence after storage choice is made.                                                |
-| Open   | Fixture module prose still needs live quality review.  | Run prose rubric and AI council once provider output exists.                                 |
-| Open   | Future multi-hour work needs stricter execution plans. | Use `.agent/PLANS.md` and the global `exec-plan` skill for complex autonomous runs.          |
-| Open   | Main branch needs remote quality enforcement.          | Enable GitHub branch protection after the CI workflow is merged.                             |
-| Open   | Low npm audit finding exists through SvelteKit cookie. | Track upstream fix; CI should fail on moderate and higher vulnerabilities.                   |
-| Open   | Public MVP needs Vercel and Grok delivery plan.        | Execute `docs/MVP_EXECUTION_PLAN.md` through PRs with CI and preview deployments.            |
-| Open   | CI UI smoke currently relies on preview build output.  | Keep `npm run verify` before `npm run verify:ui` in CI or add an explicit build preflight.   |
-| Open   | CI UI smoke must not leave server children running.    | Keep process-group cleanup in `scripts/verify-ui.mjs` covered by local and remote smoke.     |
+| Status  | Item                                                   | Next Action                                                                                  |
+| ------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Open    | Live AI provider adapter is still absent.              | Choose provider/router and implement provider-facing module execution behind ports/adapters. |
+| Open    | Story-state contract is in-memory only.                | Add persistence after storage choice is made.                                                |
+| Open    | Fixture module prose still needs live quality review.  | Run prose rubric and AI council once provider output exists.                                 |
+| Open    | Future multi-hour work needs stricter execution plans. | Use `.agent/PLANS.md` and the global `exec-plan` skill for complex autonomous runs.          |
+| Done    | Main branch needs remote quality enforcement.          | Branch protection requires PRs, conversation resolution, and the `Verify` status check.      |
+| Open    | Low npm audit finding exists through SvelteKit cookie. | Track upstream fix; CI should fail on moderate and higher vulnerabilities.                   |
+| Doing   | Public MVP needs Vercel and Grok delivery plan.        | Vercel adapter/config docs are in progress; Grok adapter remains a later PR.                 |
+| Open    | CI UI smoke currently relies on preview build output.  | Keep `npm run verify` before `npm run verify:ui` in CI or add an explicit build preflight.   |
+| Open    | CI UI smoke must not leave server children running.    | Keep process-group cleanup in `scripts/verify-ui.mjs` covered by local and remote smoke.     |
+| Open    | Vercel project is not yet proven from public URL.      | Deploy this branch, verify preview URL, then connect production deployment from `main`.      |
+| Blocked | Vercel CLI is not authenticated in the local shell.    | Run `vercel login` or provide `VERCEL_TOKEN`, then deploy from the repo root.                |
 
 ## Tracking Targets
 
