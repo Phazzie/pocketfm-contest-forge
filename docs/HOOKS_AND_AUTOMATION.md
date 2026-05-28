@@ -12,7 +12,7 @@
 - `npm run guard:module-shape`: fail when registered story modules are missing required files, schemas, quality gates, provenance, or tracking events.
 - `npm run guard:no-live-fallback`: fail when live mode can silently return fixture/deterministic creative output.
 - `npm run guard:eslint-disable-rationale`: fail when `eslint-disable` comments do not include a rationale.
-- `npm run guard:type-escape-budget`: fail when explicit `any` usage exceeds the approved registry exception.
+- `npm run guard:type-escape-budget`: fail when executable app code contains explicit `any`.
 - `npm run guard:docs-drift`: fail when code changes are not paired with expected docs updates.
 - `npm run ai:smoke`: opt-in live AI smoke against a deployed or local URL. Skips unless
   `RUN_LIVE_AI_SMOKE=1`, `LIVE_AI_SMOKE_URL`, and `STORY_AI_ACCESS_CODE` are present.
@@ -58,6 +58,17 @@ GitHub Actions runs on pull requests and pushes to `main`:
 - `npm audit --audit-level=moderate`
 
 Use branch protection so pull requests cannot merge unless CI is green.
+
+Manual deployed live AI smoke:
+
+- Workflow: `Live AI Smoke`
+- Trigger: GitHub Actions `workflow_dispatch`
+- Input: deployed Vercel URL
+- Required GitHub secret: `LIVE_AI_SMOKE_ACCESS_CODE`
+- Behavior: installs dependencies, runs `npm run guard:no-live-fallback`, then runs
+  `RUN_LIVE_AI_SMOKE=1 npm run ai:smoke` against the supplied URL.
+- Expected result: an accepted `live-ai` `cold-open-lab` result from provider `xai`; fixture fallback,
+  provider rejection, schema rejection, prose rejection, or missing access-code secret fails the job.
 
 ## Future Scripts
 

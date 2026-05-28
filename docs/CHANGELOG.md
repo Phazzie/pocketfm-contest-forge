@@ -11,6 +11,8 @@
 - Added guard scripts for repo hygiene, registered module shape, live-mode fallback prevention, docs drift, and one-command UI verification.
 - Added installable git hook templates for pre-commit and pre-push checks.
 - Added GitHub Actions CI for `npm run verify` and UI smoke verification.
+- Added a manual `Live AI Smoke` GitHub Actions workflow for proving deployed Grok output from a
+  public URL after the access-code secret is configured.
 - Added stricter TypeScript and ESLint quality gates with documented escape-hatch enforcement.
 - Removed the final explicit `any` from executable app code and tightened the type-escape guard to
   allow zero approved explicit `any` lines while using `unknown` at heterogeneous story-module

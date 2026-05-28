@@ -1,0 +1,59 @@
+# Created: 2026-05-28 05:48
+
+name: Live AI Smoke
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      live_ai_smoke_url:
+        description: 'Deployed Pocket FM Contest Forge URL to verify'
+        required: true
+        type: string
+
+concurrency:
+  group: live-ai-smoke-${{ inputs.live_ai_smoke_url }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Live AI Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify smoke configuration
+        shell: bash
+        env:
+          LIVE_AI_SMOKE_ACCESS_CODE: ${{ secrets.LIVE_AI_SMOKE_ACCESS_CODE }}
+        run: |
+          if [ -z "$LIVE_AI_SMOKE_ACCESS_CODE" ]; then
+            echo "LIVE_AI_SMOKE_ACCESS_CODE secret is required for deployed live AI smoke." >&2
+            exit 1
+          fi
+
+      - name: Guard live output cannot fall back to fixture mode
+        run: npm run guard:no-live-fallback
+
+      - name: Run deployed live AI smoke
+        env:
+          RUN_LIVE_AI_SMOKE: '1'
+          LIVE_AI_SMOKE_URL: ${{ inputs.live_ai_smoke_url }}
+          LIVE_AI_SMOKE_ACCESS_CODE: ${{ secrets.LIVE_AI_SMOKE_ACCESS_CODE }}
+        run: npm run ai:smoke
