@@ -115,9 +115,9 @@ export interface StoryModule<TInput, TOutput> {
 	run(context: ModuleRunContext<TInput>): Promise<ModuleRunResult<TOutput>>;
 }
 
-// Heterogeneous registries need to keep concrete module generics intact at lookup boundaries.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Registry stores modules with different input/output schema pairs.
-export type AnyStoryModule = StoryModule<any, any>;
+// Heterogeneous registries use unknown at lookup boundaries so modules keep
+// different input/output schema pairs without reintroducing explicit any escapes.
+export type AnyStoryModule = StoryModule<unknown, unknown>;
 
 export function createFixtureProvenance(
 	module: Pick<StoryModule<unknown, unknown>, 'id' | 'version' | 'promptVersion'>,

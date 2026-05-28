@@ -12,6 +12,10 @@
 - Added installable git hook templates for pre-commit and pre-push checks.
 - Added GitHub Actions CI for `npm run verify` and UI smoke verification.
 - Added stricter TypeScript and ESLint quality gates with documented escape-hatch enforcement.
+- Removed the final explicit `any` from executable app code and tightened the type-escape guard to
+  allow zero approved explicit `any` lines while using `unknown` at heterogeneous story-module
+  registry boundaries.
+- Updated pinned GitHub Actions dependencies to Node 24-compatible action releases.
 - Hardened quality guard scripts so they do not count their own diagnostic strings as violations.
 - Hardened quality PR review fixes for inline ESLint disable detection, explicit type-escape scanning,
   UI verification timeout validation, bounded HTTP probes, bounded browser smoke commands, and pinned
