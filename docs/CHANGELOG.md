@@ -16,6 +16,7 @@
 - Hardened quality PR review fixes for inline ESLint disable detection, explicit type-escape scanning,
   UI verification timeout validation, bounded HTTP probes, bounded browser smoke commands, and pinned
   least-privilege CI actions.
+- Switched CI UI smoke verification to production preview mode after the verified build.
 - Extended UI verification startup tolerance for slower cold Vite starts.
 - Hardened pre-push checks so nested verification commands do not inherit Git hook stdin.
 - Added a deterministic lint runner that disables Node compile cache for ESLint on runtimes where it can hang.

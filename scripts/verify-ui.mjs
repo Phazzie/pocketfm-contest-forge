@@ -1,6 +1,7 @@
 // Created: 2026-05-27 14:08
 
 import { spawn } from 'node:child_process';
+import { request } from 'node:http';
 import { createServer } from 'node:net';
 
 const host = '127.0.0.1';
@@ -10,14 +11,11 @@ const probeTimeoutMs = positiveIntegerFromEnv(process.env.VERIFY_UI_PROBE_TIMEOU
 const browserTimeoutMs = positiveIntegerFromEnv(process.env.VERIFY_UI_BROWSER_TIMEOUT_MS, 240_000);
 const url = `http://${host}:${port}/`;
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const devServer = spawn(
-	npmCommand,
-	['run', 'dev', '--', '--host', host, '--port', String(port), '--strictPort'],
-	{
-		stdio: ['ignore', 'pipe', 'pipe'],
-		env: process.env
-	}
-);
+const serverScript = process.env.VERIFY_UI_SERVER_SCRIPT ?? 'dev';
+const devServer = spawn(npmCommand, serverArgs(serverScript, host, port), {
+	stdio: ['ignore', 'pipe', 'pipe'],
+	env: process.env
+});
 
 devServer.stdout.on('data', (chunk) => process.stdout.write(chunk));
 devServer.stderr.on('data', (chunk) => process.stderr.write(chunk));
@@ -67,8 +65,7 @@ async function waitForHttp(targetUrl, timeoutMs, devServerProcess) {
 		}
 
 		try {
-			const response = await fetchWithTimeout(targetUrl, probeTimeoutMs);
-			if (response.ok) return;
+			if (await probeHttp(targetUrl, probeTimeoutMs)) return;
 		} catch (error) {
 			lastError = error;
 		}
@@ -81,15 +78,21 @@ async function waitForHttp(targetUrl, timeoutMs, devServerProcess) {
 	);
 }
 
-async function fetchWithTimeout(targetUrl, timeoutMs) {
-	const controller = new AbortController();
-	const timeout = setTimeout(() => controller.abort(), timeoutMs);
+function probeHttp(targetUrl, timeoutMs) {
+	return new Promise((resolve, reject) => {
+		const probe = request(targetUrl, { method: 'GET', timeout: timeoutMs }, (response) => {
+			response.resume();
+			resolve(
+				response.statusCode !== undefined && response.statusCode >= 200 && response.statusCode < 500
+			);
+		});
 
-	try {
-		return await fetch(targetUrl, { signal: controller.signal });
-	} finally {
-		clearTimeout(timeout);
-	}
+		probe.on('timeout', () =>
+			probe.destroy(new Error(`HTTP probe timed out after ${timeoutMs}ms`))
+		);
+		probe.on('error', reject);
+		probe.end();
+	});
 }
 
 function run(command, args, options = {}) {
@@ -133,6 +136,10 @@ function run(command, args, options = {}) {
 function positiveIntegerFromEnv(value, fallback) {
 	const parsed = Number.parseInt(value ?? '', 10);
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function serverArgs(scriptName, host, port) {
+	return ['run', scriptName, '--', '--host', host, '--port', String(port), '--strictPort'];
 }
 
 function terminate(child) {
