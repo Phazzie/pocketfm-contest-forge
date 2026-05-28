@@ -40,3 +40,14 @@ returning accepted module output.
 Remaining concern: this is still a fake-provider boundary, not a real Grok adapter and not a public
 demo path. The next step must add server-side xAI integration and UI failure states without weakening
 the fail-closed rule or allowing fixture/demo provenance to masquerade as live AI.
+
+## Checkpoint 8: xAI Transport Adapter
+
+The xAI adapter is now a narrow transport implementation for the provider port. It validates env
+configuration, posts prompt messages to the Responses API, extracts `output_text` or nested response
+content, returns provider/model/latency metadata, and fails closed for no key, invalid env, auth
+failure, timeout, malformed response, missing output, and network exceptions.
+
+Remaining concern: the adapter is not yet wired into a server-side live UI action, and there is no
+public-demo access gate yet. The app is closer to a real AI MVP, but it is still not ready to expose
+paid Grok calls from a public URL.

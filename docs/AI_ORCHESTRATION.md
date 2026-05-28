@@ -94,6 +94,37 @@ The executor also enforces a configurable provider timeout. A hung provider retu
 result with `PROVIDER_TIMEOUT`; it must not leave the request pending indefinitely or backfill with
 fixture output.
 
+## xAI Grok Adapter
+
+`src/lib/adapters/ai/xaiStoryModuleProvider.ts` implements `StoryModuleProvider` for the xAI
+Responses API. It is a transport adapter only: it posts module prompt messages, receives raw model
+text, validates the provider response shape, and returns provider diagnostics. It does not parse,
+repair, or accept story-module JSON; that remains owned by `LiveModuleExecutor` and the module-owned
+schemas.
+
+The default adapter configuration is:
+
+- endpoint: `https://api.x.ai/v1/responses`;
+- model: `grok-4.20-multi-agent`;
+- reasoning effort: `medium`;
+- timeout: 120 seconds.
+
+Official xAI documentation verified on 2026-05-28 says `grok-4.20-multi-agent` is supported by the
+Responses API and that REST `reasoning.effort` accepts `low`, `medium`, `high`, or `xhigh`.
+`low`/`medium` use the lower-cost 4-agent setup; `high`/`xhigh` use the higher-cost 16-agent setup.
+The adapter intentionally does not enable xAI built-in tools for the MVP path because tool calls add
+cost and are unnecessary for module JSON generation.
+
+Required server-side environment:
+
+- `XAI_API_KEY`
+- `STORY_AI_PROVIDER=xai` when the provider variable is set
+- `STORY_AI_MODEL=grok-4.20-multi-agent` unless overridden for a deliberate test
+- `STORY_AI_REASONING_EFFORT=medium` unless deliberately testing costlier reasoning
+
+No xAI call is allowed from Svelte client code. The next public-MVP slice must instantiate this
+adapter only from server-side load/action code or a server-only application service.
+
 ## Provider Tracking
 
 Every live AI result should record:

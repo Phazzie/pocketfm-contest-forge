@@ -26,29 +26,32 @@ Use this file for active issues, review findings, risks, and decisions that need
 
 ## Active Follow-Up
 
-| Status  | Item                                                   | Next Action                                                                                                                  |
-| ------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| Done    | Fake-provider live module boundary is absent.          | Added provider port, live executor, JSON repair, schema validation, prose gate, and fake-provider tests for `cold-open-lab`. |
-| Open    | Real Grok provider adapter is still absent.            | Implement server-side xAI adapter behind the provider port with env validation and secret-safe tests.                        |
-| Open    | Story-state contract is in-memory only.                | Add persistence after storage choice is made.                                                                                |
-| Open    | Fixture module prose still needs live quality review.  | Run prose rubric and AI council once provider output exists.                                                                 |
-| Open    | Future multi-hour work needs stricter execution plans. | Use `.agent/PLANS.md` and the global `exec-plan` skill for complex autonomous runs.                                          |
-| Done    | Main branch needs remote quality enforcement.          | Branch protection requires PRs, conversation resolution, and the `Verify` status check.                                      |
-| Open    | Low npm audit finding exists through SvelteKit cookie. | Track upstream fix; CI should fail on moderate and higher vulnerabilities.                                                   |
-| Doing   | Public MVP needs Vercel and Grok delivery plan.        | Vercel adapter/config docs are in progress; Grok adapter remains a later PR.                                                 |
-| Open    | CI UI smoke currently relies on preview build output.  | Keep `npm run verify` before `npm run verify:ui` in CI or add an explicit build preflight.                                   |
-| Open    | CI UI smoke must not leave server children running.    | Keep process-group cleanup in `scripts/verify-ui.mjs` covered by local and remote smoke.                                     |
-| Open    | Vercel project is not yet proven from public URL.      | Deploy this branch, verify preview URL, then connect production deployment from `main`.                                      |
-| Blocked | Vercel CLI is not authenticated in the local shell.    | Run `vercel login` or provide `VERCEL_TOKEN`, then deploy from the repo root.                                                |
+| Status  | Item                                                   | Next Action                                                                                                                               |
+| ------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Done    | Fake-provider live module boundary is absent.          | Added provider port, live executor, JSON repair, schema validation, prose gate, and fake-provider tests for `cold-open-lab`.              |
+| Done    | Real Grok provider adapter is still absent.            | Added xAI Responses API adapter behind the provider port with env validation, provider metadata, timeout handling, and secret-safe tests. |
+| Open    | Story-state contract is in-memory only.                | Add persistence after storage choice is made.                                                                                             |
+| Open    | Fixture module prose still needs live quality review.  | Run prose rubric and AI council once provider output exists.                                                                              |
+| Open    | Future multi-hour work needs stricter execution plans. | Use `.agent/PLANS.md` and the global `exec-plan` skill for complex autonomous runs.                                                       |
+| Done    | Main branch needs remote quality enforcement.          | Branch protection requires PRs, conversation resolution, and the `Verify` status check.                                                   |
+| Open    | Low npm audit finding exists through SvelteKit cookie. | Track upstream fix; CI should fail on moderate and higher vulnerabilities.                                                                |
+| Doing   | Public MVP needs Vercel and Grok delivery plan.        | Vercel adapter and Grok transport exist; next step is a server-side live action, access gate, and preview deployment.                     |
+| Open    | CI UI smoke currently relies on preview build output.  | Keep `npm run verify` before `npm run verify:ui` in CI or add an explicit build preflight.                                                |
+| Open    | CI UI smoke must not leave server children running.    | Keep process-group cleanup in `scripts/verify-ui.mjs` covered by local and remote smoke.                                                  |
+| Open    | Vercel project is not yet proven from public URL.      | Deploy this branch, verify preview URL, then connect production deployment from `main`.                                                   |
+| Blocked | Vercel CLI is not authenticated in the local shell.    | Run `vercel login` or provide `VERCEL_TOKEN`, then deploy from the repo root.                                                             |
+| Open    | Live Grok adapter is not wired into UI/server action.  | Add server-only action or endpoint for `cold-open-lab`, preserve inputs on failure, and render provider/prose/schema states.              |
+| Open    | GitHub Actions warns about Node 20 action runtime.     | Watch pinned `actions/checkout` and `actions/setup-node` runtime migration before GitHub forces Node 24 action runtime.                   |
 
 ## Architecture Review Notes
 
-| Status | Item                                                         | Finding                                                                                                                              | Follow-Up                                                                                               |
-| ------ | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| Done   | Provider diagnostics do not belong inside module fixtures.   | Kept provider orchestration in `LiveModuleExecutor` instead of expanding module `run()` implementations.                             | Real adapters should implement `StoryModuleProvider` under `src/lib/adapters`.                          |
-| Done   | JSON repair policy needed a single owner.                    | Live executor owns exactly one balanced-object repair attempt and records `repairAttempts` in provenance.                            | Do not duplicate repair policy inside modules or provider adapters.                                     |
-| Done   | Review found live boundary acceptance loopholes.             | Markdown-fenced JSON, blocked provider provenance, hung provider timeout, slug leakage, and unsupported module gates now have tests. | Keep adding review-derived cases before introducing the real Grok adapter.                              |
-| Open   | Prose quality gate is deterministic and intentionally crude. | It blocks obvious generic/prose-invalid output, but it is not a substitute for model critique or taste.                              | Add AI council critique after Grok adapter exists; keep deterministic gate as minimum acceptance floor. |
+| Status | Item                                                         | Finding                                                                                                                                            | Follow-Up                                                                                               |
+| ------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Done   | Provider diagnostics do not belong inside module fixtures.   | Kept provider orchestration in `LiveModuleExecutor` instead of expanding module `run()` implementations.                                           | Real adapters should implement `StoryModuleProvider` under `src/lib/adapters`.                          |
+| Done   | JSON repair policy needed a single owner.                    | Live executor owns exactly one balanced-object repair attempt and records `repairAttempts` in provenance.                                          | Do not duplicate repair policy inside modules or provider adapters.                                     |
+| Done   | Review found live boundary acceptance loopholes.             | Markdown-fenced JSON, blocked provider provenance, hung provider timeout, slug leakage, and unsupported module gates now have tests.               | Keep adding review-derived cases before introducing the real Grok adapter.                              |
+| Done   | Provider adapter should not own JSON repair or acceptance.   | xAI adapter returns raw model text and diagnostics only; `LiveModuleExecutor` still owns repair, schema validation, prose quality, and provenance. | Keep provider adapters as transport code, not story-module policy.                                      |
+| Open   | Prose quality gate is deterministic and intentionally crude. | It blocks obvious generic/prose-invalid output, but it is not a substitute for model critique or taste.                                            | Add AI council critique after Grok adapter exists; keep deterministic gate as minimum acceptance floor. |
 
 ## Tracking Targets
 
