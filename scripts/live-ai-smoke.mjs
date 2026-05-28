@@ -2,83 +2,115 @@
 
 import { parse as parseDevalue } from 'devalue';
 
-if (process.env.RUN_LIVE_AI_SMOKE !== '1') {
-	console.log('SKIP: Set RUN_LIVE_AI_SMOKE=1, LIVE_AI_SMOKE_URL, and STORY_AI_ACCESS_CODE.');
-	process.exit(0);
+const SMOKE_REQUEST_TIMEOUT_MS = 30_000;
+
+try {
+	await run();
+} catch (error) {
+	console.error(`FAILED: ${errorMessage(error)}`);
+	process.exit(1);
 }
 
-const targetUrl = requiredEnv('LIVE_AI_SMOKE_URL');
-const accessCode = process.env.LIVE_AI_SMOKE_ACCESS_CODE ?? requiredEnv('STORY_AI_ACCESS_CODE');
-const response = await fetch(liveActionUrl(targetUrl), {
-	method: 'POST',
-	headers: {
-		'Content-Type': 'application/x-www-form-urlencoded',
-		'x-sveltekit-action': 'true'
-	},
-	body: defaultLiveActionBody(accessCode)
-});
-const responseText = await response.text();
+async function run() {
+	if (process.env.RUN_LIVE_AI_SMOKE !== '1') {
+		console.log('SKIP: Set RUN_LIVE_AI_SMOKE=1, LIVE_AI_SMOKE_URL, and STORY_AI_ACCESS_CODE.');
+		return;
+	}
 
-if (!response.ok) {
-	throw new Error(
-		`Live AI smoke action failed with HTTP ${response.status}: ${httpFailureMessage(responseText)}`
+	const targetUrl = requiredEnv('LIVE_AI_SMOKE_URL');
+	const accessCode = process.env.LIVE_AI_SMOKE_ACCESS_CODE ?? requiredEnv('STORY_AI_ACCESS_CODE');
+	const response = await fetchLiveAction(targetUrl, accessCode);
+	const responseText = await response.text();
+
+	if (!response.ok) {
+		throw new Error(
+			`Live AI smoke action failed with HTTP ${response.status}: ${httpFailureMessage(responseText)}`
+		);
+	}
+
+	const envelope = parseActionEnvelope(responseText);
+	const actionData = parseActionData(envelope);
+	const liveColdOpen = actionData?.liveColdOpen;
+
+	if (envelope.type === 'failure') {
+		throw new Error(
+			`Live AI smoke action failed with action status ${actionStatus(envelope, response.status)}: ${failureMessage(liveColdOpen)}`
+		);
+	}
+
+	if (!liveColdOpen?.success) {
+		throw new Error(`Live AI smoke did not return success: ${failureMessage(liveColdOpen)}`);
+	}
+
+	const { moduleResult } = liveColdOpen.data;
+	const output = moduleResult.output;
+
+	if (liveColdOpen.data.generationMode !== 'live-ai') {
+		throw new Error(
+			`Expected live-ai generation mode, received ${liveColdOpen.data.generationMode}.`
+		);
+	}
+
+	if (moduleResult.status !== 'success') {
+		throw new Error(
+			`Expected accepted live module output, received ${moduleResult.status}: ${issueMessages(moduleResult)}`
+		);
+	}
+
+	if (moduleResult.provenance.provider !== 'xai') {
+		throw new Error(`Expected xai provider, received ${moduleResult.provenance.provider}.`);
+	}
+
+	if (!output || !Array.isArray(output.variants) || output.variants.length < 3) {
+		throw new Error('Expected at least three accepted cold-open variants.');
+	}
+
+	console.log(
+		JSON.stringify(
+			{
+				url: targetUrl,
+				generationMode: liveColdOpen.data.generationMode,
+				status: moduleResult.status,
+				provider: moduleResult.provenance.provider,
+				model: moduleResult.provenance.model,
+				promptVersion: moduleResult.provenance.promptVersion,
+				latencyMs: moduleResult.provenance.latencyMs,
+				variantCount: output.variants.length,
+				winnerId: output.winnerId
+			},
+			null,
+			2
+		)
 	);
 }
 
-const envelope = parseActionEnvelope(responseText);
-const actionData = parseActionData(envelope);
-const liveColdOpen = actionData?.liveColdOpen;
+async function fetchLiveAction(targetUrl, accessCode) {
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), SMOKE_REQUEST_TIMEOUT_MS);
+	timeout.unref?.();
 
-if (envelope.type === 'failure') {
-	throw new Error(
-		`Live AI smoke action failed with action status ${actionStatus(envelope, response.status)}: ${failureMessage(liveColdOpen)}`
-	);
+	try {
+		return await fetch(liveActionUrl(targetUrl), {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+				'x-sveltekit-action': 'true'
+			},
+			body: defaultLiveActionBody(accessCode),
+			signal: controller.signal
+		});
+	} catch (error) {
+		if (isAbortError(error)) {
+			throw new Error(`Live AI smoke request timed out after ${SMOKE_REQUEST_TIMEOUT_MS}ms.`, {
+				cause: error
+			});
+		}
+
+		throw error;
+	} finally {
+		clearTimeout(timeout);
+	}
 }
-
-if (!liveColdOpen?.success) {
-	throw new Error(`Live AI smoke did not return success: ${failureMessage(liveColdOpen)}`);
-}
-
-const { moduleResult } = liveColdOpen.data;
-const output = moduleResult.output;
-
-if (liveColdOpen.data.generationMode !== 'live-ai') {
-	throw new Error(
-		`Expected live-ai generation mode, received ${liveColdOpen.data.generationMode}.`
-	);
-}
-
-if (moduleResult.status !== 'success') {
-	throw new Error(
-		`Expected accepted live module output, received ${moduleResult.status}: ${issueMessages(moduleResult)}`
-	);
-}
-
-if (moduleResult.provenance.provider !== 'xai') {
-	throw new Error(`Expected xai provider, received ${moduleResult.provenance.provider}.`);
-}
-
-if (!output || !Array.isArray(output.variants) || output.variants.length < 3) {
-	throw new Error('Expected at least three accepted cold-open variants.');
-}
-
-console.log(
-	JSON.stringify(
-		{
-			url: targetUrl,
-			generationMode: liveColdOpen.data.generationMode,
-			status: moduleResult.status,
-			provider: moduleResult.provenance.provider,
-			model: moduleResult.provenance.model,
-			promptVersion: moduleResult.provenance.promptVersion,
-			latencyMs: moduleResult.provenance.latencyMs,
-			variantCount: output.variants.length,
-			winnerId: output.winnerId
-		},
-		null,
-		2
-	)
-);
 
 function liveActionUrl(value) {
 	const normalized = value.endsWith('/') ? value : `${value}/`;
@@ -175,12 +207,29 @@ function actionStatus(envelope, fallbackStatus) {
 }
 
 function issueMessages(moduleResult) {
-	return moduleResult.issues.map((issue) => `${issue.code}: ${issue.message}`).join('; ');
+	if (!Array.isArray(moduleResult?.issues)) {
+		return `No issue list returned for module result: ${safeJson(moduleResult)}`;
+	}
+
+	const messages = moduleResult.issues.map((issue) => `${issue.code}: ${issue.message}`).join('; ');
+	return messages || 'No module issues returned.';
 }
 
 function responseExcerpt(responseText) {
 	const excerpt = responseText.replace(/\s+/g, ' ').trim().slice(0, 240);
 	return excerpt || 'Empty response body.';
+}
+
+function isAbortError(error) {
+	return error instanceof Error && error.name === 'AbortError';
+}
+
+function safeJson(value) {
+	try {
+		return JSON.stringify(value);
+	} catch {
+		return String(value);
+	}
 }
 
 function requiredEnv(name) {
