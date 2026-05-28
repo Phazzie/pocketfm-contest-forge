@@ -17,6 +17,7 @@
   UI verification timeout validation, bounded HTTP probes, bounded browser smoke commands, and pinned
   least-privilege CI actions.
 - Switched CI UI smoke verification to production preview mode after the verified build.
+- Hardened UI verification cleanup so preview/dev server process groups are terminated after smoke.
 - Extended UI verification startup tolerance for slower cold Vite starts.
 - Hardened pre-push checks so nested verification commands do not inherit Git hook stdin.
 - Added a deterministic lint runner that disables Node compile cache for ESLint on runtimes where it can hang.

@@ -14,7 +14,8 @@ const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const serverScript = process.env.VERIFY_UI_SERVER_SCRIPT ?? 'dev';
 const devServer = spawn(npmCommand, serverArgs(serverScript, host, port), {
 	stdio: ['ignore', 'pipe', 'pipe'],
-	env: process.env
+	env: process.env,
+	detached: process.platform !== 'win32'
 });
 
 devServer.stdout.on('data', (chunk) => process.stdout.write(chunk));
@@ -28,7 +29,7 @@ try {
 	});
 	console.log(`UI verification passed at ${url}`);
 } finally {
-	devServer.kill('SIGTERM');
+	terminate(devServer);
 }
 
 function findOpenPort(startPort) {

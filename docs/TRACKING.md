@@ -36,6 +36,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Open   | Low npm audit finding exists through SvelteKit cookie. | Track upstream fix; CI should fail on moderate and higher vulnerabilities.                   |
 | Open   | Public MVP needs Vercel and Grok delivery plan.        | Execute `docs/MVP_EXECUTION_PLAN.md` through PRs with CI and preview deployments.            |
 | Open   | CI UI smoke currently relies on preview build output.  | Keep `npm run verify` before `npm run verify:ui` in CI or add an explicit build preflight.   |
+| Open   | CI UI smoke must not leave server children running.    | Keep process-group cleanup in `scripts/verify-ui.mjs` covered by local and remote smoke.     |
 
 ## Tracking Targets
 
