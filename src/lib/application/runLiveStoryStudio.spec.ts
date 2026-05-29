@@ -537,7 +537,7 @@ const validCliffhangerFuturesOutput: CliffhangerFuturesOutput = {
 			payoffPath:
 				'Episode two reveals the antagonist bought a name clue from the lover witness at a public price.',
 			payoffWarning:
-				'Audience trust risk rises if the name proof is withheld beyond the next court consequence.'
+				'Audience trust risk: withholding the name proof beyond the next court consequence makes the debt feel fake.'
 		},
 		{
 			id: 'lover-signed-order',
@@ -548,7 +548,7 @@ const validCliffhangerFuturesOutput: CliffhangerFuturesOutput = {
 			payoffPath:
 				'The next episode forces a partial confession that prices the lover relationship debt.',
 			payoffWarning:
-				'Romantic volatility risks frustrating the audience if the crown consequence becomes secondary.'
+				'Audience frustration risk: romantic volatility can make the crown consequence feel secondary.'
 		},
 		{
 			id: 'crown-chose-wrong',
@@ -560,7 +560,7 @@ const validCliffhangerFuturesOutput: CliffhangerFuturesOutput = {
 			payoffPath:
 				'Episode two creates one witness clue immune to the memory drain before the debt turns abstract.',
 			payoffWarning:
-				'Audience frustration rises if the witness arrives after the memory rule becomes lore.'
+				'Audience frustration risk: late witness proof turns the memory rule into abstract lore.'
 		}
 	],
 	recommendationId: 'enemy-knows-name',

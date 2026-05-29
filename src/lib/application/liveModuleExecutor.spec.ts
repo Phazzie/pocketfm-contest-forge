@@ -29,7 +29,8 @@ import {
 import { cliffhangerFuturesModule } from '$lib/story-modules/modules/cliffhanger-futures/module';
 import {
 	buildCliffhangerFuturesProviderInput,
-	buildCliffhangerFuturesProviderMessages
+	buildCliffhangerFuturesProviderMessages,
+	CLIFFHANGER_FUTURES_PROMPT_VERSION
 } from '$lib/story-modules/modules/cliffhanger-futures/prompts';
 import type { CouncilReviewOutput } from '$lib/story-modules/modules/council-review/contract';
 import {
@@ -228,8 +229,46 @@ describe('live module executor', () => {
 
 		expect(result.status).toBe('success');
 		expect(result.output?.recommendationId).toBe('enemy-knows-name');
-		expect(result.provenance.promptVersion).toBe('cliffhanger-futures.v1');
+		expect(result.provenance.promptVersion).toBe(CLIFFHANGER_FUTURES_PROMPT_VERSION);
 		expect(provider.requests[0]?.moduleId).toBe('cliffhanger-futures');
+	});
+
+	it('instructs cliffhanger provider output to include audience-risk payoff warnings', () => {
+		const promptText = buildCliffhangerFuturesProviderMessages(cliffhangerFuturesFixtureInput)
+			.map((message) => message.content)
+			.join('\n');
+
+		expect(promptText).toContain(`Prompt version: ${CLIFFHANGER_FUTURES_PROMPT_VERSION}.`);
+		expect(promptText).toContain(
+			'Every payoffWarning must start with "Audience frustration risk:" or "Audience trust risk:".'
+		);
+		expect(promptText).toContain('specific listener frustration, trust break, confusion');
+		expect(promptText).toContain(
+			'Do not generate payoffWarning items that only describe volatility'
+		);
+	});
+
+	it('rejects cliffhanger payoff warnings that name volatility but omit audience risk', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(
+				JSON.stringify({
+					...cliffhangerFuturesFixtureOutput,
+					candidates: cliffhangerFuturesFixtureOutput.candidates.map((candidate) => ({
+						...candidate,
+						payoffWarning:
+							'Romantic volatility can hide the crown rule before the name price is clear.'
+					}))
+				} satisfies CliffhangerFuturesOutput)
+			)
+		);
+		const result = await runCliffhangerFutures(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+		expect(result.issues.map((issue) => issue.message).join(' ')).toContain(
+			'audience-frustration risk'
+		);
 	});
 
 	it('rejects weak cliffhanger-futures JSON without fixture fallback', async () => {

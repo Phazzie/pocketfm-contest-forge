@@ -7,7 +7,7 @@ import type {
 	StoryModuleProviderMessage
 } from '$lib/core/ports/storyModuleProviderPort';
 
-export const CLIFFHANGER_FUTURES_PROMPT_VERSION = 'cliffhanger-futures.v1';
+export const CLIFFHANGER_FUTURES_PROMPT_VERSION = 'cliffhanger-futures.v2';
 
 export const cliffhangerFuturesPrompt = {
 	system:
@@ -43,7 +43,9 @@ export function buildCliffhangerFuturesProviderMessages(
 				'Each candidate must include id, text, unansweredQuestion, futuresScore, volatility, payoffPath, and payoffWarning.',
 				'The recommendationId must exactly match one candidate id.',
 				'Every payoffPath must name the next episode movement, concrete clue or proof, and relationship, public status, secret, trust, name, or price cost.',
-				'Every payoffWarning must name the audience-frustration risk if the payoff is delayed, too abstract, or too hidden.',
+				'Every payoffWarning must start with "Audience frustration risk:" or "Audience trust risk:".',
+				'Every payoffWarning must name the specific listener frustration, trust break, confusion, delayed payoff, fake cliffhanger, abstract lore, or hidden-proof risk.',
+				'Do not generate payoffWarning items that only describe volatility, tone, romance, theme, or general stakes without audience risk.',
 				'Do not use generic craft phrases such as strong hook, raise the stakes, emotional stakes, or build suspense.'
 			].join('\n')
 		},
@@ -64,7 +66,7 @@ export function buildCliffhangerFuturesProviderMessages(
 								payoffPath:
 									'The next episode clue, proof, cost, or consequence that moves the debt.',
 								payoffWarning:
-									'The specific audience-trust risk if the story withholds this too long.'
+									'Audience frustration risk: delaying the proof past episode two makes the cliffhanger feel fake.'
 							}
 						],
 						recommendationId: 'specific-cliffhanger-slug',
