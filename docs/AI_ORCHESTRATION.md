@@ -161,6 +161,12 @@ Required server-side environment:
 - `STORY_AI_MODEL=grok-4.20-multi-agent` unless overridden for a deliberate test
 - `STORY_AI_REASONING_EFFORT=medium` unless deliberately testing costlier reasoning
 
+Required provider account state:
+
+- The xAI team tied to `XAI_API_KEY` must have available credits and monthly spend headroom.
+- If xAI returns billing or permission `HTTP 403`, Story Studio must fail closed and the deployed
+  smoke cannot prove an accepted live run until credits or spend limits are restored.
+
 No xAI call is allowed from Svelte client code. The next public-MVP slice must instantiate this
 adapter only from server-side load/action code or a server-only application service.
 
