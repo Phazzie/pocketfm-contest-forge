@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+- Made the live Story Studio runner respect selected mechanisms before provider execution, returning
+  locked artifacts for deselected live tools instead of spending xAI calls.
+- Excluded the live-only `council-review` module from fixture/demo forge output until that path has
+  an explicit fixture input contract.
+- Made idle Story Studio lane changes render the selected contest brief's locked artifacts instead
+  of continuing to show the default medieval brief.
+- Expanded trope-mutation live quality review with genre-aware scene terms so non-medieval contest
+  lanes are not rejected by a medieval-only proof vocabulary.
+- Declared the Vercel function max duration and bounded route-level Story Studio provider timeouts
+  so sequential live module hangs fail closed inside the deployment budget.
 - Added the runtime-schema-backed Story Module Platform with Zod contracts, module registry, module runner, provenance, statuses, issues, and tracking events.
 - Converted `cold-open-lab`, `cliffhanger-futures`, `binge-debt-ledger`, and `trope-mutation-lab` into first-class modules with owned contracts, prompts, fixtures, tests, and README files.
 - Added story-state contracts for protagonist, antagonist, supporting cast, desire/taboo, secrets, mechanics, episode history, debt ledgers, continuity facts, writer decisions, and accepted/rejected AI suggestions.

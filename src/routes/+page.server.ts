@@ -18,9 +18,15 @@ import { mechanismCatalog } from '$lib/core/domain/mechanisms';
 import { consumeLiveAiQuota, verifyLiveAiAccessCode } from '$lib/server/liveAiAccess';
 import { defaultStoryModuleRegistry } from '$lib/story-modules/registry';
 
+const LIVE_STORY_STUDIO_PROVIDER_TIMEOUT_MS = 45_000;
+const LIVE_STORY_STUDIO_EXECUTOR_TIMEOUT_MS = 46_000;
+
 export async function load() {
 	const research = new InMemoryContestResearchRepository();
 	const brief = research.findById(defaultForgeRequest.contestId);
+	const initialStudioRuns = Object.fromEntries(
+		research.list().map((candidate) => [candidate.id, createInitialStoryStudioRun(candidate)])
+	);
 
 	if (!brief) {
 		throw new Error(`Default contest brief missing: ${defaultForgeRequest.contestId}.`);
@@ -28,6 +34,7 @@ export async function load() {
 
 	return {
 		initialStudioRun: createInitialStoryStudioRun(brief),
+		initialStudioRuns,
 		defaultRequest: defaultForgeRequest,
 		briefs: research.list(),
 		mechanisms: mechanismCatalog
@@ -75,11 +82,18 @@ export const actions: Actions = {
 			});
 		}
 
-		const provider = createXaiStoryModuleProviderFromEnv(env);
+		const provider = createXaiStoryModuleProviderFromEnv(env, {
+			timeoutMs: LIVE_STORY_STUDIO_PROVIDER_TIMEOUT_MS
+		});
 		const storyStudio = await new RunLiveStoryStudio(
 			research,
 			provider,
-			defaultStoryModuleRegistry
+			defaultStoryModuleRegistry,
+			{
+				executorConfig: {
+					providerTimeoutMs: LIVE_STORY_STUDIO_EXECUTOR_TIMEOUT_MS
+				}
+			}
 		).run(submittedRequest);
 
 		if (!storyStudio.success) {

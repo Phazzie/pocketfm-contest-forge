@@ -146,6 +146,17 @@ authorizes the request with `STORY_AI_ACCESS_CODE`, applies a small per-client i
 and returns a `StoryStudioResponse` for the UI to render. Provider failures remain visible as failed
 or locked story artifacts; the action does not replace them with fixture prose.
 
+The production action also respects the writer's selected mechanisms before spending provider calls.
+`cold-open-lab`, `binge-debt-ledger`, `cliffhanger-futures`, and `trope-mutation-lab` run only when
+their matching mechanism is selected; otherwise their artifacts remain locked and no xAI request is
+made for that module. `council-review` runs only after the prior live artifacts are accepted.
+
+The route uses a deployment-specific budget for the full Story Studio chain. The SvelteKit Vercel
+adapter is configured with a 300-second function max duration, while the route's xAI transport
+timeout is 45 seconds and the executor wrapper timeout is 46 seconds per module. That caps the
+five-module worst case below the Vercel Fluid Compute default maximum while still failing closed
+with visible module failures if a provider call hangs or times out.
+
 `src/lib/core/contracts/storyStudioContract.ts` now defines the production Story Studio response
 shape. `src/lib/application/runLiveStoryStudio.ts` is the first application use case for that
 contract: it runs the existing live `cold-open-lab` provider path, maps the module result into a

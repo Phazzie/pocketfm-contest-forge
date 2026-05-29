@@ -60,6 +60,9 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [x] 2026-05-29 13:10 - Added contest brief freshness metadata and stale-state UI. Curated
       `ContestBrief` records now include `retrievedAt`, `staleAfter`, and warnings; Story Studio
       derives source freshness and the route renders those dates.
+- [x] 2026-05-29 16:47 UTC - Addressed PR #15 review findings around selected mechanisms,
+      fixture/demo council registration, selected-lane idle state, genre-aware trope gates, stable
+      freshness labels, and Vercel live-chain timeout budgeting.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -131,6 +134,25 @@ readiness would be testing a retired path.
 Contest freshness belonged in the research/contract layer, not as a route string. The route now
 renders derived `StoryStudioRun.contestFreshness`, while curated source dates live on
 `ContestBrief.freshness`.
+
+PR review found that the live runner was still too eager: selected mechanisms were UI state, but the
+runner called every live module in the chain. The runner now locks deselected live modules before
+provider execution, which reduces spend and makes user selections truthful. Council review remains
+implicit because it is an assessment of accepted artifacts rather than a selectable story mechanism.
+
+The old fixture/demo forge path should not run `council-review` just because the module is
+registered for production Story Studio. Until fixture/demo has a real council input builder, that
+use case filters the live-only council module out and tests that fixture module results do not fail.
+
+The trope quality gate's scene vocabulary was too medieval by default. Genre-specific scene terms
+now augment the shared cost/proof vocabulary so werewolf, romantasy, thriller-system, and
+dark-academy lanes can pass when their scene proof is concrete but not court/crown-coded.
+
+The full live chain is sequential and can be slow. Vercel Fluid Compute currently allows a
+300-second default function duration, so the SvelteKit adapter now declares that max duration and
+the route caps each provider call at 45 seconds with a 46-second executor wrapper. This is still an
+MVP request/response design; a durable job runner is the better long-term shape for broader public
+use.
 
 ## Decision Log
 
@@ -212,6 +234,25 @@ accepted/failed/locked live artifacts are more truthful until a calibrated live 
 2026-05-29 13:10 - Curated contest freshness uses a short one-week stale window after the 2026-05-29
 source refresh. Rationale: contest prompts and submission pages are volatile; live generation can
 still run, but writers must see the retrieved/stale dates and official-rules warning.
+
+2026-05-29 16:47 UTC - Live Story Studio honors selected mechanisms before provider execution.
+Rationale: selected tools are part of the user contract and paid model calls should not run for
+deselected modules. Deselecting a live mechanism now creates a locked artifact rather than hidden AI
+work.
+
+2026-05-29 16:47 UTC - Keep `council-review` registered for production Story Studio but excluded
+from fixture/demo forge. Rationale: the production chain has accepted-artifact inputs for council
+review; fixture/demo forge does not yet have a truthful council input contract, so running it there
+would create failed or fake fixture behavior.
+
+2026-05-29 16:47 UTC - Use genre-aware terms in trope quality review instead of a medieval-only
+scene vocabulary. Rationale: the quality gate should reject abstract scene proof, not valid proof
+from other contest lanes.
+
+2026-05-29 16:47 UTC - Declare a 300-second Vercel function max duration and route-level 45/46
+second provider/executor timeouts for the MVP chain. Rationale: five sequential live calls remain a
+single request for MVP, so the code must bound hangs and keep the worst case inside the deployment
+duration budget.
 
 ## Outcomes & Retrospective
 
@@ -610,6 +651,17 @@ src/lib/story-modules/modules/council-review/module.spec.ts`, and `npm run check
 - 2026-05-29 13:30 - PR review noted a potential hydration mismatch from
   `toLocaleDateString()` in the Svelte template. Replaced the locale formatting with stable ISO date
   labels before merge.
+- 2026-05-29 16:47 UTC - Focused review-fix tests passed:
+  `npm run test -- src/lib/application/runLiveStoryStudio.spec.ts
+src/lib/application/forgeContestStory.spec.ts
+src/lib/application/liveModuleExecutor.spec.ts` returned 3 files and 39 tests passing.
+  The patch also declares the Vercel adapter max duration at 300 seconds and documents the 45/46
+  second per-module live-chain timeouts.
+- 2026-05-29 16:50 UTC - Review-fix verification passed. `npm run guard:no-live-fallback`
+  passed for 5 registered modules; `npm run guard:docs-drift` passed for 8 changed app code/script
+  files. Full `npm run verify` passed with 21 test files and 107 tests, zero Svelte errors/warnings,
+  and a production build. `npm run verify:ui` passed against `http://127.0.0.1:5173/` with no
+  overlay, 27 controls, Story Studio action visible, and no browser errors.
 
 ## Interfaces and Dependencies
 

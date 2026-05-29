@@ -257,6 +257,37 @@ describe('live module executor', () => {
 		expect(provider.requests[0]?.moduleId).toBe('trope-mutation-lab');
 	});
 
+	it('accepts non-medieval trope scene proof through genre-aware quality terms', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(
+				JSON.stringify({
+					...tropeMutationLabFixtureOutput,
+					expectedTrope: 'the forbidden werewolf bond chooses the rightful alpha',
+					mutationRule:
+						'the bond only works while the pack publicly believes the lovers betrayed each other',
+					preservedPromise:
+						'the listener still gets pack hierarchy, forbidden bond, and body-change stakes.',
+					sceneProof:
+						'Mara exposes her lover in the pack den, then loses public alpha status and family trust when the bond answers.',
+					episodePressure: [
+						'Every episode forces a pack ritual to repeat while costing Mara family trust.',
+						'Every public alpha challenge must create a relationship debt.',
+						'Every forbidden bond advance must cost public status inside the pack.'
+					]
+				} satisfies TropeMutationLabOutput)
+			)
+		);
+		const result = await runTropeMutationLab(provider, undefined, {
+			...tropeMutationLabFixtureInput,
+			contestGenre: 'werewolf-saga',
+			contestName: 'Werewolf Saga Contest',
+			mandatoryElements: ['pack hierarchy', 'forbidden bond', 'body-change stakes']
+		});
+
+		expect(result.status).toBe('success');
+		expect(result.output?.sceneProof).toContain('pack den');
+	});
+
 	it('rejects weak trope-mutation JSON without fixture fallback', async () => {
 		const provider = new FakeStoryModuleProvider(
 			providerSuccess(JSON.stringify(weakTropeMutationLabOutput))
@@ -410,18 +441,19 @@ async function runCliffhangerFutures(
 
 async function runTropeMutationLab(
 	provider: StoryModuleProvider,
-	config?: LiveModuleExecutorConfig
+	config?: LiveModuleExecutorConfig,
+	input = tropeMutationLabFixtureInput
 ) {
 	const context = {
-		...createModuleFixtureContext(tropeMutationLabFixtureInput),
+		...createModuleFixtureContext(input),
 		mode: 'live' as const
 	};
 
 	return new LiveModuleExecutor(provider, config).run({
 		module: tropeMutationLabModule,
 		context,
-		messages: buildTropeMutationLabProviderMessages(tropeMutationLabFixtureInput),
-		providerInput: buildTropeMutationLabProviderInput(tropeMutationLabFixtureInput)
+		messages: buildTropeMutationLabProviderMessages(input),
+		providerInput: buildTropeMutationLabProviderInput(input)
 	});
 }
 

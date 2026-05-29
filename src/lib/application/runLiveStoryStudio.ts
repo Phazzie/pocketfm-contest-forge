@@ -13,7 +13,7 @@ import type { LiveModuleExecutorConfig } from '$lib/application/liveModuleExecut
 import type {
 	ContestBrief,
 	ForgeRequest,
-	StoryModulePlanResult
+	MechanismId
 } from '$lib/core/contracts/contestForgeContract';
 import {
 	createContestFreshnessFromBrief,
@@ -21,6 +21,7 @@ import {
 	storyModuleResultToStudioArtifact,
 	summarizeStoryStudioArtifacts,
 	type StoryStudioArtifact,
+	type StoryStudioArtifactId,
 	type StoryStudioResponse
 } from '$lib/core/contracts/storyStudioContract';
 import { validateForgeRequest } from '$lib/core/contracts/contestForgeContract';
@@ -96,41 +97,22 @@ export class RunLiveStoryStudio {
 			};
 		}
 
-		const coldOpenModule = this.moduleRegistry.find('cold-open-lab');
-
-		if (!coldOpenModule) {
-			return {
-				success: false,
-				error: {
-					code: 'STUDIO_RUN_FAILED',
-					message: 'Cold Open Lab is not registered, so Story Studio cannot run.'
-				}
-			};
-		}
-
 		const requestedAt = this.now();
-		const coldOpenInput = buildColdOpenLabInput(request, brief);
 		const storyState = createStoryStateFromForgeRequest(request, brief, undefined, {
 			generationMode: 'live-ai'
 		});
 		const executor = new LiveModuleExecutor(this.provider, this.config.executorConfig);
-		const coldOpenResult = await executor.run({
-			module: coldOpenModule,
-			context: {
-				input: coldOpenInput,
-				storyState,
-				contestBrief: brief,
-				mode: 'live',
-				now: requestedAt
-			},
-			messages: buildColdOpenLabProviderMessages(coldOpenInput),
-			providerInput: buildColdOpenLabProviderInput(coldOpenInput)
-		});
-		const coldOpenPlanResult = toStoryModulePlanResult(coldOpenModule, coldOpenResult);
-		const coldOpenArtifact = storyModuleResultToStudioArtifact('cold-open-lab', coldOpenPlanResult);
-		const bingeDebtArtifact = await this.runBingeDebtLedger({
+		const coldOpenArtifact = await this.runColdOpenLab({
+			request,
 			executor,
-			coldOpenPlanResult,
+			storyState,
+			brief,
+			requestedAt
+		});
+		const bingeDebtArtifact = await this.runBingeDebtLedger({
+			request,
+			executor,
+			coldOpenArtifact,
 			storyState,
 			brief,
 			requestedAt
@@ -138,7 +120,7 @@ export class RunLiveStoryStudio {
 		const cliffhangerArtifact = await this.runCliffhangerFutures({
 			request,
 			executor,
-			coldOpenPlanResult,
+			coldOpenArtifact,
 			bingeDebtArtifact,
 			storyState,
 			brief,
@@ -147,7 +129,7 @@ export class RunLiveStoryStudio {
 		const tropeArtifact = await this.runTropeMutationLab({
 			request,
 			executor,
-			coldOpenPlanResult,
+			coldOpenArtifact,
 			bingeDebtArtifact,
 			cliffhangerArtifact,
 			storyState,
@@ -185,16 +167,78 @@ export class RunLiveStoryStudio {
 		};
 	}
 
-	private async runBingeDebtLedger(input: {
+	private async runColdOpenLab(input: {
+		request: ForgeRequest;
 		executor: LiveModuleExecutor;
-		coldOpenPlanResult: ReturnType<typeof toStoryModulePlanResult>;
 		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
 		brief: ContestBrief;
 		requestedAt: Date;
 	}): Promise<StoryStudioArtifact> {
-		const parsedColdOpen = coldOpenLabOutputSchema.safeParse(input.coldOpenPlanResult.output);
+		if (!hasSelectedMechanism(input.request, 'cold-open-split-test')) {
+			return lockedForUnselectedMechanism({
+				id: 'cold-open-lab',
+				label: 'Select cold-open split test',
+				reason: 'Cold Open Lab only runs when the Cold Open Split Test mechanism is selected.'
+			});
+		}
 
-		if (input.coldOpenPlanResult.status !== 'success' || !parsedColdOpen.success) {
+		const module = this.moduleRegistry.find('cold-open-lab');
+
+		if (!module) {
+			return {
+				id: 'cold-open-lab',
+				label: 'Cold open lab',
+				status: 'failed',
+				summary: 'Cold Open Lab is not registered, so Story Studio cannot run it.',
+				issues: [
+					{
+						code: 'MODULE_NOT_REGISTERED',
+						message: 'Cold Open Lab is not registered in the story module registry.',
+						severity: 'error'
+					}
+				]
+			};
+		}
+
+		const coldOpenInput = buildColdOpenLabInput(input.request, input.brief);
+		const result = await input.executor.run({
+			module,
+			context: {
+				input: coldOpenInput,
+				storyState: input.storyState,
+				contestBrief: input.brief,
+				mode: 'live',
+				now: input.requestedAt
+			},
+			messages: buildColdOpenLabProviderMessages(coldOpenInput),
+			providerInput: buildColdOpenLabProviderInput(coldOpenInput)
+		});
+
+		return storyModuleResultToStudioArtifact(
+			'cold-open-lab',
+			toStoryModulePlanResult(module, result)
+		);
+	}
+
+	private async runBingeDebtLedger(input: {
+		request: ForgeRequest;
+		executor: LiveModuleExecutor;
+		coldOpenArtifact: StoryStudioArtifact;
+		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
+		brief: ContestBrief;
+		requestedAt: Date;
+	}): Promise<StoryStudioArtifact> {
+		if (!hasSelectedMechanism(input.request, 'binge-debt-ledger')) {
+			return lockedForUnselectedMechanism({
+				id: 'binge-debt-ledger',
+				label: 'Select binge debt ledger',
+				reason: 'Binge Debt Ledger only runs when the Binge Debt Ledger mechanism is selected.'
+			});
+		}
+
+		const parsedColdOpen = coldOpenLabOutputSchema.safeParse(input.coldOpenArtifact.result?.output);
+
+		if (input.coldOpenArtifact.status !== 'accepted' || !parsedColdOpen.success) {
 			return createLockedStoryStudioArtifact({
 				id: 'binge-debt-ledger',
 				summary: 'Binge debt ledger is locked until a cold-open artifact is accepted.',
@@ -246,18 +290,27 @@ export class RunLiveStoryStudio {
 	private async runCliffhangerFutures(input: {
 		request: ForgeRequest;
 		executor: LiveModuleExecutor;
-		coldOpenPlanResult: StoryModulePlanResult;
+		coldOpenArtifact: StoryStudioArtifact;
 		bingeDebtArtifact: StoryStudioArtifact;
 		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
 		brief: ContestBrief;
 		requestedAt: Date;
 	}): Promise<StoryStudioArtifact> {
-		const parsedColdOpen = coldOpenLabOutputSchema.safeParse(input.coldOpenPlanResult.output);
+		if (!hasSelectedMechanism(input.request, 'cliffhanger-futures')) {
+			return lockedForUnselectedMechanism({
+				id: 'cliffhanger-futures',
+				label: 'Select cliffhanger futures',
+				reason:
+					'Cliffhanger Futures only runs when the Cliffhanger Futures Market mechanism is selected.'
+			});
+		}
+
+		const parsedColdOpen = coldOpenLabOutputSchema.safeParse(input.coldOpenArtifact.result?.output);
 		const parsedBingeDebt = bingeDebtLedgerOutputSchema.safeParse(
 			input.bingeDebtArtifact.result?.output
 		);
 
-		if (input.coldOpenPlanResult.status !== 'success' || !parsedColdOpen.success) {
+		if (input.coldOpenArtifact.status !== 'accepted' || !parsedColdOpen.success) {
 			return createLockedStoryStudioArtifact({
 				id: 'cliffhanger-futures',
 				summary: 'Cliffhanger futures is locked until a cold-open artifact is accepted.',
@@ -324,14 +377,22 @@ export class RunLiveStoryStudio {
 	private async runTropeMutationLab(input: {
 		request: ForgeRequest;
 		executor: LiveModuleExecutor;
-		coldOpenPlanResult: StoryModulePlanResult;
+		coldOpenArtifact: StoryStudioArtifact;
 		bingeDebtArtifact: StoryStudioArtifact;
 		cliffhangerArtifact: StoryStudioArtifact;
 		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
 		brief: ContestBrief;
 		requestedAt: Date;
 	}): Promise<StoryStudioArtifact> {
-		const parsedColdOpen = coldOpenLabOutputSchema.safeParse(input.coldOpenPlanResult.output);
+		if (!hasSelectedMechanism(input.request, 'trope-mutation-lab')) {
+			return lockedForUnselectedMechanism({
+				id: 'trope-mutation-lab',
+				label: 'Select trope mutation lab',
+				reason: 'Trope Mutation Lab only runs when the Trope Mutation Lab mechanism is selected.'
+			});
+		}
+
+		const parsedColdOpen = coldOpenLabOutputSchema.safeParse(input.coldOpenArtifact.result?.output);
 		const parsedBingeDebt = bingeDebtLedgerOutputSchema.safeParse(
 			input.bingeDebtArtifact.result?.output
 		);
@@ -340,7 +401,7 @@ export class RunLiveStoryStudio {
 		);
 
 		if (
-			input.coldOpenPlanResult.status !== 'success' ||
+			input.coldOpenArtifact.status !== 'accepted' ||
 			!parsedColdOpen.success ||
 			input.bingeDebtArtifact.status !== 'accepted' ||
 			!parsedBingeDebt.success ||
@@ -456,5 +517,25 @@ function lockedCouncilArtifact(nextAction: {
 		id: 'council-review',
 		summary: 'Council review is locked until live story artifacts exist for critique.',
 		nextAction
+	});
+}
+
+function hasSelectedMechanism(request: ForgeRequest, mechanismId: MechanismId): boolean {
+	return request.selectedMechanisms.includes(mechanismId);
+}
+
+function lockedForUnselectedMechanism(input: {
+	id: StoryStudioArtifactId;
+	label: string;
+	reason: string;
+}): StoryStudioArtifact {
+	return createLockedStoryStudioArtifact({
+		id: input.id,
+		summary: `${input.label} is locked because its mechanism is not selected.`,
+		nextAction: {
+			label: input.label,
+			reason: input.reason,
+			retryable: true
+		}
 	});
 }
