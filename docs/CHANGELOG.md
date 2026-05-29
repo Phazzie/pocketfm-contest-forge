@@ -72,6 +72,9 @@
   not leak awkward interpolation into provider instructions.
 - Kept user-controlled protagonist names out of cold-open system prompts; names stay in the JSON
   input block so adversarial text remains data.
+- Proved the public production Grok path with `npm run ai:smoke` against
+  `https://pocketfm-contest-forge.vercel.app`, returning accepted `xai`
+  `cold-open-lab.v2` output.
 - Fixed review findings for explicit protagonist handling, unique mechanism validation, and root lockfile hygiene.
 - Updated the Svelte workbench to render module run results and fixture-demo provenance.
 - Added autonomous work spec for the Story Module Platform.
