@@ -44,6 +44,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Open    | Real deployed Grok smoke is not yet proven.            | After Vercel env is configured, run `npm run ai:smoke` locally with live env or trigger the `Live AI Smoke` workflow with the deployed URL. |
 | Done    | Live Grok adapter is not wired into UI/server action.  | Added server-only `runLiveColdOpen` action, preserves submitted input, and renders live module success/failure separately.                  |
 | Done    | GitHub Actions warns about Node 20 action runtime.     | Updated pinned `actions/checkout` and `actions/setup-node` refs to Node 24-compatible releases.                                             |
+| Done    | Deployed live smoke was blocked by SvelteKit CSRF.     | Smoke script now sends the target deployment as `Origin` while keeping the action header and access-code gate.                              |
 
 ## Architecture Review Notes
 

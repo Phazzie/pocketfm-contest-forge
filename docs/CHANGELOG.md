@@ -60,6 +60,8 @@
 - Hardened the live AI smoke script so it uses the SvelteKit action request header, times out hung
   requests, reports transport failures before parsing action envelopes, and exits with clean failure
   messages.
+- Hardened deployed live AI smoke requests to send the target deployment as the `Origin` header and
+  validate request inputs before posting to the SvelteKit action.
 - Fixed review findings for explicit protagonist handling, unique mechanism validation, and root lockfile hygiene.
 - Updated the Svelte workbench to render module run results and fixture-demo provenance.
 - Added autonomous work spec for the Story Module Platform.
