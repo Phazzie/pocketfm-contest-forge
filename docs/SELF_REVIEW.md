@@ -66,10 +66,10 @@ one real public URL smoke run before it is girlfriend-demo ready.
 ## Checkpoint 10: Story Studio Module Chain
 
 The production Story Studio runner now has a live chain for cold opens, debt ledgers, cliffhanger
-futures, and trope mutation. The chain stays honest: the debt ledger locks when cold opens fail,
-cliffhanger futures locks when either accepted cold-open or accepted debt-ledger output is missing,
-and trope mutation locks until the prior live artifacts exist. No module substitutes fixture prose
-in live mode.
+futures, trope mutation, and council review. The chain stays honest: the debt ledger locks when cold
+opens fail, cliffhanger futures locks when either accepted cold-open or accepted debt-ledger output
+is missing, trope mutation locks until the prior live artifacts exist, and council review locks
+until the live artifact chain is accepted. No module substitutes fixture prose in live mode.
 
-Remaining concern: `council-review`, contest freshness, and the production UI still need the same
-fail-closed treatment before the MVP can be called production-demo complete.
+Remaining concern: contest freshness and the production UI still need the same fail-closed treatment
+before the MVP can be called production-demo complete.

@@ -49,7 +49,9 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [x] 2026-05-29 11:55 - Made `trope-mutation-lab` live-capable through a stronger output
       contract, provider prompt builders, a module-specific quality gate, and `RunLiveStoryStudio`
       execution after accepted cold-open, debt-ledger, and cliffhanger output.
-- [ ] Add live council review as a story module.
+- [x] 2026-05-29 12:10 - Scaffolded and implemented `council-review` as a registered story module
+      with six required council roles, provider prompt builders, a module-specific quality gate,
+      and `RunLiveStoryStudio` execution after accepted live artifacts.
 - [ ] Replace heuristic production scoring with live qualitative assessment.
 - [ ] Add contest brief freshness metadata and stale-state UI.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
@@ -70,9 +72,9 @@ use case half-live by mixing live and deterministic sections.
 
 `LiveModuleExecutor` is intentionally conservative: it supports only modules with configured
 module-specific quality gates. The default registry now covers `cold-open-lab`, `binge-debt-ledger`,
-`cliffhanger-futures`, and `trope-mutation-lab`; other modules stay blocked until their gates exist.
-Keep that posture. Broadly enabling all registered modules would create the exact technical debt
-this plan is meant to avoid.
+`cliffhanger-futures`, `trope-mutation-lab`, and `council-review`; future modules stay blocked until
+their gates exist. Keep that posture. Broadly enabling all registered modules would create the exact
+technical debt this plan is meant to avoid.
 
 The current AI council is not live AI. It is a static prompt runbook embedded in
 `ForgeContestStory`. In production it should be either hidden as a developer runbook or replaced by
@@ -102,6 +104,12 @@ module the episode-beat and unresolved-debt shapes its contract expects.
 schema could preserve a familiar doorway and mutation rule, but it did not force a repeatable serial
 engine or concrete scene proof. Those are now schema-backed fields so weak provider output cannot
 pass as abstract genre commentary.
+
+`council-review` is now the first live qualitative assessment path for the full Story Studio chain.
+It is a real module rather than the old static AI council runbook: six required roles must each
+return a finding, evidence, revision move, risk if ignored, and confidence. The provider-backed path
+still runs through `LiveModuleExecutor`, so malformed, incomplete, generic, or role-duplicated
+council output fails closed.
 
 ## Decision Log
 
@@ -167,6 +175,10 @@ more truthful than adding fallback prose.
 artifacts in the production runner. Rationale: trope mutation can technically run from a seed, but
 for the production Story Studio path it should mutate the actual accepted live premise rather than
 give generic genre advice disconnected from the prior artifacts.
+
+2026-05-29 12:10 - `council-review` runs only after the four prior live artifacts are accepted.
+Rationale: the MVP council is meant to judge the production Story Studio chain; if earlier artifacts
+fail, a locked council state is more honest than a broad critique of missing work.
 
 ## Outcomes & Retrospective
 
@@ -525,6 +537,11 @@ src/lib/application/runLiveStoryStudio.spec.ts
 src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts
 src/lib/story-modules/modules/cliffhanger-futures/module.spec.ts
 src/lib/core/domain/proseQuality.spec.ts` returned 5 files and 37 tests passing.
+- 2026-05-29 12:10 - Focused council review tests passed:
+  `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
+src/lib/application/runLiveStoryStudio.spec.ts
+src/lib/story-modules/modules/council-review/module.spec.ts
+src/lib/story-modules/registry.spec.ts` returned 4 files and 35 tests passing.
 
 ## Interfaces and Dependencies
 

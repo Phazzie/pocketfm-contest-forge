@@ -3,6 +3,7 @@
 import { bingeDebtLedgerModule } from '$lib/story-modules/modules/binge-debt-ledger/module';
 import { cliffhangerFuturesModule } from '$lib/story-modules/modules/cliffhanger-futures/module';
 import { coldOpenLabModule } from '$lib/story-modules/modules/cold-open-lab/module';
+import { councilReviewModule } from '$lib/story-modules/modules/council-review/module';
 import { tropeMutationLabModule } from '$lib/story-modules/modules/trope-mutation-lab/module';
 import type { AnyStoryModule, StoryModuleId } from '$lib/story-modules/types';
 
@@ -48,7 +49,8 @@ export const defaultStoryModules: AnyStoryModule[] = [
 	coldOpenLabModule,
 	cliffhangerFuturesModule,
 	bingeDebtLedgerModule,
-	tropeMutationLabModule
+	tropeMutationLabModule,
+	councilReviewModule
 ];
 
 export const defaultStoryModuleRegistry = createStoryModuleRegistry(defaultStoryModules);

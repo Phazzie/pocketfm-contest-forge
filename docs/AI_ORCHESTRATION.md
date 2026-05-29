@@ -72,7 +72,8 @@ Current registered modules:
 - `cliffhanger-futures` can run through `LiveModuleExecutor` after accepted cold-open and
   binge-debt output;
 - `trope-mutation-lab` can run through `LiveModuleExecutor` after accepted cold-open, binge-debt,
-  and cliffhanger output.
+  and cliffhanger output;
+- `council-review` can run through `LiveModuleExecutor` after the prior live artifacts are accepted.
 
 Direct module `run()` methods still fail closed in live mode unless explicitly designed otherwise.
 Provider-backed production execution should go through `LiveModuleExecutor`.
@@ -90,10 +91,11 @@ no fixture/demo output is substituted.
 
 Current live execution is intentionally enabled only for modules with configured quality gates. The
 default live quality gate registry supports `cold-open-lab`, `binge-debt-ledger`, and
-`cliffhanger-futures`, and `trope-mutation-lab`; other modules must add a module-specific review
-builder and acceptance rules before they can run through the provider boundary. Provider JSON repair
-handles raw JSON, markdown-fenced JSON, or the first balanced JSON object, but still records this as
-one repair attempt and fails closed if schema validation does not pass.
+`cliffhanger-futures`, `trope-mutation-lab`, and `council-review`; future modules must add a
+module-specific review builder and acceptance rules before they can run through the provider
+boundary. Provider JSON repair handles raw JSON, markdown-fenced JSON, or the first balanced JSON
+object, but still records this as one repair attempt and fails closed if schema validation does not
+pass.
 
 The executor also enforces a configurable provider timeout. A hung provider returns a failed module
 result with `PROVIDER_TIMEOUT`; it must not leave the request pending indefinitely or backfill with
@@ -149,9 +151,8 @@ shape. `src/lib/application/runLiveStoryStudio.ts` is the first application use 
 contract: it runs the existing live `cold-open-lab` provider path, maps the module result into a
 production artifact, runs `binge-debt-ledger` from accepted cold-open variants, runs
 `cliffhanger-futures` from accepted cold-open and debt-ledger output, runs `trope-mutation-lab` from
-accepted cold-open, debt-ledger, and cliffhanger output, and returns a locked `council-review`
-artifact until that module has its own schema, prompt, fixture, provenance, and quality gate. Locked
-artifacts are explicit product states, not fallback prose.
+accepted cold-open, debt-ledger, and cliffhanger output, and runs `council-review` after those live
+artifacts are accepted. Locked artifacts are explicit product states, not fallback prose.
 
 ## Provider Tracking
 

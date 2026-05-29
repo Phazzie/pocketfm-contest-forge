@@ -13,6 +13,10 @@ import {
 	tropeMutationLabInputSchema,
 	tropeMutationLabOutputSchema
 } from '$lib/story-modules/modules/trope-mutation-lab/contract';
+import {
+	councilReviewOutputSchema,
+	councilRoleIds
+} from '$lib/story-modules/modules/council-review/contract';
 
 export type LiveModuleQualityGate = (review: ProseQualityReview) => ProseQualityResult;
 
@@ -60,6 +64,13 @@ export const defaultLiveModuleQualityGateRegistry: LiveModuleQualityGateRegistry
 			buildReview: buildTropeMutationLabQualityReview,
 			qualityGate: evaluateTropeMutationLabQuality
 		}
+	],
+	[
+		'council-review',
+		{
+			buildReview: buildCouncilReviewQualityReview,
+			qualityGate: evaluateCouncilReviewQuality
+		}
 	]
 ]);
 
@@ -99,6 +110,16 @@ function buildCliffhangerFuturesQualityReview(
 }
 
 function buildTropeMutationLabQualityReview(
+	request: LiveModuleQualityReviewRequest
+): ProseQualityReview {
+	return {
+		moduleId: request.moduleId,
+		input: request.input,
+		output: request.output
+	};
+}
+
+function buildCouncilReviewQualityReview(
 	request: LiveModuleQualityReviewRequest
 ): ProseQualityReview {
 	return {
@@ -392,6 +413,123 @@ function evaluateTropeMutationLabQuality(review: ProseQualityReview): ProseQuali
 	};
 }
 
+function evaluateCouncilReviewQuality(review: ProseQualityReview): ProseQualityResult {
+	const parsed = councilReviewOutputSchema.safeParse(review.output);
+	const issues: ProseQualityIssue[] = [];
+
+	if (!parsed.success) {
+		return evaluateModuleProseQuality(review);
+	}
+
+	const output = parsed.data;
+	const roleIds = output.roles.map((role) => role.role);
+	const uniqueRoleIds = new Set(roleIds);
+	const proseText = [
+		...output.roles.flatMap((role) => [
+			role.finding,
+			role.evidence,
+			role.revisionMove,
+			role.riskIfIgnored
+		]),
+		output.consensus,
+		output.topRevisionMove
+	].join(' ');
+	const lowerProse = proseText.toLowerCase();
+
+	if (uniqueRoleIds.size !== councilRoleIds.length) {
+		issues.push({
+			code: 'NO_PROSE_CANDIDATES',
+			field: `${review.moduleId}.roles`,
+			message: 'Council Review must return each required council role exactly once.',
+			severity: 'error'
+		});
+	}
+
+	for (const requiredRole of councilRoleIds) {
+		if (!uniqueRoleIds.has(requiredRole)) {
+			issues.push({
+				code: 'NO_PROSE_CANDIDATES',
+				field: `${review.moduleId}.roles`,
+				message: `Council Review is missing required role ${requiredRole}.`,
+				severity: 'error'
+			});
+		}
+	}
+
+	const genericPhrase = GENERIC_WRITING_ADVICE_PHRASES.find((phrase) =>
+		lowerProse.includes(phrase)
+	);
+
+	if (genericPhrase) {
+		issues.push({
+			code: 'GENERIC_WRITING_ADVICE',
+			field: `${review.moduleId}.output`,
+			message: `Council Review used generic writing-advice phrasing: "${genericPhrase}".`,
+			severity: 'error'
+		});
+	}
+
+	for (const role of output.roles) {
+		const lowerFinding = role.finding.toLowerCase();
+		const lowerEvidence = role.evidence.toLowerCase();
+		const lowerRevisionMove = role.revisionMove.toLowerCase();
+		const lowerRisk = role.riskIfIgnored.toLowerCase();
+
+		if (!hasAny(`${lowerFinding} ${lowerEvidence}`, councilEvidenceTerms)) {
+			issues.push({
+				code: 'ABSTRACT_SCENE_PRESSURE',
+				field: `${review.moduleId}.roles.${role.role}.evidence`,
+				message: `Council role ${role.role} must cite concrete story, contest, or artifact evidence.`,
+				severity: 'error'
+			});
+		}
+
+		if (
+			!hasAny(lowerRevisionMove, revisionMoveTerms) ||
+			!hasAny(lowerRevisionMove, debtCostTerms)
+		) {
+			issues.push({
+				code: 'MISSING_SPECIFIC_COST',
+				field: `${review.moduleId}.roles.${role.role}.revisionMove`,
+				message: `Council role ${role.role} needs a playable revision move with a concrete cost.`,
+				severity: 'error'
+			});
+		}
+
+		if (!hasAny(lowerRisk, councilRiskTerms)) {
+			issues.push({
+				code: 'MISSING_SPECIFIC_COST',
+				field: `${review.moduleId}.roles.${role.role}.riskIfIgnored`,
+				message: `Council role ${role.role} must name a specific risk if ignored.`,
+				severity: 'error'
+			});
+		}
+
+		if (role.confidence <= 0 || role.confidence >= 1) {
+			issues.push({
+				code: 'ABSTRACT_SCENE_PRESSURE',
+				field: `${review.moduleId}.roles.${role.role}.confidence`,
+				message: `Council role ${role.role} confidence must not be a fake absolute.`,
+				severity: 'error'
+			});
+		}
+	}
+
+	if (!hasAny(output.topRevisionMove.toLowerCase(), revisionMoveTerms)) {
+		issues.push({
+			code: 'MISSING_SPECIFIC_COST',
+			field: `${review.moduleId}.topRevisionMove`,
+			message: 'Council Review must name one concrete top revision move.',
+			severity: 'error'
+		});
+	}
+
+	return {
+		accepted: issues.every((issue) => issue.severity !== 'error'),
+		issues
+	};
+}
+
 function readStringProperty(value: unknown, key: string): string | undefined {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
 	const property = (value as Record<string, unknown>)[key];
@@ -509,6 +647,62 @@ const contestStopWords = new Set([
 	'that',
 	'with'
 ]);
+
+const councilEvidenceTerms = [
+	'accusation',
+	'artifact',
+	'brief',
+	'contest',
+	'court',
+	'crown',
+	'debt',
+	'episode',
+	'evidence',
+	'lover',
+	'mara',
+	'name',
+	'proof',
+	'public',
+	'throne',
+	'witness'
+];
+
+const revisionMoveTerms = [
+	'add',
+	'cut',
+	'delay',
+	'force',
+	'keep',
+	'lock',
+	'make',
+	'mark',
+	'move',
+	'pay',
+	'put',
+	'rebuild',
+	'reveal',
+	'rewrite',
+	'save',
+	'track'
+];
+
+const councilRiskTerms = [
+	'abstract',
+	'confuse',
+	'drain',
+	'drop',
+	'fake',
+	'frustrat',
+	'generic',
+	'lose',
+	'loses',
+	'miss',
+	'rejection',
+	'risk',
+	'stale',
+	'trust',
+	'weak'
+];
 
 const cliffhangerPayoffTerms = [
 	'because',

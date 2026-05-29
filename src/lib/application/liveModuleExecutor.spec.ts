@@ -31,6 +31,16 @@ import {
 	buildCliffhangerFuturesProviderInput,
 	buildCliffhangerFuturesProviderMessages
 } from '$lib/story-modules/modules/cliffhanger-futures/prompts';
+import type { CouncilReviewOutput } from '$lib/story-modules/modules/council-review/contract';
+import {
+	councilReviewFixtureInput,
+	councilReviewFixtureOutput
+} from '$lib/story-modules/modules/council-review/fixtures';
+import { councilReviewModule } from '$lib/story-modules/modules/council-review/module';
+import {
+	buildCouncilReviewProviderInput,
+	buildCouncilReviewProviderMessages
+} from '$lib/story-modules/modules/council-review/prompts';
 import type { TropeMutationLabOutput } from '$lib/story-modules/modules/trope-mutation-lab/contract';
 import {
 	tropeMutationLabFixtureInput,
@@ -261,6 +271,33 @@ describe('live module executor', () => {
 		);
 	});
 
+	it('accepts valid council-review JSON through its module-specific quality gate', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(councilReviewFixtureOutput))
+		);
+		const result = await runCouncilReview(provider);
+
+		expect(result.status).toBe('success');
+		expect(result.output?.roles).toHaveLength(6);
+		expect(result.output?.greenlight).toBe('ready-for-demo');
+		expect(result.provenance.promptVersion).toBe('council-review.v1');
+		expect(provider.requests[0]?.moduleId).toBe('council-review');
+	});
+
+	it('rejects weak council-review JSON without fixture fallback', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(weakCouncilReviewOutput))
+		);
+		const result = await runCouncilReview(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+		expect(result.issues.map((issue) => issue.message).join(' ')).toContain(
+			'each required council role'
+		);
+	});
+
 	it('uses the configured module-specific review builder before quality evaluation', async () => {
 		let reviewedProtagonistName: string | undefined;
 		const provider = new FakeStoryModuleProvider(
@@ -385,6 +422,20 @@ async function runTropeMutationLab(
 		context,
 		messages: buildTropeMutationLabProviderMessages(tropeMutationLabFixtureInput),
 		providerInput: buildTropeMutationLabProviderInput(tropeMutationLabFixtureInput)
+	});
+}
+
+async function runCouncilReview(provider: StoryModuleProvider, config?: LiveModuleExecutorConfig) {
+	const context = {
+		...createModuleFixtureContext(councilReviewFixtureInput),
+		mode: 'live' as const
+	};
+
+	return new LiveModuleExecutor(provider, config).run({
+		module: councilReviewModule,
+		context,
+		messages: buildCouncilReviewProviderMessages(councilReviewFixtureInput),
+		providerInput: buildCouncilReviewProviderInput(councilReviewFixtureInput)
 	});
 }
 
@@ -588,4 +639,60 @@ const weakTropeMutationLabOutput: TropeMutationLabOutput = {
 		'Every episode should keep readers engaged.'
 	],
 	rejectionNote: 'This might not have a strong hook.'
+};
+
+const weakCouncilReviewOutput: CouncilReviewOutput = {
+	roles: [
+		{
+			role: 'listener-saboteur',
+			finding: 'This should be more exciting for the audience.',
+			evidence: 'The story needs a stronger hook and emotional stakes.',
+			revisionMove: 'Raise the stakes in the scene.',
+			riskIfIgnored: 'It may be too weak for the audience.',
+			confidence: 1
+		},
+		{
+			role: 'listener-saboteur',
+			finding: 'This repeats the same role instead of using the full council.',
+			evidence: 'The advice is generic and not tied to an artifact.',
+			revisionMove: 'Make it compelling with more energy.',
+			riskIfIgnored: 'Readers may not engage with the story.',
+			confidence: 0
+		},
+		{
+			role: 'listener-saboteur',
+			finding: 'This still avoids a specific role finding.',
+			evidence: 'The evidence does not cite court, crown, name, debt, or witness proof.',
+			revisionMove: 'Build suspense before the reveal.',
+			riskIfIgnored: 'The output remains generic.',
+			confidence: 0.5
+		},
+		{
+			role: 'listener-saboteur',
+			finding: 'This gives shallow notes instead of a playable revision.',
+			evidence: 'There is no concrete accepted artifact citation.',
+			revisionMove: 'Improve the scene with clearer tension.',
+			riskIfIgnored: 'It could fail without more specificity.',
+			confidence: 0.4
+		},
+		{
+			role: 'listener-saboteur',
+			finding: 'This finding lacks a useful council distinction.',
+			evidence: 'It says nothing about the contest or story evidence.',
+			revisionMove: 'Strengthen the hook for the audience.',
+			riskIfIgnored: 'The audience may be bored.',
+			confidence: 0.3
+		},
+		{
+			role: 'listener-saboteur',
+			finding: 'This finding is not grounded enough to use.',
+			evidence: 'It does not cite specific artifact details.',
+			revisionMove: 'Add tension before the next moment.',
+			riskIfIgnored: 'It may not work for the audience.',
+			confidence: 0.2
+		}
+	],
+	consensus: 'The concept needs stronger craft work and better hooks.',
+	topRevisionMove: 'Raise the stakes in the scene.',
+	greenlight: 'revise-before-submitting'
 };

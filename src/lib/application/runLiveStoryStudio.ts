@@ -4,6 +4,7 @@ import { LiveModuleExecutor } from '$lib/application/liveModuleExecutor';
 import { toStoryModulePlanResult } from '$lib/application/storyModulePlanResult';
 import {
 	buildBingeDebtLedgerInputFromColdOpen,
+	buildCouncilReviewInput,
 	buildCliffhangerFuturesInputFromLiveArtifacts,
 	buildColdOpenLabInput,
 	buildTropeMutationLabInputFromLiveArtifacts
@@ -46,6 +47,10 @@ import {
 	buildTropeMutationLabProviderInput,
 	buildTropeMutationLabProviderMessages
 } from '$lib/story-modules/modules/trope-mutation-lab/prompts';
+import {
+	buildCouncilReviewProviderInput,
+	buildCouncilReviewProviderMessages
+} from '$lib/story-modules/modules/council-review/prompts';
 
 export interface RunLiveStoryStudioConfig {
 	now?: () => Date;
@@ -149,13 +154,21 @@ export class RunLiveStoryStudio {
 			brief,
 			requestedAt
 		});
-		const artifacts: StoryStudioArtifact[] = [
+		const priorArtifacts: StoryStudioArtifact[] = [
 			coldOpenArtifact,
 			bingeDebtArtifact,
 			cliffhangerArtifact,
-			tropeArtifact,
-			lockedCouncilArtifact()
+			tropeArtifact
 		];
+		const councilArtifact = await this.runCouncilReview({
+			request,
+			executor,
+			priorArtifacts,
+			storyState,
+			brief,
+			requestedAt
+		});
+		const artifacts: StoryStudioArtifact[] = [...priorArtifacts, councilArtifact];
 
 		return {
 			success: true,
@@ -385,17 +398,63 @@ export class RunLiveStoryStudio {
 			toStoryModulePlanResult(module, result)
 		);
 	}
+
+	private async runCouncilReview(input: {
+		request: ForgeRequest;
+		executor: LiveModuleExecutor;
+		priorArtifacts: StoryStudioArtifact[];
+		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
+		brief: ContestBrief;
+		requestedAt: Date;
+	}): Promise<StoryStudioArtifact> {
+		if (!input.priorArtifacts.every((artifact) => artifact.status === 'accepted')) {
+			return lockedCouncilArtifact({
+				label: 'Accept prior artifacts first',
+				reason:
+					'Council Review needs accepted live story artifacts before it can critique the full production Story Studio chain.',
+				retryable: true
+			});
+		}
+
+		const module = this.moduleRegistry.find('council-review');
+
+		if (!module) {
+			return lockedCouncilArtifact({
+				label: 'Register council-review',
+				reason: 'Council Review is not registered in the story module registry.',
+				retryable: false
+			});
+		}
+
+		const councilInput = buildCouncilReviewInput(input.request, input.brief, input.priorArtifacts);
+		const result = await input.executor.run({
+			module,
+			context: {
+				input: councilInput,
+				storyState: input.storyState,
+				contestBrief: input.brief,
+				mode: 'live',
+				now: input.requestedAt
+			},
+			messages: buildCouncilReviewProviderMessages(councilInput),
+			providerInput: buildCouncilReviewProviderInput(councilInput)
+		});
+
+		return storyModuleResultToStudioArtifact(
+			'council-review',
+			toStoryModulePlanResult(module, result)
+		);
+	}
 }
 
-function lockedCouncilArtifact(): StoryStudioArtifact {
+function lockedCouncilArtifact(nextAction: {
+	label: string;
+	reason: string;
+	retryable: boolean;
+}): StoryStudioArtifact {
 	return createLockedStoryStudioArtifact({
 		id: 'council-review',
 		summary: 'Council review is locked until live story artifacts exist for critique.',
-		nextAction: {
-			label: 'Implement council-review module',
-			reason:
-				'Council review must be a registered story module with its own schema, prompt, fixture, provenance, and quality gate.',
-			retryable: false
-		}
+		nextAction
 	});
 }

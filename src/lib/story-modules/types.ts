@@ -10,6 +10,7 @@ export type StoryModuleId =
 	| 'cliffhanger-futures'
 	| 'binge-debt-ledger'
 	| 'trope-mutation-lab'
+	| 'council-review'
 	| (string & {});
 
 export type StoryModuleCategory =
@@ -31,7 +32,10 @@ export type QualityGateId =
 	| 'no-debt-without-payoff'
 	| 'stale-debt-escalates'
 	| 'familiar-doorway'
-	| 'strange-room';
+	| 'strange-room'
+	| 'role-evidence'
+	| 'revision-move'
+	| 'contest-fit';
 
 export type ModuleExecutionMode = 'fixture' | 'demo' | 'live';
 export type ModuleResultStatus = 'success' | 'partial' | 'failed';
