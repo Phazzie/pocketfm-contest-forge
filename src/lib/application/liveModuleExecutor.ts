@@ -42,10 +42,27 @@ export interface LiveModuleExecutorRequest<TInput, TOutput> {
 
 export type LiveModuleQualityGate = (review: ProseQualityReview) => ProseQualityResult;
 
+export interface LiveModuleQualityReviewRequest {
+	moduleId: string;
+	input: unknown;
+	output: unknown;
+}
+
+export type LiveModuleQualityReviewBuilder = (
+	request: LiveModuleQualityReviewRequest
+) => ProseQualityReview;
+
+export interface LiveModuleQualityGateConfig {
+	buildReview: LiveModuleQualityReviewBuilder;
+	qualityGate?: LiveModuleQualityGate;
+}
+
+export type LiveModuleQualityGateRegistry = ReadonlyMap<string, LiveModuleQualityGateConfig>;
+
 export interface LiveModuleExecutorConfig {
 	qualityGate?: LiveModuleQualityGate;
+	qualityGateRegistry?: LiveModuleQualityGateRegistry;
 	providerTimeoutMs?: number;
-	supportedModuleIds?: ReadonlySet<string>;
 }
 
 interface ProviderDiagnostics {
@@ -70,24 +87,25 @@ type JsonParseResult =
 
 export class LiveModuleExecutor {
 	private readonly providerTimeoutMs: number;
-	private readonly qualityGate: LiveModuleQualityGate;
-	private readonly supportedModuleIds: ReadonlySet<string>;
+	private readonly defaultQualityGate: LiveModuleQualityGate;
+	private readonly qualityGateRegistry: LiveModuleQualityGateRegistry;
 
 	constructor(
 		private readonly provider: StoryModuleProvider,
 		config: LiveModuleExecutorConfig = {}
 	) {
 		this.providerTimeoutMs = Math.max(1, config.providerTimeoutMs ?? 120_000);
-		this.qualityGate = config.qualityGate ?? evaluateModuleProseQuality;
-		this.supportedModuleIds = config.supportedModuleIds ?? new Set(['cold-open-lab']);
+		this.defaultQualityGate = config.qualityGate ?? evaluateModuleProseQuality;
+		this.qualityGateRegistry = config.qualityGateRegistry ?? defaultLiveModuleQualityGateRegistry;
 	}
 
 	async run<TInput, TOutput>(
 		request: LiveModuleExecutorRequest<TInput, TOutput>
 	): Promise<ModuleRunResult<TOutput>> {
 		const startedAt = performance.now();
+		const qualityGateConfig = this.qualityGateRegistry.get(request.module.id);
 
-		if (!this.supportedModuleIds.has(request.module.id)) {
+		if (!qualityGateConfig) {
 			return this.failed(request, startedAt, [
 				{
 					code: 'INVALID_INPUT',
@@ -273,18 +291,12 @@ export class LiveModuleExecutor {
 			);
 		}
 
-		const protagonistName = readStringProperty(parsedInput.data, 'protagonistName');
-		const qualityReview: ProseQualityReview = protagonistName
-			? {
-					moduleId: request.module.id,
-					protagonistName,
-					output: parsedOutput.data
-				}
-			: {
-					moduleId: request.module.id,
-					output: parsedOutput.data
-				};
-		const qualityResult = this.qualityGate(qualityReview);
+		const qualityReview = qualityGateConfig.buildReview({
+			moduleId: request.module.id,
+			input: parsedInput.data,
+			output: parsedOutput.data
+		});
+		const qualityResult = (qualityGateConfig.qualityGate ?? this.defaultQualityGate)(qualityReview);
 		const qualityIssues = qualityResult.issues.map(moduleIssueFromProseIssue);
 
 		if (!qualityResult.accepted) {
@@ -335,6 +347,32 @@ export class LiveModuleExecutor {
 			]
 		};
 	}
+}
+
+export const defaultLiveModuleQualityGateRegistry: LiveModuleQualityGateRegistry = new Map([
+	[
+		'cold-open-lab',
+		{
+			buildReview: buildColdOpenQualityReview
+		}
+	]
+]);
+
+function buildColdOpenQualityReview(request: LiveModuleQualityReviewRequest): ProseQualityReview {
+	const protagonistName = readStringProperty(request.input, 'protagonistName');
+
+	if (protagonistName) {
+		return {
+			moduleId: request.moduleId,
+			protagonistName,
+			output: request.output
+		};
+	}
+
+	return {
+		moduleId: request.moduleId,
+		output: request.output
+	};
 }
 
 class ProviderTimeoutError extends Error {

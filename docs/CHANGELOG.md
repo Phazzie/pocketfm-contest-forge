@@ -45,6 +45,8 @@
   states for modules that do not yet have live quality gates.
 - Extracted shared story-module input builders so fixture/demo forge output and live Story Studio
   execution use the same module input assembly.
+- Replaced the live executor's broad supported-module set with a module-specific quality-gate
+  registry that still only enables `cold-open-lab` by default.
 - Added the story module provider port, fake-provider live executor, JSON repair, schema validation,
   provider provenance, and deterministic prose quality gate for `cold-open-lab`.
 - Hardened the live module boundary after review so markdown-fenced JSON can repair once, fixture
