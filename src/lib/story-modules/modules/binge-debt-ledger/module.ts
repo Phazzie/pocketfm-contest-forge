@@ -18,7 +18,7 @@ export const bingeDebtLedgerModule: StoryModule<BingeDebtLedgerInput, BingeDebtL
 	category: 'continuity',
 	inputSchema: bingeDebtLedgerInputSchema,
 	outputSchema: bingeDebtLedgerOutputSchema,
-	requiredState: ['episodeHistory', 'debts.open', 'secrets'],
+	requiredState: ['protagonist', 'desireTaboo', 'secrets'],
 	promptVersion: BINGE_DEBT_LEDGER_PROMPT_VERSION,
 	qualityGates: ['no-debt-without-payoff', 'stale-debt-escalates'],
 	async run(context) {

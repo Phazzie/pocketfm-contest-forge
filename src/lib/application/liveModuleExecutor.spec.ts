@@ -7,6 +7,13 @@ import type {
 	StoryModuleProviderRequest,
 	StoryModuleProviderResult
 } from '$lib/core/ports/storyModuleProviderPort';
+import type { BingeDebtLedgerOutput } from '$lib/story-modules/modules/binge-debt-ledger/contract';
+import { bingeDebtLedgerFixtureInput } from '$lib/story-modules/modules/binge-debt-ledger/fixtures';
+import { bingeDebtLedgerModule } from '$lib/story-modules/modules/binge-debt-ledger/module';
+import {
+	buildBingeDebtLedgerProviderInput,
+	buildBingeDebtLedgerProviderMessages
+} from '$lib/story-modules/modules/binge-debt-ledger/prompts';
 import type { ColdOpenLabOutput } from '$lib/story-modules/modules/cold-open-lab/contract';
 import { coldOpenLabFixtureInput } from '$lib/story-modules/modules/cold-open-lab/fixtures';
 import { coldOpenLabModule } from '$lib/story-modules/modules/cold-open-lab/module';
@@ -159,6 +166,30 @@ describe('live module executor', () => {
 		expect(result.trackingEvents.map((event) => event.type)).toContain('quality-rejection');
 	});
 
+	it('accepts valid binge-debt ledger JSON through its module-specific quality gate', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(validBingeDebtLedgerOutput))
+		);
+		const result = await runBingeDebtLedger(provider);
+
+		expect(result.status).toBe('success');
+		expect(result.output?.openedDebts.map((debt) => debt.id)).toContain('debt-stolen-name');
+		expect(result.provenance.promptVersion).toBe('binge-debt-ledger.v1');
+		expect(provider.requests[0]?.moduleId).toBe('binge-debt-ledger');
+	});
+
+	it('rejects weak binge-debt ledger JSON without fixture fallback', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(weakBingeDebtLedgerOutput))
+		);
+		const result = await runBingeDebtLedger(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+		expect(result.issues.map((issue) => issue.message).join(' ')).toContain('payoff window');
+	});
+
 	it('uses the configured module-specific review builder before quality evaluation', async () => {
 		let reviewedProtagonistName: string | undefined;
 		const provider = new FakeStoryModuleProvider(
@@ -228,6 +259,23 @@ async function runColdOpen(provider: StoryModuleProvider, config?: LiveModuleExe
 		context,
 		messages: buildColdOpenLabProviderMessages(coldOpenLabFixtureInput),
 		providerInput: buildColdOpenLabProviderInput(coldOpenLabFixtureInput)
+	});
+}
+
+async function runBingeDebtLedger(
+	provider: StoryModuleProvider,
+	config?: LiveModuleExecutorConfig
+) {
+	const context = {
+		...createModuleFixtureContext(bingeDebtLedgerFixtureInput),
+		mode: 'live' as const
+	};
+
+	return new LiveModuleExecutor(provider, config).run({
+		module: bingeDebtLedgerModule,
+		context,
+		messages: buildBingeDebtLedgerProviderMessages(bingeDebtLedgerFixtureInput),
+		providerInput: buildBingeDebtLedgerProviderInput(bingeDebtLedgerFixtureInput)
 	});
 }
 
@@ -322,4 +370,64 @@ const weakColdOpenOutput: ColdOpenLabOutput = {
 	winnerId: 'advice-one',
 	winnerRationale: 'This has a strong hook and clear genre promise.',
 	rejectionNotes: ['Avoid weak setup.']
+};
+
+const validBingeDebtLedgerOutput: BingeDebtLedgerOutput = {
+	openedDebts: [
+		{
+			id: 'debt-stolen-name',
+			label: 'Who profits when Mara Vey public name is stolen in court?',
+			status: 'open',
+			openedInEpisode: 1,
+			payoffWindow: 'episodes 2-4',
+			interest: 'Each public ceremony lets the false heir spend Mara name as a crown debt.'
+		},
+		{
+			id: 'debt-lover-proof',
+			label: 'Why does the lover protect Mara Vey after betraying her name?',
+			status: 'open',
+			openedInEpisode: 1,
+			payoffWindow: 'episodes 2-3',
+			interest: 'The relationship cost rises whenever the lover hides proof from the court.'
+		}
+	],
+	paidDebts: [],
+	staleDebts: [],
+	payoffWindows: [
+		{
+			debtId: 'debt-stolen-name',
+			episodeRange: 'episodes 2-4',
+			requiredEscalation: 'A court witness uses Mara stolen name to collect a public price.'
+		},
+		{
+			debtId: 'debt-lover-proof',
+			episodeRange: 'episodes 2-3',
+			requiredEscalation: 'The lover must protect Mara in public while denying trust in private.'
+		}
+	],
+	auditorNote:
+		'The ledger works because every open debt carries a public status wound or relationship price.'
+};
+
+const weakBingeDebtLedgerOutput: BingeDebtLedgerOutput = {
+	openedDebts: [
+		{
+			id: 'debt-generic',
+			label: 'What happens next?',
+			status: 'open',
+			openedInEpisode: 1,
+			payoffWindow: 'episodes 2-4',
+			interest: 'This creates a strong hook and emotional stakes.'
+		}
+	],
+	paidDebts: [],
+	staleDebts: [],
+	payoffWindows: [
+		{
+			debtId: 'different-debt',
+			episodeRange: 'episodes 2-4',
+			requiredEscalation: 'Build suspense before the reveal.'
+		}
+	],
+	auditorNote: 'Raise the stakes for the audience.'
 };

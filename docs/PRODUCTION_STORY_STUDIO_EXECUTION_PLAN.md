@@ -39,7 +39,9 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [ ] Move deterministic forge output out of the production route.
 - [x] 2026-05-29 11:22 - Replaced the executor's broad supported-module set with a
       module-specific live quality gate registry. Only `cold-open-lab` is registered by default.
-- [ ] Make `binge-debt-ledger` live-capable.
+- [x] 2026-05-29 11:32 - Made `binge-debt-ledger` live-capable through provider prompt builders,
+      a module-specific quality gate, and `RunLiveStoryStudio` execution after accepted cold-open
+      output.
 - [ ] Make `cliffhanger-futures` live-capable.
 - [ ] Make `trope-mutation-lab` live-capable.
 - [ ] Add live council review as a story module.
@@ -78,6 +80,11 @@ fixture-demo forge plan.
 
 Live-module enablement now depends on `LiveModuleQualityGateRegistry`, not a broad set of supported
 IDs. Each module must provide its own review builder before the executor will call the provider.
+
+`binge-debt-ledger` can run live after `cold-open-lab` succeeds. Because the old deterministic pilot
+cannot be used in production, its live input is built from accepted cold-open variants, seed story
+state, and existing secrets. Direct `module.run(..., live)` still fails closed; provider-backed live
+execution goes through `LiveModuleExecutor`.
 
 ## Decision Log
 
@@ -129,6 +136,10 @@ live-capable, and it avoids faking incomplete modules with deterministic prose.
 2026-05-29 11:22 - Live execution is enabled by a module-specific quality gate registry instead of
 `supportedModuleIds`. Rationale: the executor must know how to build a prose review for each
 module's output before it can safely call the provider.
+
+2026-05-29 11:32 - `binge-debt-ledger` uses accepted cold-open variants as first-episode beats for
+the live path. Rationale: using the deterministic pilot would preserve the demo scaffold in the
+production chain; accepted live cold-open variants are the first honest story artifact available.
 
 ## Outcomes & Retrospective
 
@@ -471,6 +482,11 @@ src/lib/application/forgeContestStory.spec.ts` returned 4 files and 19 tests pas
 - 2026-05-29 11:22 - Focused executor tests passed after the quality-gate registry refactor:
   `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
 src/lib/application/runLiveStoryStudio.spec.ts` returned 2 files and 20 tests passing.
+- 2026-05-29 11:32 - Focused binge-debt tests passed:
+  `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
+src/lib/application/runLiveStoryStudio.spec.ts
+src/lib/story-modules/modules/binge-debt-ledger/module.spec.ts` returned 3 files and 24 tests
+  passing.
 
 ## Interfaces and Dependencies
 

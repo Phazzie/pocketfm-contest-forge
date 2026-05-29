@@ -67,6 +67,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Done   | Review found live access quota loopholes.                     | Failed access-code attempts are rate-limited, paid-call quota is consumed after request validation, and stale live output clears when inputs edit.  | Keep access and quota checks separate in future auth work.                                              |
 | Open   | Prose quality gate is deterministic and intentionally crude.  | It blocks obvious generic/prose-invalid output, but it is not a substitute for model critique or taste.                                             | Add AI council critique after Grok adapter exists; keep deterministic gate as minimum acceptance floor. |
 | Done   | Production contract needed a truthful locked-artifact state.  | `StoryStudioRun` now represents accepted, failed, and locked artifacts separately, so incomplete modules do not need fixture prose in production.   | Render this contract in the production route once UI work begins.                                       |
+| Done   | Binge Debt Ledger needed a real live path.                    | The module now has provider prompt/input builders, a quality gate registry entry, and live execution from accepted cold-open output.                | Continue with `cliffhanger-futures` before changing the UI.                                             |
 
 ## Tracking Targets
 
