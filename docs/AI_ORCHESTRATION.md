@@ -204,6 +204,11 @@ readiness scores as production advice. The default request lives in
 `src/lib/application/defaultForgeRequest.ts` so the route can populate controls without importing
 the deterministic fixture forge.
 
+Submitted-request equality for live result display lives in
+`src/lib/application/forgeRequestEquality.ts`, not in the Svelte route. The route can decide whether
+the latest action response still matches visible controls without owning story/request comparison
+rules.
+
 Contest freshness is contract-backed rather than a UI string. Curated briefs carry `retrievedAt`,
 `staleAfter`, and a source warning; `StoryStudioRun.contestFreshness` derives `fresh`, `stale`, or
 `unknown` from those dates and keeps stale warnings visible while still allowing a live run.

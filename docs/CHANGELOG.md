@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Moved Story Studio submitted-request equality helpers out of the Svelte route and into the
+  application layer with unit coverage.
+- Improved Story Studio validation issue rendering so global errors do not show an empty field
+  prefix.
+- Extracted the Story Studio route into typed Svelte components for the seed rail, live run panel,
+  module boards, quality gates, provenance, and locked artifact states.
 - Hardened `council-review.v2` after production smoke reached the final module and rejected role
   advice without concrete revision costs or specific risk-if-ignored cues.
 - Hardened `trope-mutation-lab.v4` after production smoke rejected a mutation rule without a
