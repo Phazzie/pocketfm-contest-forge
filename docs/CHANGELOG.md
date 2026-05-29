@@ -7,6 +7,8 @@
 - Hardened `trope-mutation-lab.v3` after production smoke rejected a mutation rule without a
   visible inversion/subversion cue; live mutation rules must now include an explicit rule-change
   word.
+- Expanded the `trope-mutation-lab.v3` prompt regression so it asserts the full accepted
+  rule-change cue list, including `twist` and `while`.
 - Hardened `cliffhanger-futures.v2` after production smoke rejected payoff warnings that described
   volatility without naming audience frustration; live warnings must now start with an audience-risk
   prefix.
