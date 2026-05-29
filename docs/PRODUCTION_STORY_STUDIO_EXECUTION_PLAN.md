@@ -83,6 +83,10 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       closed on a mutation rule without an explicit inversion/subversion cue. Hardened
       `trope-mutation-lab.v4` so mutation rules must include a visible rule-change cue word and
       weak conjunctions are not accepted as cues.
+- [x] 2026-05-29 19:17 UTC - Production live smoke reached the final `council-review` module and
+      failed closed on abstract revision moves and vague risks. Hardened `council-review.v2` so
+      every role revision move needs a concrete story cost and every risk starts with
+      `Specific risk:` or `Audience risk:`.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -199,6 +203,12 @@ The follow-up smoke then reached `trope-mutation-lab` again and failed on the mu
 The existing gate was correct to reject a rule that did not visibly invert, subvert, or change the
 trope. The prompt needs to force the model to include the same cue words the gate already accepts,
 or production will keep failing on semantically vague rules.
+
+The next smoke reached `council-review`, which means cold open, debt ledger, cliffhanger futures,
+and trope mutation had all produced accepted live artifacts in one deployed run. The final failure
+was still useful: several roles gave critique-shaped advice without concrete story costs or a
+specific risk if ignored. The council prompt needs the same explicit cue discipline as the prior
+modules, and the quality gate should enforce those cues instead of trusting natural-language intent.
 
 ## Decision Log
 
@@ -325,6 +335,11 @@ strategic.
 2026-05-29 18:02 UTC - Keep the `trope-mutation-lab` mutation-rule quality gate strict and harden
 the prompt around explicit cue words. Rationale: a mutation needs a visible rule change, not just a
 newly phrased premise or emotional benefit.
+
+2026-05-29 19:17 UTC - Keep the `council-review` quality gate strict and harden the prompt around
+cost-bearing revision moves and explicit risk prefixes. Rationale: final council output is only
+useful if every role gives a playable change with a story cost and names the consequence of ignoring
+it; generic critique would recreate the static-council technical debt this module replaced.
 
 ## Outcomes & Retrospective
 
@@ -800,6 +815,18 @@ src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 file
   regression. Focused trope tests returned 2 files and 31 tests passing. `npm run guard:no-live-fallback`
   and `npm run guard:docs-drift` passed. Full `npm run verify` passed with 21 test files and 114
   tests, zero Svelte errors/warnings, and a production build.
+- 2026-05-29 19:14 UTC - Post-merge production smoke run
+  `https://github.com/Phazzie/pocketfm-contest-forge/actions/runs/26656945033` failed closed after
+  3 minutes 29 seconds: `council-review` failed with `PROSE_QUALITY_REJECTION` because several role
+  `revisionMove` fields lacked concrete costs and two `riskIfIgnored` fields lacked specific risk
+  cues. No fixture output was accepted. Follow-up branch `fix/council-review-risk-cues` hardens the
+  provider prompt and gate around cost-bearing revision moves and explicit risk prefixes.
+- 2026-05-29 19:22 UTC - Council review hardening verification passed. Focused tests for
+  `liveModuleExecutor`, `runLiveStoryStudio`, and `council-review` returned 3 files and 46 tests
+  passing. `npm run guard:no-live-fallback` passed for 5 registered modules and
+  `npm run guard:docs-drift` passed for 6 changed app code/script files. Full `npm run verify`
+  passed with 21 test files and 117 tests, zero Svelte errors/warnings, no approved explicit
+  `any` lines, and a production build.
 
 ## Interfaces and Dependencies
 

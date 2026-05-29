@@ -21,6 +21,8 @@ Mode rules:
 
 Quality gates:
 
-- role evidence
-- revision move
-- contest fit
+- every required role appears exactly once
+- role evidence cites a concrete story, contest, or artifact detail
+- each revision move includes a playable action and a concrete story cost
+- each risk if ignored starts with `Specific risk:` or `Audience risk:` and names a concrete failure mode
+- contest fit stays grounded in accepted artifacts instead of generic writing advice
