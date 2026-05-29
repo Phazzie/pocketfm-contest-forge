@@ -107,9 +107,13 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       judge rail shows gate counts, quality messages, provider trail, and recent tracking.
 - [x] 2026-05-29 20:49 UTC - Verified the Story Studio UI polish locally. Required guards, full
       verify, UI smoke, and manual desktop/mobile overflow checks passed with no browser errors.
+- [x] 2026-05-29 20:55 UTC - Merged the UI polish through PR #24 and verified the production
+      deploy. Main CI passed for `b804046`, Vercel production deployment
+      `dpl_CeAJSsu1vs4g32LXv6XAwW9tjrJQ` is ready, deploy readiness passed, and the production
+      browser smoke passed against `https://pocketfm-contest-forge.vercel.app`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
-- [ ] Validate locally, deploy, and prove production smoke.
+- [ ] Restore xAI credits/spend and prove a full accepted production live AI smoke run.
 
 ## Surprises & Discoveries
 
@@ -892,6 +896,13 @@ src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 file
   and `.svelte-kit/screenshots/story-studio-mobile.png`; desktop 1440x1100 and mobile 390x900 both
   had `bodyScrollWidth` equal to viewport width, zero console/page errors, and no overflowing
   elements.
+- 2026-05-29 20:55 UTC - PR #24 merged by rebase at `b804046`. Main CI
+  `https://github.com/Phazzie/pocketfm-contest-forge/actions/runs/26661642035` passed in 1 minute
+  4 seconds. Vercel production deployment `dpl_CeAJSsu1vs4g32LXv6XAwW9tjrJQ` is ready for commit
+  `b804046f726fbe81b67da46a0c60408aea343d25`. `npm run deploy:readiness -- --url
+https://pocketfm-contest-forge.vercel.app` passed, and production browser smoke passed with body
+  length 3259, 27 controls, Story Studio action visible, and no browser errors. Full live AI smoke
+  was not retried because xAI credits/monthly spend remains the external blocker.
 
 ## Interfaces and Dependencies
 
