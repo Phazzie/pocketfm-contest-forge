@@ -60,88 +60,95 @@
 		</div>
 	</div>
 
-	<label>
-		<span>Contest lane</span>
-		<select name="contestId" bind:value={selectedGenre}>
-			{#each briefs as brief (brief.id)}
-				<option value={brief.id}>{brief.contestName}</option>
+	<details class="control-section" open>
+		<summary>Story</summary>
+		<label>
+			<span>Working title</span>
+			<input name="workingTitle" bind:value={workingTitle} />
+		</label>
+
+		<label>
+			<span>Protagonist</span>
+			<input name="protagonistName" bind:value={protagonistName} />
+		</label>
+
+		<label>
+			<span>Logline</span>
+			<textarea name="logline" rows="5" bind:value={logline}></textarea>
+		</label>
+
+		<label>
+			<span>Emotional promise</span>
+			<textarea name="emotionalPromise" rows="2" bind:value={emotionalPromise}></textarea>
+		</label>
+
+		<label>
+			<span>Taboo lever</span>
+			<textarea name="tabooLever" rows="2" bind:value={tabooLever}></textarea>
+		</label>
+	</details>
+
+	<details class="control-section" open>
+		<summary>Contest</summary>
+		<label>
+			<span>Contest lane</span>
+			<select name="contestId" bind:value={selectedGenre}>
+				{#each briefs as brief (brief.id)}
+					<option value={brief.id}>{brief.contestName}</option>
+				{/each}
+			</select>
+		</label>
+
+		<label class="risk-control">
+			<span>Risk tolerance {Math.round(riskLevel)}</span>
+			<input name="riskTolerance" type="range" min="1" max="5" step="1" bind:value={riskLevel} />
+		</label>
+
+		<div class="mechanism-picker">
+			<p>Mechanisms</p>
+			{#each mechanisms as mechanism (mechanism.id)}
+				<button
+					type="button"
+					class:active={selectedMechanisms.includes(mechanism.id)}
+					aria-pressed={selectedMechanisms.includes(mechanism.id)}
+					onclick={() => toggleMechanism(mechanism.id)}
+				>
+					<span>{mechanism.shortLabel}</span>
+				</button>
 			{/each}
-		</select>
-	</label>
-
-	<label>
-		<span>Working title</span>
-		<input name="workingTitle" bind:value={workingTitle} />
-	</label>
-
-	<label>
-		<span>Protagonist</span>
-		<input name="protagonistName" bind:value={protagonistName} />
-	</label>
-
-	<label>
-		<span>Logline</span>
-		<textarea name="logline" rows="5" bind:value={logline}></textarea>
-	</label>
-
-	<label>
-		<span>Emotional promise</span>
-		<textarea name="emotionalPromise" rows="2" bind:value={emotionalPromise}></textarea>
-	</label>
-
-	<label>
-		<span>Taboo lever</span>
-		<textarea name="tabooLever" rows="2" bind:value={tabooLever}></textarea>
-	</label>
-
-	<div class="number-grid">
-		<label>
-			<span>Episodes</span>
-			<input
-				name="episodeCountTarget"
-				type="number"
-				min="30"
-				max="300"
-				bind:value={episodeCountTarget}
-			/>
-		</label>
-
-		<label>
-			<span>Minutes</span>
-			<input
-				name="minutesPerEpisode"
-				type="number"
-				min="5"
-				max="15"
-				bind:value={minutesPerEpisode}
-			/>
-		</label>
-	</div>
-
-	<label class="risk-control">
-		<span>Risk tolerance {Math.round(riskLevel)}</span>
-		<input name="riskTolerance" type="range" min="1" max="5" step="1" bind:value={riskLevel} />
-	</label>
-
-	<div class="mechanism-picker">
-		<p>Mechanisms</p>
-		{#each mechanisms as mechanism (mechanism.id)}
-			<button
-				type="button"
-				class:active={selectedMechanisms.includes(mechanism.id)}
-				aria-pressed={selectedMechanisms.includes(mechanism.id)}
-				onclick={() => toggleMechanism(mechanism.id)}
-			>
-				<span>{mechanism.shortLabel}</span>
-			</button>
-		{/each}
-	</div>
+		</div>
+	</details>
 
 	{#each selectedMechanisms as mechanism (mechanism)}
 		<input type="hidden" name="selectedMechanisms" value={mechanism} />
 	{/each}
 
-	<div class="live-action">
+	<details class="control-section" open>
+		<summary>Runtime</summary>
+		<div class="number-grid">
+			<label>
+				<span>Episodes</span>
+				<input
+					name="episodeCountTarget"
+					type="number"
+					min="30"
+					max="300"
+					bind:value={episodeCountTarget}
+				/>
+			</label>
+
+			<label>
+				<span>Minutes</span>
+				<input
+					name="minutesPerEpisode"
+					type="number"
+					min="5"
+					max="15"
+					bind:value={minutesPerEpisode}
+				/>
+			</label>
+		</div>
+
 		<label>
 			<span>Live access code</span>
 			<input
@@ -152,10 +159,12 @@
 			/>
 		</label>
 
-		<button type="submit" disabled={isLiveSubmitting}>
-			{isLiveSubmitting ? 'Running Story Studio' : 'Run Story Studio'}
-		</button>
-	</div>
+		<div class="live-action">
+			<button type="submit" disabled={isLiveSubmitting}>
+				{isLiveSubmitting ? 'Running Story Studio' : 'Run Story Studio'}
+			</button>
+		</div>
+	</details>
 </form>
 
 <style>
@@ -174,7 +183,7 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		margin-bottom: 24px;
+		margin-bottom: 22px;
 	}
 
 	.mark {
@@ -201,11 +210,33 @@
 		line-height: 1.05;
 	}
 
+	.control-section {
+		padding: 16px 0 18px;
+		border-top: 1px solid rgba(255, 255, 255, 0.14);
+	}
+
+	.control-section:last-of-type {
+		border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+	}
+
+	summary {
+		min-height: 32px;
+		color: #fff8ea;
+		cursor: pointer;
+		font-size: 13px;
+		font-weight: 900;
+		text-transform: uppercase;
+	}
+
+	summary::marker {
+		color: #d89b27;
+	}
+
 	label,
 	.mechanism-picker {
 		display: grid;
 		gap: 8px;
-		margin: 14px 0;
+		margin: 12px 0;
 	}
 
 	label span,
@@ -229,6 +260,15 @@
 		padding: 10px 11px;
 	}
 
+	input:focus-visible,
+	select:focus-visible,
+	textarea:focus-visible,
+	button:focus-visible,
+	summary:focus-visible {
+		outline: 3px solid rgba(216, 155, 39, 0.7);
+		outline-offset: 2px;
+	}
+
 	select option {
 		color: #191713;
 	}
@@ -249,8 +289,7 @@
 		padding-left: 0;
 	}
 
-	.number-grid,
-	.live-action {
+	.number-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 12px;
@@ -287,17 +326,12 @@
 	}
 
 	.live-action {
-		align-items: end;
-		margin-top: 18px;
-		padding-top: 18px;
-		border-top: 1px solid rgba(255, 255, 255, 0.16);
-	}
-
-	.live-action label {
-		margin: 0;
+		display: grid;
+		margin-top: 12px;
 	}
 
 	.live-action button {
+		width: 100%;
 		background: #e9543f;
 		border-color: #e9543f;
 	}

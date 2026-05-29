@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Polished the Story Studio production UI toward `DESIGN.md` with collapsible seed sections, a
+  dark story thesis band, artifact runway, expanded status counts, sticky judge rail, provider
+  trail, and recent tracking feed.
 - Moved Story Studio submitted-request equality helpers out of the Svelte route and into the
   application layer with unit coverage.
 - Improved Story Studio validation issue rendering so global errors do not show an empty field
