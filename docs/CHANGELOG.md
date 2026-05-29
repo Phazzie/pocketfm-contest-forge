@@ -62,6 +62,10 @@
   messages.
 - Hardened deployed live AI smoke requests to send the target deployment as the `Origin` header and
   validate request inputs before posting to the SvelteKit action.
+- Hardened live AI smoke entrypoint detection so runtimes without `import.meta.main` do not
+  silently skip the deployed smoke and malformed entrypoint metadata fails closed.
+- Extended the live AI smoke request timeout beyond the provider timeout so deployed smoke captures
+  real provider success/failure instead of aborting early.
 - Fixed review findings for explicit protagonist handling, unique mechanism validation, and root lockfile hygiene.
 - Updated the Svelte workbench to render module run results and fixture-demo provenance.
 - Added autonomous work spec for the Story Module Platform.

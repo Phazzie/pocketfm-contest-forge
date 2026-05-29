@@ -1,7 +1,9 @@
 // Created: 2026-05-29 03:18
 
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { liveActionRequest, liveActionUrl } from './live-ai-smoke.mjs';
+import { isMainModule, liveActionRequest, liveActionUrl } from './live-ai-smoke.mjs';
 
 describe('live AI smoke script', () => {
 	it('builds the SvelteKit action URL from the deployed target', () => {
@@ -32,6 +34,27 @@ describe('live AI smoke script', () => {
 	it('rejects empty access codes before building the request body', () => {
 		expect(() => liveActionRequest('https://pocketfm-contest-forge.vercel.app', ' ')).toThrow(
 			'Access code must be a non-empty string.'
+		);
+	});
+
+	it('detects direct script execution on runtimes without import.meta.main', () => {
+		const scriptPath = path.resolve('scripts/live-ai-smoke.mjs');
+		const meta = { url: pathToFileURL(scriptPath).href };
+
+		expect(isMainModule(meta, ['node', 'scripts/live-ai-smoke.mjs'])).toBe(true);
+	});
+
+	it('uses import.meta.main when the runtime provides it', () => {
+		const scriptPath = path.resolve('scripts/live-ai-smoke.mjs');
+		const meta = { main: true, url: pathToFileURL(scriptPath).href };
+
+		expect(isMainModule(meta, ['node'])).toBe(true);
+	});
+
+	it('returns false for malformed entrypoint metadata', () => {
+		expect(isMainModule(null, null)).toBe(false);
+		expect(isMainModule({ url: 'not-a-file-url' }, ['node', 'scripts/live-ai-smoke.mjs'])).toBe(
+			false
 		);
 	});
 });

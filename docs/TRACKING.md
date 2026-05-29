@@ -45,6 +45,8 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Done    | Live Grok adapter is not wired into UI/server action.  | Added server-only `runLiveColdOpen` action, preserves submitted input, and renders live module success/failure separately.                  |
 | Done    | GitHub Actions warns about Node 20 action runtime.     | Updated pinned `actions/checkout` and `actions/setup-node` refs to Node 24-compatible releases.                                             |
 | Done    | Deployed live smoke was blocked by SvelteKit CSRF.     | Smoke script now sends the target deployment as `Origin` while keeping the action header and access-code gate.                              |
+| Done    | Local live smoke could false-pass on Node 23.          | Smoke script now falls back to resolved entrypoint detection when `import.meta.main` is unavailable.                                        |
+| Done    | Live smoke client timed out before provider timeout.   | Smoke script timeout now exceeds the xAI provider timeout so failures come from the live action path.                                       |
 
 ## Architecture Review Notes
 
