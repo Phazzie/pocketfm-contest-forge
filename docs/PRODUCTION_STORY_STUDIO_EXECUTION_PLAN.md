@@ -31,6 +31,8 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       `docs/TRACKING.md`, `src/routes/+page.svelte`, `src/routes/+page.server.ts`,
       `src/lib/application/forgeContestStory.ts`, `src/lib/application/runLiveColdOpenLab.ts`,
       `src/lib/application/liveModuleExecutor.ts`, and the module registry.
+- [x] 2026-05-29 09:36 - Updated this ExecPlan after repository consolidation. The canonical
+      workspace is now `/Users/hbpheonix/pocketfm`.
 - [ ] Add the production studio contract and product-mode boundary.
 - [ ] Move deterministic forge output out of the production route.
 - [ ] Generalize live module execution with module-specific quality gates.
@@ -64,12 +66,14 @@ The current AI council is not live AI. It is a static prompt runbook embedded in
 `ForgeContestStory`. In production it should be either hidden as a developer runbook or replaced by
 a provider-backed council artifact with schema validation and prose review.
 
+After consolidation, `/Users/hbpheonix/pocketfm` is the canonical local repo. The older nested path
+under `/Users/hbpheonix/fairytaleswithspice` no longer exists as the active app checkout.
+
 ## Decision Log
 
-2026-05-29 08:28 - This plan targets the nested SvelteKit app at
-`/Users/hbpheonix/fairytaleswithspice/pocketfm-contest-forge`, not the older Angular parent app.
-Rationale: the local `AGENTS.md` says to ignore the older Angular app unless explicitly reopened,
-and the demo/live AI work exists in the SvelteKit app.
+2026-05-29 08:28 - This plan targets the standalone SvelteKit app, not the older Angular parent
+app. Rationale: the local `AGENTS.md` says to ignore the older Angular app unless explicitly
+reopened, and the demo/live AI work exists in the SvelteKit app.
 
 2026-05-29 08:28 - Production will use a new story-studio application contract instead of expanding
 `ForgePlan` into a mixed deterministic/live mega-contract. Rationale: `ForgePlan` currently carries
@@ -103,6 +107,10 @@ assessment instead.
 `StoryModuleProvider` port. Rationale: the adapter and deployed smoke path already exist, and
 switching provider interfaces before finishing the demo would add avoidable churn.
 
+2026-05-29 09:36 - Use `/Users/hbpheonix/pocketfm` as the canonical workspace. Rationale: the
+current GitHub-connected repo, local commits, Vercel link, and dependency install were consolidated
+there, and verification passed from that path.
+
 ## Outcomes & Retrospective
 
 Not complete. Fill this in when the production route no longer displays deterministic creative
@@ -111,7 +119,7 @@ tests, production Vercel smoke passes, and stale docs have been updated or marke
 
 ## Context and Orientation
 
-Work in `/Users/hbpheonix/fairytaleswithspice/pocketfm-contest-forge`.
+Work in `/Users/hbpheonix/pocketfm`.
 
 Read these files before editing:
 
@@ -434,6 +442,8 @@ Initial evidence:
   for `https://pocketfm-contest-forge.vercel.app` with `generationMode: live-ai`, provider `xai`,
   model `grok-4.20-multi-agent`, prompt version `cold-open-lab.v2`, status `success`, and four
   accepted variants. This plan extends that single live panel into the full production story studio.
+- 2026-05-29 09:36 - The repo was consolidated to `/Users/hbpheonix/pocketfm`; `npm run verify`
+  passed from the new canonical path.
 
 ## Interfaces and Dependencies
 

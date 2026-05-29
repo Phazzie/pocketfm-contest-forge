@@ -39,6 +39,8 @@
 - Added a self-contained next autonomous execution plan for the first live-AI-capable story module path.
 - Added a production Story Studio ExecPlan for replacing the remaining user-facing fixture/demo
   scaffold with live, fail-closed story artifacts and locked states.
+- Updated execution plan workspace paths after repo consolidation so future work starts from
+  `/Users/hbpheonix/pocketfm`.
 - Added the story module provider port, fake-provider live executor, JSON repair, schema validation,
   provider provenance, and deterministic prose quality gate for `cold-open-lab`.
 - Hardened the live module boundary after review so markdown-fenced JSON can repair once, fixture
