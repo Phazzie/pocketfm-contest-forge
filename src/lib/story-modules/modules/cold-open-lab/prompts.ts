@@ -1,17 +1,18 @@
 // Created: 2026-05-26 13:46
 
 import type { ColdOpenLabInput } from './contract';
+import { GENERIC_WRITING_ADVICE_PHRASES } from '$lib/core/domain/proseQuality';
 import type {
 	SerializableProviderInput,
 	StoryModuleProviderMessage
 } from '$lib/core/ports/storyModuleProviderPort';
 
-export const COLD_OPEN_LAB_PROMPT_VERSION = 'cold-open-lab.v1';
+export const COLD_OPEN_LAB_PROMPT_VERSION = 'cold-open-lab.v2';
 
 export const coldOpenLabPrompt = {
 	system:
-		'Generate 3-5 first-minute openings for a serial audio contest submission. Preserve the genre promise, name concrete stakes, and reject generic atmosphere.',
-	user: 'Given the seed, contest lane, protagonist, emotional promise, and taboo lever, produce cold open variants with acquisition strategy, first-minute question, audio note, rejection risk, winner rationale, and rejection notes.'
+		'You are a serial-audio cold open editor. Return concrete first-minute story choices that can be performed aloud. Never give craft advice, praise, or abstract labels.',
+	user: 'Use the supplied seed to create 3-5 usable cold-open variants. Every value must sound like a story-room note about this exact protagonist, seed-specific object, secret, room, witness, vow, debt, price, or public status wound.'
 };
 
 export function buildColdOpenLabProviderInput(input: ColdOpenLabInput): SerializableProviderInput {
@@ -38,9 +39,15 @@ export function buildColdOpenLabProviderMessages(
 				coldOpenLabPrompt.system,
 				`Prompt version: ${COLD_OPEN_LAB_PROMPT_VERSION}.`,
 				'Return only valid JSON. Do not wrap the JSON in markdown.',
+				'Do not include comments, markdown, bullets outside JSON, or extra prose.',
 				'Use exactly one rejectionRisk value per variant: low, medium, or high.',
-				'Each variant must name the protagonist or another concrete subject, show first-minute scene pressure, and include a visible payoff path for any cliffhanger question.',
-				'Reject generic writing advice. Produce usable story strategy, not encouragement.'
+				'Each variant.text must be one complete sentence, 12-20 words, with no semicolon.',
+				'Each variant.text must name the protagonistName from the JSON Input block; if it is blank, use "the protagonist"; it may also name another concrete subject.',
+				'Each variant.text must show first-minute scene pressure and include a specific cost, debt, status wound, or relationship price.',
+				'Each firstMinuteQuestion must include its payoff path using a concrete clue, proof, cost, price, debt, consequence, or next-episode reveal.',
+				'Every acquisitionStrategy, audioNote, winnerRationale, and rejectionNote must use scene-specific nouns from this seed, not general craft language.',
+				`Never print these generic phrases in any JSON value: ${formatForbiddenGenericPhrases()}.`,
+				'Produce usable story strategy: public action, private betrayal, concrete cost, and an audible image.'
 			].join('\n')
 		},
 		{
@@ -72,4 +79,8 @@ export function buildColdOpenLabProviderMessages(
 			].join('\n')
 		}
 	];
+}
+
+function formatForbiddenGenericPhrases(): string {
+	return GENERIC_WRITING_ADVICE_PHRASES.map((phrase) => `"${phrase}"`).join(', ');
 }

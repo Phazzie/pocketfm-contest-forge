@@ -95,6 +95,14 @@ The executor also enforces a configurable provider timeout. A hung provider retu
 result with `PROVIDER_TIMEOUT`; it must not leave the request pending indefinitely or backfill with
 fixture output.
 
+`cold-open-lab.v2` hardens the provider prompt against known prose-gate failures. It constrains
+spoken variant sentences to 12-20 words, requires concrete first-minute pressure and payoff-path
+language, and mirrors the deterministic gate's generic writing-advice phrase list so live output is
+less likely to fail on abstract craft language such as "emotional stakes." Its prompt builder also
+falls back to "the protagonist" if malformed blank name input reaches message construction, keeping
+provider instructions readable without accepting invalid contracts. User-controlled names remain in
+the JSON input block and are not interpolated into system instructions.
+
 ## xAI Grok Adapter
 
 `src/lib/adapters/ai/xaiStoryModuleProvider.ts` implements `StoryModuleProvider` for the xAI

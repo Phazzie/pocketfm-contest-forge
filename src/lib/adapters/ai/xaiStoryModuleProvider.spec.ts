@@ -237,8 +237,8 @@ describe('xAI story module provider', () => {
 
 const providerRequest: StoryModuleProviderRequest = {
 	moduleId: 'cold-open-lab',
-	moduleVersion: 'cold-open-lab.v1',
-	promptVersion: 'cold-open-lab.prompt.v1',
+	moduleVersion: '1.0.0',
+	promptVersion: 'cold-open-lab.v2',
 	mode: 'live',
 	messages: [
 		{

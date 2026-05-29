@@ -48,10 +48,10 @@ describe('live module executor', () => {
 		expect(result.output?.winnerId).toBe('court-name-theft');
 		expect(result.provenance.provider).toBe('xai');
 		expect(result.provenance.model).toBe('fake-grok-4.2');
-		expect(result.provenance.promptVersion).toBe('cold-open-lab.v1');
+		expect(result.provenance.promptVersion).toBe('cold-open-lab.v2');
 		expect(result.provenance.repairAttempts).toBe(0);
 		expect(result.trackingEvents.map((event) => event.type)).toContain('module-completed');
-		expect(provider.requests[0]?.promptVersion).toBe('cold-open-lab.v1');
+		expect(provider.requests[0]?.promptVersion).toBe('cold-open-lab.v2');
 	});
 
 	it('fails closed when the provider is unavailable', async () => {
