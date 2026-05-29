@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { defaultForgeRequest } from '$lib/application/defaultForgeRequest';
 import { RunLiveStoryStudio } from '$lib/application/runLiveStoryStudio';
+import type { RunLiveStoryStudioConfig } from '$lib/application/runLiveStoryStudio';
 import { InMemoryContestResearchRepository } from '$lib/adapters/research/inMemoryContestResearchRepository';
 import type {
 	StoryModuleProvider,
@@ -232,6 +233,41 @@ describe('run live story studio', () => {
 		expect(provider.requests).toHaveLength(0);
 	});
 
+	it('locks the next artifact before provider execution when request budget is low', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(validColdOpenOutput))
+		);
+		let clockCalls = 0;
+		const result = await runUseCase(provider, defaultForgeRequest, {
+			maxRunDurationMs: 285_000,
+			minimumRemainingMsBeforeProviderCall: 70_000,
+			nowMs: () => {
+				clockCalls += 1;
+				return clockCalls <= 2 ? 0 : 250_000;
+			}
+		});
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.artifacts[0]?.status).toBe('accepted');
+			expect(result.data.artifacts[1]).toMatchObject({
+				id: 'binge-debt-ledger',
+				status: 'locked',
+				nextAction: {
+					label: 'Retry Story Studio',
+					retryable: true
+				}
+			});
+			expect(result.data.artifacts[1]?.summary).toContain('live request budget');
+			expect(result.data.qualitySummary).toMatchObject({
+				accepted: 1,
+				failed: 0,
+				locked: 4
+			});
+		}
+		expect(provider.requests.map((request) => request.moduleId)).toEqual(['cold-open-lab']);
+	});
+
 	it('surfaces binge-debt provider failure as a failed artifact without fixture fallback', async () => {
 		const provider = new FakeStoryModuleProvider([
 			providerSuccess(JSON.stringify(validColdOpenOutput)),
@@ -384,13 +420,14 @@ describe('run live story studio', () => {
 
 async function runUseCase(
 	provider: StoryModuleProvider,
-	request = defaultForgeRequest
+	request = defaultForgeRequest,
+	config: RunLiveStoryStudioConfig = {}
 ): Promise<Awaited<ReturnType<RunLiveStoryStudio['run']>>> {
 	return new RunLiveStoryStudio(
 		new InMemoryContestResearchRepository(),
 		provider,
 		createStoryModuleRegistry(defaultStoryModules),
-		{ now: () => new Date(requestedAt) }
+		{ now: () => new Date(requestedAt), ...config }
 	).run(request);
 }
 

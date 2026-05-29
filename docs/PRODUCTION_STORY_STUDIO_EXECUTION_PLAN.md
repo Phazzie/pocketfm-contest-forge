@@ -67,6 +67,10 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       timeout was too tight for `grok-4.20-multi-agent` cold-open generation. Raised the
       route-level provider/executor budget to 55/56 seconds while keeping the five-module worst case
       under the configured 300-second Vercel duration.
+- [x] 2026-05-29 17:08 UTC - Added a remaining-time guard to `RunLiveStoryStudio` after PR #16
+      review noted that five near-timeout module calls could still risk a platform 504. The runner
+      now locks the next artifact before provider execution when less than 70 seconds remain in its
+      285-second application budget.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -163,6 +167,11 @@ The first post-merge production live smoke failed closed at `cold-open-lab` with
 working, but it also proves the 45-second provider budget was below real Grok latency for the
 production prompt. The follow-up budget remains bounded under the Vercel duration instead of
 removing the timeout.
+
+PR #16 review correctly caught that longer per-module timeouts are not enough by themselves. A
+five-call chain can still approach the platform limit if every module hangs near timeout. The runner
+now checks elapsed time before each provider call and returns a controlled locked artifact instead
+of starting work that is unlikely to finish before Vercel terminates the request.
 
 ## Decision Log
 
@@ -269,6 +278,11 @@ seconds after production smoke timed out the cold-open provider call at 45 secon
 lowering timeout too far made the demo fail before Grok could produce accepted JSON; 55/56 keeps the
 five-module worst case under the configured 300-second Vercel duration while preserving fail-closed
 behavior.
+
+2026-05-29 17:08 UTC - Add a 285-second application budget and 70-second minimum remaining-time
+check before each provider call. Rationale: the route should preserve typed Story Studio state even
+when the full chain runs long; if the remaining budget is too low, locking the next artifact is
+better than risking a Vercel 504 page.
 
 ## Outcomes & Retrospective
 
@@ -680,13 +694,18 @@ src/lib/application/liveModuleExecutor.spec.ts` returned 3 files and 39 tests pa
   overlay, 27 controls, Story Studio action visible, and no browser errors.
 - 2026-05-29 16:58 UTC - Post-merge production smoke run
   `https://github.com/Phazzie/pocketfm-contest-forge/actions/runs/26650590075` failed closed after
-  58 seconds: `cold-open-lab` returned failed with `PROVIDER_TIMEOUT` because the xAI adapter timed
+  58 seconds: `cold-open-lab` failed with `PROVIDER_TIMEOUT` because the xAI adapter timed
   out after 45000ms. No fixture output was accepted. Follow-up branch
   `fix/story-studio-timeout-budget` raises the route budget to 55/56 seconds and requires another
   production smoke attempt.
 - 2026-05-29 17:01 UTC - Timeout-budget follow-up verification passed. `npm run format`,
   `npm run guard:no-live-fallback`, and `npm run guard:docs-drift` passed. Full `npm run verify`
   passed with 21 test files and 107 tests, zero Svelte errors/warnings, and a production build.
+- 2026-05-29 17:09 UTC - Remaining-time guard verification passed. Focused
+  `npm run test -- src/lib/application/runLiveStoryStudio.spec.ts` returned 1 file and 12 tests
+  passing. `npm run guard:no-live-fallback` and `npm run guard:docs-drift` passed. Full
+  `npm run verify` passed with 21 test files and 108 tests, zero Svelte errors/warnings, and a
+  production build.
 
 ## Interfaces and Dependencies
 

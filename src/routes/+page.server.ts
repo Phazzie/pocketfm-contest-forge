@@ -20,6 +20,8 @@ import { defaultStoryModuleRegistry } from '$lib/story-modules/registry';
 
 const LIVE_STORY_STUDIO_PROVIDER_TIMEOUT_MS = 55_000;
 const LIVE_STORY_STUDIO_EXECUTOR_TIMEOUT_MS = 56_000;
+const LIVE_STORY_STUDIO_MAX_RUN_DURATION_MS = 285_000;
+const LIVE_STORY_STUDIO_MIN_REMAINING_MS = 70_000;
 
 export async function load() {
 	const research = new InMemoryContestResearchRepository();
@@ -90,6 +92,8 @@ export const actions: Actions = {
 			provider,
 			defaultStoryModuleRegistry,
 			{
+				maxRunDurationMs: LIVE_STORY_STUDIO_MAX_RUN_DURATION_MS,
+				minimumRemainingMsBeforeProviderCall: LIVE_STORY_STUDIO_MIN_REMAINING_MS,
 				executorConfig: {
 					providerTimeoutMs: LIVE_STORY_STUDIO_EXECUTOR_TIMEOUT_MS
 				}

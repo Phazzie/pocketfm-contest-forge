@@ -49,6 +49,11 @@ mechanisms are selected. Route code therefore uses a 55-second xAI transport tim
 300-second Vercel function duration. If a mechanism is not selected, its module stays locked and the
 provider call is skipped.
 
+`RunLiveStoryStudio` keeps an additional 285-second application budget with a 70-second minimum
+remaining-time check before each provider call. If the chain is already close to the serverless
+limit, the next artifact is returned as locked with retry guidance instead of risking a generic
+Vercel 504 that would lose the typed failure state.
+
 ## Verification
 
 Before merging deployment changes:

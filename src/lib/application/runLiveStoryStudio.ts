@@ -18,6 +18,7 @@ import type {
 import {
 	createContestFreshnessFromBrief,
 	createLockedStoryStudioArtifact,
+	storyStudioArtifactLabels,
 	storyModuleResultToStudioArtifact,
 	summarizeStoryStudioArtifacts,
 	type StoryStudioArtifact,
@@ -55,11 +56,21 @@ import {
 
 export interface RunLiveStoryStudioConfig {
 	now?: () => Date;
+	nowMs?: () => number;
+	maxRunDurationMs?: number;
+	minimumRemainingMsBeforeProviderCall?: number;
 	executorConfig?: LiveModuleExecutorConfig;
+}
+
+interface RunLiveStoryStudioBudget {
+	startedAtMs: number;
+	maxRunDurationMs: number;
+	minimumRemainingMsBeforeProviderCall: number;
 }
 
 export class RunLiveStoryStudio {
 	private readonly now: () => Date;
+	private readonly nowMs: () => number;
 
 	constructor(
 		private readonly research: ContestResearchPort,
@@ -68,6 +79,7 @@ export class RunLiveStoryStudio {
 		private readonly config: RunLiveStoryStudioConfig = {}
 	) {
 		this.now = config.now ?? (() => new Date());
+		this.nowMs = config.nowMs ?? (() => Date.now());
 	}
 
 	async run(request: ForgeRequest): Promise<StoryStudioResponse> {
@@ -98,6 +110,7 @@ export class RunLiveStoryStudio {
 		}
 
 		const requestedAt = this.now();
+		const budget = this.createBudget();
 		const storyState = createStoryStateFromForgeRequest(request, brief, undefined, {
 			generationMode: 'live-ai'
 		});
@@ -107,7 +120,8 @@ export class RunLiveStoryStudio {
 			executor,
 			storyState,
 			brief,
-			requestedAt
+			requestedAt,
+			budget
 		});
 		const bingeDebtArtifact = await this.runBingeDebtLedger({
 			request,
@@ -115,7 +129,8 @@ export class RunLiveStoryStudio {
 			coldOpenArtifact,
 			storyState,
 			brief,
-			requestedAt
+			requestedAt,
+			budget
 		});
 		const cliffhangerArtifact = await this.runCliffhangerFutures({
 			request,
@@ -124,7 +139,8 @@ export class RunLiveStoryStudio {
 			bingeDebtArtifact,
 			storyState,
 			brief,
-			requestedAt
+			requestedAt,
+			budget
 		});
 		const tropeArtifact = await this.runTropeMutationLab({
 			request,
@@ -134,7 +150,8 @@ export class RunLiveStoryStudio {
 			cliffhangerArtifact,
 			storyState,
 			brief,
-			requestedAt
+			requestedAt,
+			budget
 		});
 		const priorArtifacts: StoryStudioArtifact[] = [
 			coldOpenArtifact,
@@ -148,7 +165,8 @@ export class RunLiveStoryStudio {
 			priorArtifacts,
 			storyState,
 			brief,
-			requestedAt
+			requestedAt,
+			budget
 		});
 		const artifacts: StoryStudioArtifact[] = [...priorArtifacts, councilArtifact];
 
@@ -173,6 +191,7 @@ export class RunLiveStoryStudio {
 		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
 		brief: ContestBrief;
 		requestedAt: Date;
+		budget: RunLiveStoryStudioBudget;
 	}): Promise<StoryStudioArtifact> {
 		if (!hasSelectedMechanism(input.request, 'cold-open-split-test')) {
 			return lockedForUnselectedMechanism({
@@ -198,6 +217,10 @@ export class RunLiveStoryStudio {
 					}
 				]
 			};
+		}
+
+		if (!this.hasBudgetForProviderCall(input.budget)) {
+			return lockedForInsufficientRunBudget('cold-open-lab');
 		}
 
 		const coldOpenInput = buildColdOpenLabInput(input.request, input.brief);
@@ -227,6 +250,7 @@ export class RunLiveStoryStudio {
 		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
 		brief: ContestBrief;
 		requestedAt: Date;
+		budget: RunLiveStoryStudioBudget;
 	}): Promise<StoryStudioArtifact> {
 		if (!hasSelectedMechanism(input.request, 'binge-debt-ledger')) {
 			return lockedForUnselectedMechanism({
@@ -264,6 +288,10 @@ export class RunLiveStoryStudio {
 			});
 		}
 
+		if (!this.hasBudgetForProviderCall(input.budget)) {
+			return lockedForInsufficientRunBudget('binge-debt-ledger');
+		}
+
 		const ledgerInput = buildBingeDebtLedgerInputFromColdOpen(
 			input.storyState,
 			parsedColdOpen.data
@@ -295,6 +323,7 @@ export class RunLiveStoryStudio {
 		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
 		brief: ContestBrief;
 		requestedAt: Date;
+		budget: RunLiveStoryStudioBudget;
 	}): Promise<StoryStudioArtifact> {
 		if (!hasSelectedMechanism(input.request, 'cliffhanger-futures')) {
 			return lockedForUnselectedMechanism({
@@ -349,6 +378,10 @@ export class RunLiveStoryStudio {
 			});
 		}
 
+		if (!this.hasBudgetForProviderCall(input.budget)) {
+			return lockedForInsufficientRunBudget('cliffhanger-futures');
+		}
+
 		const cliffhangerInput = buildCliffhangerFuturesInputFromLiveArtifacts(
 			input.request,
 			input.brief,
@@ -383,6 +416,7 @@ export class RunLiveStoryStudio {
 		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
 		brief: ContestBrief;
 		requestedAt: Date;
+		budget: RunLiveStoryStudioBudget;
 	}): Promise<StoryStudioArtifact> {
 		if (!hasSelectedMechanism(input.request, 'trope-mutation-lab')) {
 			return lockedForUnselectedMechanism({
@@ -434,6 +468,10 @@ export class RunLiveStoryStudio {
 			});
 		}
 
+		if (!this.hasBudgetForProviderCall(input.budget)) {
+			return lockedForInsufficientRunBudget('trope-mutation-lab');
+		}
+
 		const tropeInput = buildTropeMutationLabInputFromLiveArtifacts(
 			input.request,
 			input.brief,
@@ -467,6 +505,7 @@ export class RunLiveStoryStudio {
 		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
 		brief: ContestBrief;
 		requestedAt: Date;
+		budget: RunLiveStoryStudioBudget;
 	}): Promise<StoryStudioArtifact> {
 		if (!input.priorArtifacts.every((artifact) => artifact.status === 'accepted')) {
 			return lockedCouncilArtifact({
@@ -487,6 +526,10 @@ export class RunLiveStoryStudio {
 			});
 		}
 
+		if (!this.hasBudgetForProviderCall(input.budget)) {
+			return lockedForInsufficientRunBudget('council-review');
+		}
+
 		const councilInput = buildCouncilReviewInput(input.request, input.brief, input.priorArtifacts);
 		const result = await input.executor.run({
 			module,
@@ -505,6 +548,23 @@ export class RunLiveStoryStudio {
 			'council-review',
 			toStoryModulePlanResult(module, result)
 		);
+	}
+
+	private createBudget(): RunLiveStoryStudioBudget {
+		return {
+			startedAtMs: this.nowMs(),
+			maxRunDurationMs: Math.max(1, this.config.maxRunDurationMs ?? 285_000),
+			minimumRemainingMsBeforeProviderCall: Math.max(
+				1,
+				this.config.minimumRemainingMsBeforeProviderCall ?? 70_000
+			)
+		};
+	}
+
+	private hasBudgetForProviderCall(budget: RunLiveStoryStudioBudget): boolean {
+		const elapsedMs = Math.max(0, this.nowMs() - budget.startedAtMs);
+		const remainingMs = budget.maxRunDurationMs - elapsedMs;
+		return remainingMs >= budget.minimumRemainingMsBeforeProviderCall;
 	}
 }
 
@@ -535,6 +595,19 @@ function lockedForUnselectedMechanism(input: {
 		nextAction: {
 			label: input.label,
 			reason: input.reason,
+			retryable: true
+		}
+	});
+}
+
+function lockedForInsufficientRunBudget(id: StoryStudioArtifactId): StoryStudioArtifact {
+	return createLockedStoryStudioArtifact({
+		id,
+		summary: `${storyStudioArtifactLabels[id]} is locked because the live request budget is nearly exhausted.`,
+		nextAction: {
+			label: 'Retry Story Studio',
+			reason:
+				'Story Studio stopped before starting this provider call so Vercel can return a controlled locked state instead of a platform timeout.',
 			retryable: true
 		}
 	});
