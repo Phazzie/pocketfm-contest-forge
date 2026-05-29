@@ -304,6 +304,10 @@ describe('live module executor', () => {
 
 		expect(promptText).toContain(`Prompt version: ${TROPE_MUTATION_LAB_PROMPT_VERSION}.`);
 		expect(promptText).toContain(
+			'The mutationRule must include at least one explicit rule-change cue word'
+		);
+		expect(promptText).toContain('but, except, instead, invert, only, reverse, rule, subvert');
+		expect(promptText).toContain(
 			'Every episodePressure item must start with "Every episode", "Each episode", or "Whenever".'
 		);
 		expect(promptText).toContain(
@@ -314,7 +318,27 @@ describe('live module executor', () => {
 		expect(promptText).toContain('Every episode victory costs the protagonist public status');
 	});
 
-	it('rejects trope-mutation episode pressure that carries cost but omits the v2 repeat cue', async () => {
+	it('rejects trope-mutation rules that omit an explicit inversion or rule-change cue', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(
+				JSON.stringify({
+					...tropeMutationLabFixtureOutput,
+					mutationRule:
+						'the crown recognizes the person who can make public belief cruel and costly'
+				} satisfies TropeMutationLabOutput)
+			)
+		);
+		const result = await runTropeMutationLab(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+		expect(result.issues.map((issue) => issue.message).join(' ')).toContain(
+			'specific inversion, subversion, or rule change'
+		);
+	});
+
+	it('rejects trope-mutation episode pressure that carries cost but omits the repeat cue', async () => {
 		const provider = new FakeStoryModuleProvider(
 			providerSuccess(
 				JSON.stringify({

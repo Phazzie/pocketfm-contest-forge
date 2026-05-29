@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Hardened `trope-mutation-lab.v3` after production smoke rejected a mutation rule without a
+  visible inversion/subversion cue; live mutation rules must now include an explicit rule-change
+  word.
 - Hardened `cliffhanger-futures.v2` after production smoke rejected payoff warnings that described
   volatility without naming audience frustration; live warnings must now start with an audience-risk
   prefix.

@@ -109,12 +109,13 @@ falls back to "the protagonist" if malformed blank name input reaches message co
 provider instructions readable without accepting invalid contracts. User-controlled names remain in
 the JSON input block and are not interpolated into system instructions.
 
-`trope-mutation-lab.v2` hardens the provider prompt after production Story Studio smoke reached the
-module and failed closed on `PROSE_QUALITY_REJECTION`. Each live `episodePressure` item must now
-start with a repeatable cue (`Every episode`, `Each episode`, or `Whenever`) and include a concrete
-cost word such as betrayal, debt, family, lover, public, relationship, reputation, secret, status,
-or trust. The live quality gate mirrors that prefix rule so the prompt and acceptance criteria stay
-aligned instead of weakening the gate.
+`trope-mutation-lab.v3` hardens the provider prompt after production Story Studio smoke reached the
+module and failed closed on multiple `PROSE_QUALITY_REJECTION` cases. Each live `mutationRule` must
+include a visible rule-change cue such as but, except, instead, invert, only, reverse, rule, subvert,
+twist, or while. Each live `episodePressure` item must start with a repeatable cue (`Every episode`,
+`Each episode`, or `Whenever`) and include a concrete cost word such as betrayal, debt, family,
+lover, public, relationship, reputation, secret, status, or trust. The live quality gate mirrors
+those rules so the prompt and acceptance criteria stay aligned instead of weakening the gate.
 
 `cliffhanger-futures.v2` hardens payoff warning instructions after production Story Studio smoke
 rejected candidate warnings that described volatility without naming audience frustration. Each live
