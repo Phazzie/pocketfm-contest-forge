@@ -2,6 +2,12 @@
 
 import type { ContestBrief } from '$lib/core/contracts/contestForgeContract';
 
+const retrievedAt = '2026-05-29T16:00:00.000Z';
+const staleAfter = '2026-06-05T16:00:00.000Z';
+
+const officialRulesWarning =
+	'Curated brief was refreshed from public sources; verify the current official rules before submitting.';
+
 export const contestBriefs: ContestBrief[] = [
 	{
 		id: 'medieval-fantasy',
@@ -37,7 +43,14 @@ export const contestBriefs: ContestBrief[] = [
 					'Pocket FM positions fantasy, romance, thriller, horror, and drama as core audio library categories.',
 				confidence: 'direct'
 			}
-		]
+		],
+		freshness: {
+			source: 'curated',
+			retrievedAt,
+			staleAfter,
+			warning:
+				'Public listing references a January 20, 2026 contest date; verify the active official submission window before submitting.'
+		}
 	},
 	{
 		id: 'werewolf-saga',
@@ -69,7 +82,14 @@ export const contestBriefs: ContestBrief[] = [
 					'Pocket FM actively recruits novice and experienced writers for audio storytelling.',
 				confidence: 'direct'
 			}
-		]
+		],
+		freshness: {
+			source: 'curated',
+			retrievedAt,
+			staleAfter,
+			warning:
+				'Public listing references a November 2, 2025 contest date; treat this as genre research unless a current official contest page is confirmed.'
+		}
 	},
 	{
 		id: 'romantasy',
@@ -97,7 +117,13 @@ export const contestBriefs: ContestBrief[] = [
 					'Pocket FM writing contests are described as high-concept universes with cash prizes up to INR 1 lakh per contest.',
 				confidence: 'reported'
 			}
-		]
+		],
+		freshness: {
+			source: 'curated',
+			retrievedAt,
+			staleAfter,
+			warning: officialRulesWarning
+		}
 	},
 	{
 		id: 'thriller-system',
@@ -121,7 +147,13 @@ export const contestBriefs: ContestBrief[] = [
 					'Pocket FM focuses on hundreds-of-episode audio series matched to listener taste and rapid production.',
 				confidence: 'reported'
 			}
-		]
+		],
+		freshness: {
+			source: 'curated',
+			retrievedAt,
+			staleAfter,
+			warning: officialRulesWarning
+		}
 	},
 	{
 		id: 'dark-academy',
@@ -150,6 +182,12 @@ export const contestBriefs: ContestBrief[] = [
 					'Reported contest examples include named high-concept universes such as Magical Beasts Academy.',
 				confidence: 'reported'
 			}
-		]
+		],
+		freshness: {
+			source: 'curated',
+			retrievedAt,
+			staleAfter,
+			warning: officialRulesWarning
+		}
 	}
 ];

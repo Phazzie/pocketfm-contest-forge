@@ -2,6 +2,7 @@
 
 import type {
 	ContestBrief,
+	ContestBriefFreshnessSource,
 	ContractIssue,
 	StoryModulePlanIssue,
 	StoryModulePlanProvenance,
@@ -28,7 +29,7 @@ export type StoryStudioArtifactStatus =
 	| 'stale';
 
 export type ContestFreshnessStatus = 'fresh' | 'stale' | 'unknown';
-export type ContestFreshnessSource = 'curated' | 'live-research';
+export type ContestFreshnessSource = ContestBriefFreshnessSource;
 
 export type StoryStudioErrorCode =
 	| 'ACCESS_DENIED'
@@ -162,6 +163,40 @@ export function createUnknownContestFreshness(): ContestFreshness {
 		status: 'unknown',
 		warning: 'Contest brief freshness is not tracked yet.'
 	};
+}
+
+export function createContestFreshnessFromBrief(
+	brief: ContestBrief,
+	now = new Date()
+): ContestFreshness {
+	const staleAfter = new Date(brief.freshness.staleAfter);
+	const status =
+		Number.isNaN(staleAfter.getTime()) || Number.isNaN(now.getTime())
+			? 'unknown'
+			: now.getTime() > staleAfter.getTime()
+				? 'stale'
+				: 'fresh';
+	const warning = freshnessWarning(brief, status);
+	const freshness: ContestFreshness = {
+		source: brief.freshness.source,
+		status,
+		retrievedAt: brief.freshness.retrievedAt,
+		staleAfter: brief.freshness.staleAfter
+	};
+
+	if (warning) {
+		freshness.warning = warning;
+	}
+
+	return freshness;
+}
+
+function freshnessWarning(brief: ContestBrief, status: ContestFreshnessStatus) {
+	if (status === 'stale') {
+		return `Contest brief was last refreshed on ${brief.freshness.retrievedAt}; verify current official rules before relying on it.`;
+	}
+
+	return brief.freshness.warning;
 }
 
 export function summarizeStoryStudioArtifacts(

@@ -57,7 +57,9 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [x] 2026-05-29 12:10 - Scaffolded and implemented `council-review` as a registered story module
       with six required council roles, provider prompt builders, a module-specific quality gate,
       and `RunLiveStoryStudio` execution after accepted live artifacts.
-- [ ] Add contest brief freshness metadata and stale-state UI.
+- [x] 2026-05-29 13:10 - Added contest brief freshness metadata and stale-state UI. Curated
+      `ContestBrief` records now include `retrievedAt`, `staleAfter`, and warnings; Story Studio
+      derives source freshness and the route renders those dates.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -125,6 +127,10 @@ system from `DESIGN.md`, but it no longer centers the fixture/demo forge plan.
 The old live AI smoke script was still aimed at `?/runLiveColdOpen`. Route migration requires the
 smoke proof to submit `?/runLiveStudio` and inspect Story Studio artifacts, otherwise deployment
 readiness would be testing a retired path.
+
+Contest freshness belonged in the research/contract layer, not as a route string. The route now
+renders derived `StoryStudioRun.contestFreshness`, while curated source dates live on
+`ContestBrief.freshness`.
 
 ## Decision Log
 
@@ -202,6 +208,10 @@ Rationale: the production route still needs a seed to populate controls, but imp
 2026-05-29 12:35 - The production route replaced numeric readiness meters with artifact status
 counts and council findings. Rationale: the old score was deterministic and over-authoritative;
 accepted/failed/locked live artifacts are more truthful until a calibrated live judge exists.
+
+2026-05-29 13:10 - Curated contest freshness uses a short one-week stale window after the 2026-05-29
+source refresh. Rationale: contest prompts and submission pages are volatile; live generation can
+still run, but writers must see the retrieved/stale dates and official-rules warning.
 
 ## Outcomes & Retrospective
 
@@ -584,6 +594,13 @@ src/lib/story-modules/modules/council-review/module.spec.ts`, and `npm run check
   zero Svelte errors/warnings, and a production build. `npm run verify:ui` passed against
   `http://127.0.0.1:5173/` with no overlay, 27 controls, Story Studio action visible, and no browser
   errors.
+- 2026-05-29 13:15 - Contest freshness checks passed: focused tests for
+  `storyStudioContract`, `contestForgeContract`, `createInitialStoryStudioRun`, and
+  `runLiveStoryStudio` returned 4 files and 22 tests passing. `npm run guard:no-live-fallback`
+  passed for 5 registered modules; `npm run guard:docs-drift` passed for 10 changed app code/script
+  files. Full `npm run verify` passed with 104 tests, zero Svelte errors/warnings, and a production
+  build. `npm run verify:ui` passed against `http://127.0.0.1:5173/` with no overlay, 27 controls,
+  Story Studio action visible, and no browser errors.
 
 ## Interfaces and Dependencies
 

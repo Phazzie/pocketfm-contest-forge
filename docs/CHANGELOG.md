@@ -64,6 +64,8 @@
   rendering and a server-side `runLiveStudio` action backed by `RunLiveStoryStudio`.
 - Updated browser and live AI smoke checks to target the Story Studio UI and `runLiveStudio` action
   instead of the retired cold-open-only route action.
+- Added contest brief freshness metadata with retrieved/stale dates, curated-source warnings, and
+  route/UI rendering for source freshness.
 - Added the story module provider port, fake-provider live executor, JSON repair, schema validation,
   provider provenance, and deterministic prose quality gate for `cold-open-lab`.
 - Hardened the live module boundary after review so markdown-fenced JSON can repair once, fixture
