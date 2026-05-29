@@ -75,7 +75,7 @@ auth/deploy verification, and public-demo abuse controls remain before MVP.
 
 ## Context and Orientation
 
-Work in `/Users/hbpheonix/fairytaleswithspice/pocketfm-contest-forge`.
+Work in `/Users/hbpheonix/pocketfm`.
 
 Read these files before editing:
 
