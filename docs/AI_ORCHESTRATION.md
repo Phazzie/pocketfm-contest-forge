@@ -101,6 +101,12 @@ The executor also enforces a configurable provider timeout. A hung provider retu
 result with `PROVIDER_TIMEOUT`; it must not leave the request pending indefinitely or backfill with
 fixture output.
 
+Provider quota, billing, credit, monthly spend, and provider rate-limit blocks return
+`PROVIDER_QUOTA_EXCEEDED`. This is still a failed artifact, not a fallback path. The UI should show
+the issue and preserve the seed so the writer can retry after credits or spend limits are restored.
+The xAI adapter normalizes common provider delimiter variants such as `rate-limit`, `rate_limit`,
+and `usage_limit` before classifying those errors.
+
 `cold-open-lab.v2` hardens the provider prompt against known prose-gate failures. It constrains
 spoken variant sentences to 12-20 words, requires concrete first-minute pressure and payoff-path
 language, and mirrors the deterministic gate's generic writing-advice phrase list so live output is

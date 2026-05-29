@@ -511,6 +511,8 @@ function mapProviderFailureCode(code: StoryModuleProviderFailureCode): ModuleIss
 	switch (code) {
 		case 'PROVIDER_UNAVAILABLE':
 			return 'PROVIDER_UNAVAILABLE';
+		case 'PROVIDER_QUOTA_EXCEEDED':
+			return 'PROVIDER_QUOTA_EXCEEDED';
 		case 'PROVIDER_TIMEOUT':
 			return 'PROVIDER_TIMEOUT';
 		case 'MALFORMED_JSON':

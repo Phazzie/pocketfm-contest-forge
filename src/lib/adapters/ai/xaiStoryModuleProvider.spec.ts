@@ -153,6 +153,61 @@ describe('xAI story module provider', () => {
 		}
 	});
 
+	it.each([402, 403, 429])(
+		'maps xAI quota or billing HTTP %i responses to quota exceeded',
+		async (status) => {
+			const provider = new XaiStoryModuleProvider({
+				apiKey: 'test-key',
+				fetch: async () =>
+					new Response(
+						JSON.stringify({
+							error: {
+								message: 'Your team has exhausted credits or reached its monthly spending limit.'
+							}
+						}),
+						{ status }
+					),
+				now: fixedNow
+			});
+
+			const result = await provider.generateModuleJson(providerRequest);
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.code).toBe('PROVIDER_QUOTA_EXCEEDED');
+				expect(result.message).toContain('quota or billing limit');
+				expect(result.message).toContain('monthly spend');
+			}
+		}
+	);
+
+	it.each(['rate limit', 'rate-limit', 'rate_limit', 'usage_limit'])(
+		'maps xAI 403 %s responses to quota exceeded',
+		async (providerPhrase) => {
+			const provider = new XaiStoryModuleProvider({
+				apiKey: 'test-key',
+				fetch: async () =>
+					new Response(
+						JSON.stringify({
+							error: {
+								message: `Provider ${providerPhrase} exceeded.`
+							}
+						}),
+						{ status: 403 }
+					),
+				now: fixedNow
+			});
+
+			const result = await provider.generateModuleJson(providerRequest);
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.code).toBe('PROVIDER_QUOTA_EXCEEDED');
+				expect(result.message).toContain('quota or billing limit');
+			}
+		}
+	);
+
 	it('maps non-auth provider HTTP failures to unexpected exception', async () => {
 		const provider = new XaiStoryModuleProvider({
 			apiKey: 'test-key',

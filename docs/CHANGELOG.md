@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Added a provider quota/billing failure code so xAI credit, billing, monthly spend, and provider
+  rate-limit blocks surface as clear fail-closed Story Studio artifact issues, including common
+  `rate-limit`, `rate_limit`, and `usage_limit` provider wording.
 - Polished the Story Studio production UI toward `DESIGN.md` with collapsible seed sections, a
   dark story thesis band, artifact runway, expanded status counts, sticky judge rail, provider
   trail, and recent tracking feed.

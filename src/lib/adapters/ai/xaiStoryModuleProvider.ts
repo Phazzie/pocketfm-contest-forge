@@ -126,13 +126,9 @@ export class XaiStoryModuleProvider implements StoryModuleProvider {
 			const bodyText = await safeResponseText(response);
 
 			if (!response.ok) {
-				return this.failure(
-					response.status === 401 || response.status === 403
-						? 'PROVIDER_UNAVAILABLE'
-						: 'UNEXPECTED_EXCEPTION',
-					`xAI Responses API returned HTTP ${response.status}: ${truncate(bodyText)}`,
-					startedAt
-				);
+				const failure = httpFailure(response.status, bodyText);
+
+				return this.failure(failure.code, failure.message, startedAt);
 			}
 
 			const bodyJson = parseJson(bodyText);
@@ -313,6 +309,76 @@ function normalizeOptionalString(value: string | undefined): string | undefined 
 function truncate(value: string): string {
 	const normalized = value.trim().replace(/\s+/g, ' ');
 	return normalized.length > 300 ? `${normalized.slice(0, 300)}...` : normalized;
+}
+
+function httpFailure(
+	status: number,
+	bodyText: string
+): Pick<StoryModuleProviderFailure, 'code' | 'message'> {
+	const providerMessage = providerMessageSuffix(bodyText);
+
+	if (status === 401) {
+		return {
+			code: 'PROVIDER_UNAVAILABLE',
+			message: `xAI rejected authentication with HTTP 401. Check XAI_API_KEY.${providerMessage}`
+		};
+	}
+
+	if (isQuotaOrBillingFailure(status, bodyText)) {
+		return {
+			code: 'PROVIDER_QUOTA_EXCEEDED',
+			message: `xAI provider quota or billing limit blocked generation with HTTP ${status}. Restore xAI credits, billing, or monthly spend, then retry.${providerMessage}`
+		};
+	}
+
+	if (status === 403) {
+		return {
+			code: 'PROVIDER_UNAVAILABLE',
+			message: `xAI rejected the request with HTTP 403. Check API key permissions and account access.${providerMessage}`
+		};
+	}
+
+	return {
+		code: 'UNEXPECTED_EXCEPTION',
+		message: `xAI Responses API returned HTTP ${status}.${providerMessage}`
+	};
+}
+
+function providerMessageSuffix(bodyText: string): string {
+	const message = truncate(extractProviderErrorMessage(bodyText) ?? bodyText);
+	return message ? ` Provider said: ${message}` : '';
+}
+
+function extractProviderErrorMessage(bodyText: string): string | undefined {
+	const parsed = parseJson(bodyText);
+
+	if (!parsed.success) return undefined;
+
+	return (
+		readStringPath(parsed.value, ['error', 'message']) ?? readStringPath(parsed.value, ['message'])
+	);
+}
+
+function readStringPath(value: unknown, path: string[]): string | undefined {
+	let current = value;
+
+	for (const key of path) {
+		if (!current || typeof current !== 'object') return undefined;
+		current = (current as Record<string, unknown>)[key];
+	}
+
+	return typeof current === 'string' && current.trim().length > 0 ? current : undefined;
+}
+
+function isQuotaOrBillingFailure(status: number, bodyText: string): boolean {
+	if (status === 402 || status === 429) return true;
+	if (status !== 403) return false;
+
+	const normalizedBodyText = bodyText.replace(/[-_]+/g, ' ');
+
+	return /\b(billing|credit|credits|quota|rate limit|spend|spending|usage limit)\b/i.test(
+		normalizedBodyText
+	);
 }
 
 function isAbortError(error: unknown): boolean {
