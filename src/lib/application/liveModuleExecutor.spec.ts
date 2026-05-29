@@ -49,7 +49,8 @@ import {
 import { tropeMutationLabModule } from '$lib/story-modules/modules/trope-mutation-lab/module';
 import {
 	buildTropeMutationLabProviderInput,
-	buildTropeMutationLabProviderMessages
+	buildTropeMutationLabProviderMessages,
+	TROPE_MUTATION_LAB_PROMPT_VERSION
 } from '$lib/story-modules/modules/trope-mutation-lab/prompts';
 import { createModuleFixtureContext } from '$lib/story-modules/testSupport';
 
@@ -253,8 +254,24 @@ describe('live module executor', () => {
 
 		expect(result.status).toBe('success');
 		expect(result.output?.sceneProof).toContain('court trial');
-		expect(result.provenance.promptVersion).toBe('trope-mutation-lab.v1');
+		expect(result.provenance.promptVersion).toBe(TROPE_MUTATION_LAB_PROMPT_VERSION);
 		expect(provider.requests[0]?.moduleId).toBe('trope-mutation-lab');
+	});
+
+	it('instructs trope-mutation provider output to include repeatable cost-bearing episode pressure', () => {
+		const promptText = buildTropeMutationLabProviderMessages(tropeMutationLabFixtureInput)
+			.map((message) => message.content)
+			.join('\n');
+
+		expect(promptText).toContain(`Prompt version: ${TROPE_MUTATION_LAB_PROMPT_VERSION}.`);
+		expect(promptText).toContain(
+			'Every episodePressure item must start with "Every episode", "Each episode", or "Whenever".'
+		);
+		expect(promptText).toContain(
+			'Every episodePressure item must include at least one concrete cost word'
+		);
+		expect(promptText).toContain('betrayal, cost, debt, family, lover, name');
+		expect(promptText).toContain('Every episode victory costs the protagonist public status');
 	});
 
 	it('accepts non-medieval trope scene proof through genre-aware quality terms', async () => {
