@@ -23,7 +23,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Done   | P3       | 55/56-second module timeouts left too little all-timeout overhead before Vercel 504s.       | PR #16 review | Added a 285-second application budget with a 70-second remaining-time guard before each provider call.                |
 | Done   | P3       | Production smoke reached `trope-mutation-lab` but rejected weak episode pressure.           | Live smoke    | Hardened `trope-mutation-lab.v2` so episode pressure must start with a repeat cue and carry concrete recurring cost.  |
 | Done   | P3       | Production smoke rejected `cliffhanger-futures` payoff warnings without audience risk.      | Live smoke    | Hardened `cliffhanger-futures.v2` so payoff warnings must start with an explicit audience-risk prefix.                |
-| Done   | P3       | Production smoke rejected a `trope-mutation-lab` mutation rule without a rule-change cue.   | Live smoke    | Hardened `trope-mutation-lab.v3` so mutation rules must include an explicit inversion/subversion cue word.            |
+| Done   | P3       | Production smoke rejected a `trope-mutation-lab` mutation rule without a rule-change cue.   | Live smoke    | Hardened `trope-mutation-lab.v4` so mutation rules must include an explicit inversion/subversion cue word.            |
 
 ## Product Risks
 
@@ -94,7 +94,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Done   | Timeout guard needed a graceful near-deadline state.             | PR review caught that five near-timeout calls could still leave too little platform overhead.                                                               | `RunLiveStoryStudio` now checks remaining request budget before starting each provider call.            |
 | Done   | Trope Mutation prompt needed to mirror its quality gate.         | Production smoke failed closed because Grok returned `episodePressure` without repeatable cost-bearing pressure.                                            | `trope-mutation-lab.v2` now explicitly requires repeat cues and concrete cost words per pressure item.  |
 | Done   | Cliffhanger warning prompt needed to mirror its quality gate.    | Production smoke failed closed because two `payoffWarning` fields described volatility without audience-frustration risk.                                   | `cliffhanger-futures.v2` now requires and gates explicit audience-risk warning prefixes.                |
-| Done   | Trope Mutation rule prompt needed to mirror its quality gate.    | Production smoke failed closed because a `mutationRule` lacked a visible inversion, subversion, or rule-change cue.                                         | `trope-mutation-lab.v3` now requires explicit rule-change cue words in provider output.                 |
+| Done   | Trope Mutation rule prompt needed to mirror its quality gate.    | Production smoke failed closed because a `mutationRule` lacked a visible inversion, subversion, or rule-change cue.                                         | `trope-mutation-lab.v4` now requires explicit rule-change cue words and rejects weak conjunction cues.  |
 
 ## Tracking Targets
 

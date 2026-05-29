@@ -21,10 +21,11 @@ Quality gates:
 - concrete relationship, public status, secret, trust, name, debt, or price cost
 - scene proof with a playable place/action/cost
 
-`trope-mutation-lab.v3` hardens the provider prompt after production smoke reached this module and
+`trope-mutation-lab.v4` hardens the provider prompt after production smoke reached this module and
 failed closed on weak `episodePressure` and `mutationRule` output. Every live `mutationRule` must
-include a visible rule-change cue such as `only`, `instead`, `subvert`, `twist`, or `while`. Every
-live `episodePressure` item must begin with `Every episode`, `Each episode`, or `Whenever`, and it
-must carry a concrete recurring cost word. The live quality gate enforces the same prefix and
-rule-change expectations. Tone-only advice, escalation language, or suspense-only pressure remains a
-prose-quality rejection.
+include a visible rule-change cue such as `except`, `instead`, `invert`, `mutation`, `only`,
+`reverse`, `rule`, `subvert`, or `twist`; weak conjunctions such as `but` and `while` are not
+accepted cues. Every live `episodePressure` item must begin with `Every episode`, `Each episode`, or
+`Whenever`, and it must carry a concrete recurring cost word. The live quality gate enforces the same
+prefix and rule-change expectations. Tone-only advice, escalation language, or suspense-only
+pressure remains a prose-quality rejection.

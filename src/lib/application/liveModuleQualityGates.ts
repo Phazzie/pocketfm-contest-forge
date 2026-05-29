@@ -607,7 +607,6 @@ const familiarTropeTerms = [
 ];
 
 const mutationTerms = [
-	'but',
 	'except',
 	'instead',
 	'invert',
@@ -619,8 +618,7 @@ const mutationTerms = [
 	'rule',
 	'subvert',
 	'subverts',
-	'twist',
-	'while'
+	'twist'
 ];
 
 const serialEngineTerms = [

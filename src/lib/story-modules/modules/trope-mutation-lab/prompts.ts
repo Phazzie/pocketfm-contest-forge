@@ -6,7 +6,7 @@ import type {
 	StoryModuleProviderMessage
 } from '$lib/core/ports/storyModuleProviderPort';
 
-export const TROPE_MUTATION_LAB_PROMPT_VERSION = 'trope-mutation-lab.v3';
+export const TROPE_MUTATION_LAB_PROMPT_VERSION = 'trope-mutation-lab.v4';
 
 export const tropeMutationLabPrompt = {
 	system:
@@ -41,7 +41,7 @@ export function buildTropeMutationLabProviderMessages(
 				'Do not include comments, markdown, bullets outside JSON, or extra prose.',
 				'The expectedTrope must name a familiar genre doorway the target audience recognizes.',
 				'The mutationRule must invert or subvert that trope while preserving the contest lane.',
-				'The mutationRule must include at least one explicit rule-change cue word: but, except, instead, invert, only, reverse, rule, subvert, twist, or while.',
+				'The mutationRule must include at least one explicit rule-change cue word: except, instead, invert, mutation, only, reverse, rule, subvert, or twist.',
 				'Do not generate a mutationRule that only restates the premise, setting, emotion, or benefit without a visible rule-change cue.',
 				'The preservedPromise must name how the mandatory contest elements still remain legible.',
 				'The serialEngine must explain the repeatable episode machine created by the mutation.',
@@ -62,7 +62,7 @@ export function buildTropeMutationLabProviderMessages(
 					{
 						expectedTrope: 'The familiar genre trope being used as the doorway.',
 						mutationRule:
-							'The rightful heir can reclaim the throne only while each public victory erases a trusted name.',
+							'The familiar power reward only works when each public victory exposes a relationship debt.',
 						preservedPromise:
 							'How the genre lane and mandatory contest elements stay recognizable.',
 						confusionGuardrail:
