@@ -116,6 +116,8 @@ twist, or while. Each live `episodePressure` item must start with a repeatable c
 `Each episode`, or `Whenever`) and include a concrete cost word such as betrayal, debt, family,
 lover, public, relationship, reputation, secret, status, or trust. The live quality gate mirrors
 those rules so the prompt and acceptance criteria stay aligned instead of weakening the gate.
+Regression coverage asserts the full rule-change cue list so prompt drift cannot drop accepted cue
+words such as twist or while.
 
 `cliffhanger-futures.v2` hardens payoff warning instructions after production Story Studio smoke
 rejected candidate warnings that described volatility without naming audience frustration. Each live

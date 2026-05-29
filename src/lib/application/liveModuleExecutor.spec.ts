@@ -306,7 +306,9 @@ describe('live module executor', () => {
 		expect(promptText).toContain(
 			'The mutationRule must include at least one explicit rule-change cue word'
 		);
-		expect(promptText).toContain('but, except, instead, invert, only, reverse, rule, subvert');
+		expect(promptText).toContain(
+			'but, except, instead, invert, only, reverse, rule, subvert, twist, or while'
+		);
 		expect(promptText).toContain(
 			'Every episodePressure item must start with "Every episode", "Each episode", or "Whenever".'
 		);
