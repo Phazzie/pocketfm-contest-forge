@@ -97,6 +97,10 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [x] 2026-05-29 19:55 UTC - Verified the component extraction after tightening mobile/desktop
       control sizing. Full guards, tests, Svelte diagnostics, production build, UI smoke, and manual
       desktop/mobile overflow checks passed with no browser errors and no clipped controls.
+- [x] 2026-05-29 20:24 UTC - Merged the Story Studio component extraction through PR #22 and
+      verified the production deploy. Main CI passed for `4b255fa`, Vercel production deployment
+      `dpl_53VDS863mA7kwmyih72FKtTKhB5S` is ready, deploy readiness passed, and the production
+      browser smoke passed against `https://pocketfm-contest-forge.vercel.app`.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -857,6 +861,13 @@ src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 file
   and `.svelte-kit/screenshots/story-studio-mobile.png`; desktop 1440x1100 and mobile 390x900 both
   had `bodyScrollWidth` equal to viewport width, zero console/page errors, and no overflowing
   elements.
+- 2026-05-29 20:24 UTC - PR #22 merged by rebase at `4b255fa`. Main CI
+  `https://github.com/Phazzie/pocketfm-contest-forge/actions/runs/26660235289` passed in 1 minute
+  13 seconds. Vercel production deployment `dpl_53VDS863mA7kwmyih72FKtTKhB5S` is ready and aliased
+  to `https://pocketfm-contest-forge.vercel.app`. Deploy readiness passed for the production URL.
+  Production browser smoke passed with body length 2605, 27 controls, Story Studio action visible,
+  and no browser errors. Live AI smoke was not retried because xAI credits/monthly spend remains
+  the external blocker.
 
 ## Interfaces and Dependencies
 
