@@ -44,8 +44,8 @@ action returns an unavailable state and does not call xAI. The current per-clien
 in-memory and intended only for MVP demo protection; it is not durable auth.
 
 The full `runLiveStudio` action can make up to five sequential provider calls when all live
-mechanisms are selected. Route code therefore uses a 45-second xAI transport timeout and a
-46-second executor timeout per module, keeping the worst-case chain under the configured
+mechanisms are selected. Route code therefore uses a 55-second xAI transport timeout and a
+56-second executor timeout per module, keeping the worst-case chain under the configured
 300-second Vercel function duration. If a mechanism is not selected, its module stays locked and the
 provider call is skipped.
 

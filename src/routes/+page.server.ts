@@ -18,8 +18,8 @@ import { mechanismCatalog } from '$lib/core/domain/mechanisms';
 import { consumeLiveAiQuota, verifyLiveAiAccessCode } from '$lib/server/liveAiAccess';
 import { defaultStoryModuleRegistry } from '$lib/story-modules/registry';
 
-const LIVE_STORY_STUDIO_PROVIDER_TIMEOUT_MS = 45_000;
-const LIVE_STORY_STUDIO_EXECUTOR_TIMEOUT_MS = 46_000;
+const LIVE_STORY_STUDIO_PROVIDER_TIMEOUT_MS = 55_000;
+const LIVE_STORY_STUDIO_EXECUTOR_TIMEOUT_MS = 56_000;
 
 export async function load() {
 	const research = new InMemoryContestResearchRepository();

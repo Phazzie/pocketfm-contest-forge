@@ -63,6 +63,10 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [x] 2026-05-29 16:47 UTC - Addressed PR #15 review findings around selected mechanisms,
       fixture/demo council registration, selected-lane idle state, genre-aware trope gates, stable
       freshness labels, and Vercel live-chain timeout budgeting.
+- [x] 2026-05-29 16:58 UTC - Production live smoke proved the initial 45-second route provider
+      timeout was too tight for `grok-4.20-multi-agent` cold-open generation. Raised the
+      route-level provider/executor budget to 55/56 seconds while keeping the five-module worst case
+      under the configured 300-second Vercel duration.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -150,9 +154,15 @@ dark-academy lanes can pass when their scene proof is concrete but not court/cro
 
 The full live chain is sequential and can be slow. Vercel Fluid Compute currently allows a
 300-second default function duration, so the SvelteKit adapter now declares that max duration and
-the route caps each provider call at 45 seconds with a 46-second executor wrapper. This is still an
+the route caps each provider call at 55 seconds with a 56-second executor wrapper. This is still an
 MVP request/response design; a durable job runner is the better long-term shape for broader public
 use.
+
+The first post-merge production live smoke failed closed at `cold-open-lab` with
+`PROVIDER_TIMEOUT: xAI Responses API timed out after 45000ms.` That confirms the no-fallback path is
+working, but it also proves the 45-second provider budget was below real Grok latency for the
+production prompt. The follow-up budget remains bounded under the Vercel duration instead of
+removing the timeout.
 
 ## Decision Log
 
@@ -253,6 +263,12 @@ from other contest lanes.
 second provider/executor timeouts for the MVP chain. Rationale: five sequential live calls remain a
 single request for MVP, so the code must bound hangs and keep the worst case inside the deployment
 duration budget.
+
+2026-05-29 16:58 UTC - Increase the route-level live-chain provider/executor budget to 55/56
+seconds after production smoke timed out the cold-open provider call at 45 seconds. Rationale:
+lowering timeout too far made the demo fail before Grok could produce accepted JSON; 55/56 keeps the
+five-module worst case under the configured 300-second Vercel duration while preserving fail-closed
+behavior.
 
 ## Outcomes & Retrospective
 
@@ -662,6 +678,15 @@ src/lib/application/liveModuleExecutor.spec.ts` returned 3 files and 39 tests pa
   files. Full `npm run verify` passed with 21 test files and 107 tests, zero Svelte errors/warnings,
   and a production build. `npm run verify:ui` passed against `http://127.0.0.1:5173/` with no
   overlay, 27 controls, Story Studio action visible, and no browser errors.
+- 2026-05-29 16:58 UTC - Post-merge production smoke run
+  `https://github.com/Phazzie/pocketfm-contest-forge/actions/runs/26650590075` failed closed after
+  58 seconds: `cold-open-lab` returned failed with `PROVIDER_TIMEOUT` because the xAI adapter timed
+  out after 45000ms. No fixture output was accepted. Follow-up branch
+  `fix/story-studio-timeout-budget` raises the route budget to 55/56 seconds and requires another
+  production smoke attempt.
+- 2026-05-29 17:01 UTC - Timeout-budget follow-up verification passed. `npm run format`,
+  `npm run guard:no-live-fallback`, and `npm run guard:docs-drift` passed. Full `npm run verify`
+  passed with 21 test files and 107 tests, zero Svelte errors/warnings, and a production build.
 
 ## Interfaces and Dependencies
 
