@@ -11,7 +11,10 @@ import type {
 	LedgerDebt
 } from '$lib/story-modules/modules/binge-debt-ledger/contract';
 import type { CliffhangerFuturesInput } from '$lib/story-modules/modules/cliffhanger-futures/contract';
-import type { ColdOpenLabInput } from '$lib/story-modules/modules/cold-open-lab/contract';
+import type {
+	ColdOpenLabInput,
+	ColdOpenLabOutput
+} from '$lib/story-modules/modules/cold-open-lab/contract';
 import type { TropeMutationLabInput } from '$lib/story-modules/modules/trope-mutation-lab/contract';
 
 export function buildColdOpenLabInput(
@@ -61,6 +64,23 @@ export function buildBingeDebtLedgerInput(
 		episodeBeats: pilot.beats.map((beat) => beat.text),
 		secrets: storyState.secrets.map((secret) => secret.description),
 		promises: pilot.bingeDebtAdded,
+		priorLedger: {
+			open: storyState.debts.open.map(toLedgerDebt),
+			paid: storyState.debts.paid.map(toLedgerDebt),
+			stale: storyState.debts.stale.map(toLedgerDebt)
+		}
+	};
+}
+
+export function buildBingeDebtLedgerInputFromColdOpen(
+	storyState: StoryState,
+	coldOpenOutput: ColdOpenLabOutput
+): BingeDebtLedgerInput {
+	return {
+		episodeNumber: 1,
+		episodeBeats: coldOpenOutput.variants.map((variant) => variant.text),
+		secrets: storyState.secrets.map((secret) => secret.description),
+		promises: coldOpenOutput.variants.map((variant) => variant.firstMinuteQuestion),
 		priorLedger: {
 			open: storyState.debts.open.map(toLedgerDebt),
 			paid: storyState.debts.paid.map(toLedgerDebt),

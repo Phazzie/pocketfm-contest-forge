@@ -11,28 +11,39 @@ import type {
 } from '$lib/core/ports/storyModuleProviderPort';
 import { createStoryModuleRegistry, defaultStoryModules } from '$lib/story-modules/registry';
 import type { ColdOpenLabOutput } from '$lib/story-modules/modules/cold-open-lab/contract';
+import type { BingeDebtLedgerOutput } from '$lib/story-modules/modules/binge-debt-ledger/contract';
 
 const generatedAt = '2026-05-29T11:08:00.000Z';
 const requestedAt = '2026-05-29T11:08:01.000Z';
 
 class FakeStoryModuleProvider implements StoryModuleProvider {
 	readonly requests: StoryModuleProviderRequest[] = [];
+	private readonly results: StoryModuleProviderResult[];
 
-	constructor(private readonly result: StoryModuleProviderResult) {}
+	constructor(result: StoryModuleProviderResult | StoryModuleProviderResult[]) {
+		this.results = Array.isArray(result) ? result : [result];
+	}
 
 	async generateModuleJson(
 		request: StoryModuleProviderRequest
 	): Promise<StoryModuleProviderResult> {
+		const result = this.results[this.requests.length];
 		this.requests.push(request);
-		return this.result;
+
+		if (!result) {
+			throw new Error(`No fake provider result configured for request ${this.requests.length}.`);
+		}
+
+		return result;
 	}
 }
 
 describe('run live story studio', () => {
 	it('returns an accepted cold-open artifact and locked future artifacts', async () => {
-		const provider = new FakeStoryModuleProvider(
-			providerSuccess(JSON.stringify(validColdOpenOutput))
-		);
+		const provider = new FakeStoryModuleProvider([
+			providerSuccess(JSON.stringify(validColdOpenOutput)),
+			providerSuccess(JSON.stringify(validBingeDebtLedgerOutput))
+		]);
 		const result = await runUseCase(provider);
 
 		expect(result.success).toBe(true);
@@ -51,18 +62,23 @@ describe('run live story studio', () => {
 			expect(result.data.artifacts[0]?.result?.output).toMatchObject({
 				winnerId: 'court-name-theft'
 			});
-			expect(result.data.artifacts.slice(1).every((artifact) => artifact.status === 'locked')).toBe(
+			expect(result.data.artifacts[1]?.status).toBe('accepted');
+			expect(result.data.artifacts[1]?.result?.output).toMatchObject({
+				openedDebts: expect.arrayContaining([expect.objectContaining({ id: 'debt-stolen-name' })])
+			});
+			expect(result.data.artifacts.slice(2).every((artifact) => artifact.status === 'locked')).toBe(
 				true
 			);
 			expect(result.data.qualitySummary).toMatchObject({
-				accepted: 1,
+				accepted: 2,
 				failed: 0,
-				locked: 4
+				locked: 3
 			});
 			expect(result.data.contestFreshness.status).toBe('unknown');
 		}
-		expect(provider.requests).toHaveLength(1);
+		expect(provider.requests).toHaveLength(2);
 		expect(provider.requests[0]?.moduleId).toBe('cold-open-lab');
+		expect(provider.requests[1]?.moduleId).toBe('binge-debt-ledger');
 	});
 
 	it('rejects invalid forge requests before calling the provider', async () => {
@@ -114,12 +130,40 @@ describe('run live story studio', () => {
 			expect(coldOpen?.status).toBe('failed');
 			expect(coldOpen?.result?.output).toBeUndefined();
 			expect(coldOpen?.issues.map((issue) => issue.code)).toContain('PROVIDER_UNAVAILABLE');
+			expect(result.data.artifacts[1]?.status).toBe('locked');
 			expect(result.data.qualitySummary).toMatchObject({
 				accepted: 0,
 				failed: 1,
 				locked: 4
 			});
 		}
+		expect(provider.requests).toHaveLength(1);
+	});
+
+	it('surfaces binge-debt provider failure as a failed artifact without fixture fallback', async () => {
+		const provider = new FakeStoryModuleProvider([
+			providerSuccess(JSON.stringify(validColdOpenOutput)),
+			providerFailure('PROVIDER_TIMEOUT', 'The fake provider timed out.')
+		]);
+		const result = await runUseCase(provider);
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			const bingeDebt = result.data.artifacts[1];
+
+			expect(bingeDebt?.status).toBe('failed');
+			expect(bingeDebt?.result?.output).toBeUndefined();
+			expect(bingeDebt?.issues.map((issue) => issue.code)).toContain('PROVIDER_TIMEOUT');
+			expect(result.data.qualitySummary).toMatchObject({
+				accepted: 1,
+				failed: 1,
+				locked: 3
+			});
+		}
+		expect(provider.requests.map((request) => request.moduleId)).toEqual([
+			'cold-open-lab',
+			'binge-debt-ledger'
+		]);
 	});
 
 	it('fails when the required cold-open module is not registered', async () => {
@@ -212,4 +256,41 @@ const validColdOpenOutput: ColdOpenLabOutput = {
 	winnerId: 'court-name-theft',
 	winnerRationale: 'Mara, the public shame, and the relationship betrayal are audible at once.',
 	rejectionNotes: ['Do not explain crown lore before the court hears the accusation.']
+};
+
+const validBingeDebtLedgerOutput: BingeDebtLedgerOutput = {
+	openedDebts: [
+		{
+			id: 'debt-stolen-name',
+			label: 'Who profits when Mara Vey public name is stolen in court?',
+			status: 'open',
+			openedInEpisode: 1,
+			payoffWindow: 'episodes 2-4',
+			interest: 'Each public ceremony lets the false heir spend Mara name as a crown debt.'
+		},
+		{
+			id: 'debt-lover-proof',
+			label: 'Why does the lover protect Mara Vey after betraying her name?',
+			status: 'open',
+			openedInEpisode: 1,
+			payoffWindow: 'episodes 2-3',
+			interest: 'The relationship cost rises whenever the lover hides proof from the court.'
+		}
+	],
+	paidDebts: [],
+	staleDebts: [],
+	payoffWindows: [
+		{
+			debtId: 'debt-stolen-name',
+			episodeRange: 'episodes 2-4',
+			requiredEscalation: 'A court witness uses Mara stolen name to collect a public price.'
+		},
+		{
+			debtId: 'debt-lover-proof',
+			episodeRange: 'episodes 2-3',
+			requiredEscalation: 'The lover must protect Mara in public while denying trust in private.'
+		}
+	],
+	auditorNote:
+		'The ledger works because every open debt carries a public status wound or relationship price.'
 };

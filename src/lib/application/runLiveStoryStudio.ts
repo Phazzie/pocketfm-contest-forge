@@ -2,7 +2,10 @@
 
 import { LiveModuleExecutor } from '$lib/application/liveModuleExecutor';
 import { toStoryModulePlanResult } from '$lib/application/storyModulePlanResult';
-import { buildColdOpenLabInput } from '$lib/application/storyModuleInputs';
+import {
+	buildBingeDebtLedgerInputFromColdOpen,
+	buildColdOpenLabInput
+} from '$lib/application/storyModuleInputs';
 import type { LiveModuleExecutorConfig } from '$lib/application/liveModuleExecutor';
 import type { ForgeRequest } from '$lib/core/contracts/contestForgeContract';
 import {
@@ -22,6 +25,11 @@ import {
 	buildColdOpenLabProviderInput,
 	buildColdOpenLabProviderMessages
 } from '$lib/story-modules/modules/cold-open-lab/prompts';
+import { coldOpenLabOutputSchema } from '$lib/story-modules/modules/cold-open-lab/contract';
+import {
+	buildBingeDebtLedgerProviderInput,
+	buildBingeDebtLedgerProviderMessages
+} from '$lib/story-modules/modules/binge-debt-ledger/prompts';
 
 export interface RunLiveStoryStudioConfig {
 	now?: () => Date;
@@ -98,8 +106,16 @@ export class RunLiveStoryStudio {
 			providerInput: buildColdOpenLabProviderInput(coldOpenInput)
 		});
 		const coldOpenPlanResult = toStoryModulePlanResult(coldOpenModule, coldOpenResult);
+		const bingeDebtArtifact = await this.runBingeDebtLedger({
+			executor,
+			coldOpenPlanResult,
+			storyState,
+			brief,
+			requestedAt
+		});
 		const artifacts: StoryStudioArtifact[] = [
 			storyModuleResultToStudioArtifact('cold-open-lab', coldOpenPlanResult),
+			bingeDebtArtifact,
 			...lockedFutureArtifacts()
 		];
 
@@ -117,14 +133,68 @@ export class RunLiveStoryStudio {
 			}
 		};
 	}
+
+	private async runBingeDebtLedger(input: {
+		executor: LiveModuleExecutor;
+		coldOpenPlanResult: ReturnType<typeof toStoryModulePlanResult>;
+		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
+		brief: NonNullable<ReturnType<ContestResearchPort['findById']>>;
+		requestedAt: Date;
+	}): Promise<StoryStudioArtifact> {
+		const parsedColdOpen = coldOpenLabOutputSchema.safeParse(input.coldOpenPlanResult.output);
+
+		if (input.coldOpenPlanResult.status !== 'success' || !parsedColdOpen.success) {
+			return createLockedStoryStudioArtifact({
+				id: 'binge-debt-ledger',
+				summary: 'Binge debt ledger is locked until a cold-open artifact is accepted.',
+				nextAction: {
+					label: 'Accept cold open first',
+					reason:
+						'Binge debt ledger needs accepted live cold-open variants so it can price actual listener promises.',
+					retryable: true
+				}
+			});
+		}
+
+		const module = this.moduleRegistry.find('binge-debt-ledger');
+
+		if (!module) {
+			return createLockedStoryStudioArtifact({
+				id: 'binge-debt-ledger',
+				nextAction: {
+					label: 'Register binge-debt-ledger',
+					reason: 'Binge Debt Ledger is not registered in the story module registry.',
+					retryable: false
+				}
+			});
+		}
+
+		const ledgerInput = buildBingeDebtLedgerInputFromColdOpen(
+			input.storyState,
+			parsedColdOpen.data
+		);
+		const result = await input.executor.run({
+			module,
+			context: {
+				input: ledgerInput,
+				storyState: input.storyState,
+				contestBrief: input.brief,
+				mode: 'live',
+				now: input.requestedAt
+			},
+			messages: buildBingeDebtLedgerProviderMessages(ledgerInput),
+			providerInput: buildBingeDebtLedgerProviderInput(ledgerInput)
+		});
+
+		return storyModuleResultToStudioArtifact(
+			'binge-debt-ledger',
+			toStoryModulePlanResult(module, result)
+		);
+	}
 }
 
 function lockedFutureArtifacts(): StoryStudioArtifact[] {
 	return [
-		createLockedStoryStudioArtifact({
-			id: 'binge-debt-ledger',
-			nextAction: liveGateNextAction('binge-debt-ledger')
-		}),
 		createLockedStoryStudioArtifact({
 			id: 'cliffhanger-futures',
 			nextAction: liveGateNextAction('cliffhanger-futures')

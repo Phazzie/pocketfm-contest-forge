@@ -1,11 +1,11 @@
 // Created: 2026-05-28 04:04
 
+import { evaluateModuleProseQuality, type ProseQualityIssue } from '$lib/core/domain/proseQuality';
 import {
-	evaluateModuleProseQuality,
-	type ProseQualityIssue,
-	type ProseQualityResult,
-	type ProseQualityReview
-} from '$lib/core/domain/proseQuality';
+	defaultLiveModuleQualityGateRegistry,
+	type LiveModuleQualityGate,
+	type LiveModuleQualityGateRegistry
+} from '$lib/application/liveModuleQualityGates';
 import {
 	storyModuleProviderRequestSchema,
 	storyModuleProviderResultSchema,
@@ -39,25 +39,6 @@ export interface LiveModuleExecutorRequest<TInput, TOutput> {
 	messages: StoryModuleProviderMessage[];
 	providerInput: SerializableProviderInput;
 }
-
-export type LiveModuleQualityGate = (review: ProseQualityReview) => ProseQualityResult;
-
-export interface LiveModuleQualityReviewRequest {
-	moduleId: string;
-	input: unknown;
-	output: unknown;
-}
-
-export type LiveModuleQualityReviewBuilder = (
-	request: LiveModuleQualityReviewRequest
-) => ProseQualityReview;
-
-export interface LiveModuleQualityGateConfig {
-	buildReview: LiveModuleQualityReviewBuilder;
-	qualityGate?: LiveModuleQualityGate;
-}
-
-export type LiveModuleQualityGateRegistry = ReadonlyMap<string, LiveModuleQualityGateConfig>;
 
 export interface LiveModuleExecutorConfig {
 	qualityGate?: LiveModuleQualityGate;
@@ -349,32 +330,6 @@ export class LiveModuleExecutor {
 	}
 }
 
-export const defaultLiveModuleQualityGateRegistry: LiveModuleQualityGateRegistry = new Map([
-	[
-		'cold-open-lab',
-		{
-			buildReview: buildColdOpenQualityReview
-		}
-	]
-]);
-
-function buildColdOpenQualityReview(request: LiveModuleQualityReviewRequest): ProseQualityReview {
-	const protagonistName = readStringProperty(request.input, 'protagonistName');
-
-	if (protagonistName) {
-		return {
-			moduleId: request.moduleId,
-			protagonistName,
-			output: request.output
-		};
-	}
-
-	return {
-		moduleId: request.moduleId,
-		output: request.output
-	};
-}
-
 class ProviderTimeoutError extends Error {
 	constructor(timeoutMs: number) {
 		super(`Story module provider timed out after ${timeoutMs}ms.`);
@@ -595,10 +550,4 @@ function hasStoryStateValue(value: unknown, path: string): boolean {
 	if (Array.isArray(target)) return target.length > 0;
 	if (typeof target === 'string') return target.trim().length > 0;
 	return target !== null && target !== undefined;
-}
-
-function readStringProperty(value: unknown, key: string): string | undefined {
-	if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
-	const property = (value as Record<string, unknown>)[key];
-	return typeof property === 'string' && property.trim().length > 0 ? property : undefined;
 }
