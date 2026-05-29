@@ -359,8 +359,12 @@ function evaluateTropeMutationLabQuality(review: ProseQualityReview): ProseQuali
 		});
 	}
 
+	const sceneTerms = parsedInput.success
+		? tropeSceneTermsForGenre(parsedInput.data.contestGenre)
+		: tropeSceneTerms;
+
 	if (
-		!hasAny(output.sceneProof.toLowerCase(), tropeSceneTerms) ||
+		!hasAny(output.sceneProof.toLowerCase(), sceneTerms) ||
 		!hasAny(output.sceneProof.toLowerCase(), debtCostTerms)
 	) {
 		issues.push({
@@ -549,6 +553,11 @@ function contestPromiseTerms(values: string[]): string[] {
 	return [...new Set(terms)];
 }
 
+function tropeSceneTermsForGenre(genre: string): string[] {
+	const terms = new Set([...tropeSceneTerms, ...(tropeSceneTermsByGenre[genre] ?? [])]);
+	return [...terms];
+}
+
 const debtCostTerms = [
 	'betrayal',
 	'cost',
@@ -633,6 +642,13 @@ const tropeSceneTerms = [
 	'trial',
 	'witness'
 ];
+
+const tropeSceneTermsByGenre: Record<string, string[]> = {
+	'werewolf-saga': ['alpha', 'bond', 'border', 'den', 'forest', 'luna', 'pack', 'ritual'],
+	romantasy: ['altar', 'bond', 'court', 'garden', 'magic', 'palace', 'ritual', 'tower'],
+	'thriller-system': ['alley', 'countdown', 'elevator', 'hospital', 'lab', 'screen', 'station'],
+	'dark-academy': ['archive', 'classroom', 'dorm', 'hall', 'library', 'office', 'ritual', 'school']
+};
 
 const contestStopWords = new Set([
 	'and',

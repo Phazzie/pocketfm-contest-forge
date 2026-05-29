@@ -71,17 +71,20 @@ export class ForgeContestStory {
 		const premise = this.intelligence.premise(request, brief);
 		const now = new Date();
 		const moduleResults = await Promise.all(
-			this.moduleRegistry.list().map(async (module) => {
-				const result = await this.moduleRunner.run(module, {
-					input: buildModuleInput(module.id, request, brief, pilot, storyState, premise),
-					storyState,
-					contestBrief: brief,
-					mode,
-					now
-				});
+			this.moduleRegistry
+				.list()
+				.filter((module) => module.id !== 'council-review')
+				.map(async (module) => {
+					const result = await this.moduleRunner.run(module, {
+						input: buildModuleInput(module.id, request, brief, pilot, storyState, premise),
+						storyState,
+						contestBrief: brief,
+						mode,
+						now
+					});
 
-				return toStoryModulePlanResult(module, result);
-			})
+					return toStoryModulePlanResult(module, result);
+				})
 		);
 
 		return {

@@ -8,6 +8,7 @@ This repo deploys as a SvelteKit app on Vercel with explicit adapter support.
 
 - Adapter: `@sveltejs/adapter-vercel`
 - Function runtime: `nodejs22.x`
+- Function max duration: 300 seconds through the SvelteKit Vercel adapter
 - Node version: `.nvmrc` and `package.json` both require Node 22
 - Install command: `npm ci`
 - Build command: `npm run build`
@@ -41,6 +42,12 @@ private env values.
 `STORY_AI_ACCESS_CODE` is enforced before paid provider calls. Without it, the live Story Studio
 action returns an unavailable state and does not call xAI. The current per-client limiter is
 in-memory and intended only for MVP demo protection; it is not durable auth.
+
+The full `runLiveStudio` action can make up to five sequential provider calls when all live
+mechanisms are selected. Route code therefore uses a 45-second xAI transport timeout and a
+46-second executor timeout per module, keeping the worst-case chain under the configured
+300-second Vercel function duration. If a mechanism is not selected, its module stays locked and the
+provider call is skipped.
 
 ## Verification
 

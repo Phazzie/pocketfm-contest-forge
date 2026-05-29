@@ -20,6 +20,10 @@ describe('forge contest story use case', () => {
 		expect(result.data.pilot.bingeDebtAdded.length).toBeGreaterThanOrEqual(3);
 		expect(result.data.aiCouncil.map((prompt) => prompt.role)).toContain('Listener Saboteur');
 		expect(result.data.moduleResults.map((module) => module.moduleId)).toContain('cold-open-lab');
+		expect(result.data.moduleResults.map((module) => module.moduleId)).not.toContain(
+			'council-review'
+		);
+		expect(result.data.moduleResults.every((module) => module.status !== 'failed')).toBe(true);
 	});
 
 	it('keeps the application use case independent from Svelte components', async () => {

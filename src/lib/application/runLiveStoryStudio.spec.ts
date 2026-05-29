@@ -1,7 +1,7 @@
 // Created: 2026-05-29 11:08
 
 import { describe, expect, it } from 'vitest';
-import { defaultForgeRequest } from '$lib/application/createDefaultForge';
+import { defaultForgeRequest } from '$lib/application/defaultForgeRequest';
 import { RunLiveStoryStudio } from '$lib/application/runLiveStoryStudio';
 import { InMemoryContestResearchRepository } from '$lib/adapters/research/inMemoryContestResearchRepository';
 import type {
@@ -163,6 +163,75 @@ describe('run live story studio', () => {
 		expect(provider.requests).toHaveLength(1);
 	});
 
+	it('locks deselected live mechanisms before spending provider calls', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(validColdOpenOutput))
+		);
+		const result = await runUseCase(provider, {
+			...defaultForgeRequest,
+			selectedMechanisms: [
+				'retention-black-box',
+				'desire-lattice',
+				'audio-mouthfeel',
+				'cold-open-split-test'
+			]
+		});
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.artifacts[0]?.status).toBe('accepted');
+			expect(result.data.artifacts[1]?.status).toBe('locked');
+			expect(result.data.artifacts[1]?.nextAction).toMatchObject({
+				label: 'Select binge debt ledger'
+			});
+			expect(result.data.artifacts[2]?.status).toBe('locked');
+			expect(result.data.artifacts[2]?.nextAction).toMatchObject({
+				label: 'Select cliffhanger futures'
+			});
+			expect(result.data.artifacts[3]?.status).toBe('locked');
+			expect(result.data.artifacts[3]?.nextAction).toMatchObject({
+				label: 'Select trope mutation lab'
+			});
+			expect(result.data.artifacts[4]?.status).toBe('locked');
+			expect(result.data.qualitySummary).toMatchObject({
+				accepted: 1,
+				failed: 0,
+				locked: 4
+			});
+		}
+		expect(provider.requests.map((request) => request.moduleId)).toEqual(['cold-open-lab']);
+	});
+
+	it('locks all live modules without provider calls when no live mechanisms are selected', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(validColdOpenOutput))
+		);
+		const result = await runUseCase(provider, {
+			...defaultForgeRequest,
+			selectedMechanisms: ['retention-black-box', 'desire-lattice', 'audio-mouthfeel', 'serial-dna']
+		});
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.artifacts.map((artifact) => artifact.status)).toEqual([
+				'locked',
+				'locked',
+				'locked',
+				'locked',
+				'locked'
+			]);
+			expect(result.data.artifacts[0]?.nextAction).toMatchObject({
+				label: 'Select cold-open split test'
+			});
+			expect(result.data.qualitySummary).toMatchObject({
+				accepted: 0,
+				failed: 0,
+				locked: 5
+			});
+		}
+		expect(provider.requests).toHaveLength(0);
+	});
+
 	it('surfaces binge-debt provider failure as a failed artifact without fixture fallback', async () => {
 		const provider = new FakeStoryModuleProvider([
 			providerSuccess(JSON.stringify(validColdOpenOutput)),
@@ -279,7 +348,7 @@ describe('run live story studio', () => {
 		]);
 	});
 
-	it('fails when the required cold-open module is not registered', async () => {
+	it('surfaces a missing cold-open module as a failed artifact without provider calls', async () => {
 		const provider = new FakeStoryModuleProvider(
 			providerSuccess(JSON.stringify(validColdOpenOutput))
 		);
@@ -293,9 +362,21 @@ describe('run live story studio', () => {
 			{ now: () => new Date(requestedAt) }
 		).run(defaultForgeRequest);
 
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.code).toBe('STUDIO_RUN_FAILED');
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.artifacts[0]).toMatchObject({
+				id: 'cold-open-lab',
+				status: 'failed',
+				summary: 'Cold Open Lab is not registered, so Story Studio cannot run it.'
+			});
+			expect(result.data.artifacts[0]?.issues.map((issue) => issue.code)).toContain(
+				'MODULE_NOT_REGISTERED'
+			);
+			expect(result.data.qualitySummary).toMatchObject({
+				accepted: 0,
+				failed: 1,
+				locked: 4
+			});
 		}
 		expect(provider.requests).toHaveLength(0);
 	});

@@ -63,7 +63,10 @@
 			? (form.storyStudio ?? null)
 			: null
 	);
-	const studioRun = $derived(storyStudio?.success ? storyStudio.data : data.initialStudioRun);
+	const selectedInitialStudioRun = $derived(
+		data.initialStudioRuns[selectedGenre] ?? data.initialStudioRun
+	);
+	const studioRun = $derived(storyStudio?.success ? storyStudio.data : selectedInitialStudioRun);
 	const studioError = $derived(storyStudio && !storyStudio.success ? storyStudio.error : null);
 
 	function toggleMechanism(id: MechanismId) {
