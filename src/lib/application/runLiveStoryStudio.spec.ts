@@ -13,6 +13,7 @@ import { createStoryModuleRegistry, defaultStoryModules } from '$lib/story-modul
 import type { ColdOpenLabOutput } from '$lib/story-modules/modules/cold-open-lab/contract';
 import type { BingeDebtLedgerOutput } from '$lib/story-modules/modules/binge-debt-ledger/contract';
 import type { CliffhangerFuturesOutput } from '$lib/story-modules/modules/cliffhanger-futures/contract';
+import type { CouncilReviewOutput } from '$lib/story-modules/modules/council-review/contract';
 import type { TropeMutationLabOutput } from '$lib/story-modules/modules/trope-mutation-lab/contract';
 
 const generatedAt = '2026-05-29T11:08:00.000Z';
@@ -46,7 +47,8 @@ describe('run live story studio', () => {
 			providerSuccess(JSON.stringify(validColdOpenOutput)),
 			providerSuccess(JSON.stringify(validBingeDebtLedgerOutput)),
 			providerSuccess(JSON.stringify(validCliffhangerFuturesOutput)),
-			providerSuccess(JSON.stringify(validTropeMutationLabOutput))
+			providerSuccess(JSON.stringify(validTropeMutationLabOutput)),
+			providerSuccess(JSON.stringify(validCouncilReviewOutput))
 		]);
 		const result = await runUseCase(provider);
 
@@ -78,19 +80,23 @@ describe('run live story studio', () => {
 			expect(result.data.artifacts[3]?.result?.output).toMatchObject({
 				sceneProof: expect.stringContaining('court trial')
 			});
-			expect(result.data.artifacts[4]?.status).toBe('locked');
+			expect(result.data.artifacts[4]?.status).toBe('accepted');
+			expect(result.data.artifacts[4]?.result?.output).toMatchObject({
+				greenlight: 'ready-for-demo'
+			});
 			expect(result.data.qualitySummary).toMatchObject({
-				accepted: 4,
+				accepted: 5,
 				failed: 0,
-				locked: 1
+				locked: 0
 			});
 			expect(result.data.contestFreshness.status).toBe('unknown');
 		}
-		expect(provider.requests).toHaveLength(4);
+		expect(provider.requests).toHaveLength(5);
 		expect(provider.requests[0]?.moduleId).toBe('cold-open-lab');
 		expect(provider.requests[1]?.moduleId).toBe('binge-debt-ledger');
 		expect(provider.requests[2]?.moduleId).toBe('cliffhanger-futures');
 		expect(provider.requests[3]?.moduleId).toBe('trope-mutation-lab');
+		expect(provider.requests[4]?.moduleId).toBe('council-review');
 	});
 
 	it('rejects invalid forge requests before calling the provider', async () => {
@@ -233,6 +239,38 @@ describe('run live story studio', () => {
 			'binge-debt-ledger',
 			'cliffhanger-futures',
 			'trope-mutation-lab'
+		]);
+	});
+
+	it('surfaces council provider failure as a failed artifact without fixture fallback', async () => {
+		const provider = new FakeStoryModuleProvider([
+			providerSuccess(JSON.stringify(validColdOpenOutput)),
+			providerSuccess(JSON.stringify(validBingeDebtLedgerOutput)),
+			providerSuccess(JSON.stringify(validCliffhangerFuturesOutput)),
+			providerSuccess(JSON.stringify(validTropeMutationLabOutput)),
+			providerFailure('PROVIDER_TIMEOUT', 'The fake council provider timed out.')
+		]);
+		const result = await runUseCase(provider);
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			const council = result.data.artifacts[4];
+
+			expect(council?.status).toBe('failed');
+			expect(council?.result?.output).toBeUndefined();
+			expect(council?.issues.map((issue) => issue.code)).toContain('PROVIDER_TIMEOUT');
+			expect(result.data.qualitySummary).toMatchObject({
+				accepted: 4,
+				failed: 1,
+				locked: 0
+			});
+		}
+		expect(provider.requests.map((request) => request.moduleId)).toEqual([
+			'cold-open-lab',
+			'binge-debt-ledger',
+			'cliffhanger-futures',
+			'trope-mutation-lab',
+			'council-review'
 		]);
 	});
 
@@ -425,4 +463,86 @@ const validTropeMutationLabOutput: TropeMutationLabOutput = {
 	],
 	rejectionNote:
 		'Do not invert the trope so far that the throne no longer matters; the familiar power fantasy must remain legible.'
+};
+
+const validCouncilReviewOutput: CouncilReviewOutput = {
+	roles: [
+		{
+			role: 'listener-saboteur',
+			finding:
+				'The strongest listener pull is Mara losing her public name before the crown rule is explained.',
+			evidence:
+				'Cold-open evidence puts Mara, the court, the lover proof, and the stolen name debt in one audible event.',
+			revisionMove:
+				'Keep the first revision inside the court scene and make the lover hand over the proof before any lore.',
+			riskIfIgnored:
+				'If the opening moves into history first, listeners may miss the public status wound and drop before the debt appears.',
+			confidence: 0.88
+		},
+		{
+			role: 'trope-criminal',
+			finding:
+				'The rightful-heir trope stays familiar because the throne still matters, but public belief now crowns power.',
+			evidence:
+				'Trope mutation evidence keeps the crown, court betrayal, public belief, and Mara private cost visible.',
+			revisionMove:
+				'Add one public witness who changes allegiance after the crowd believes the crueler truth about Mara.',
+			riskIfIgnored:
+				'If the mutation becomes abstract philosophy, the audience loses the familiar throne revenge doorway.',
+			confidence: 0.82
+		},
+		{
+			role: 'debt-auditor',
+			finding:
+				'The name debt and lover-proof debt have useful early payoff windows but must not both pay in episode two.',
+			evidence:
+				'The ledger schedules stolen-name pressure for episodes 2-4 and lover-proof pressure for episodes 2-3.',
+			revisionMove:
+				'Pay only one public clue in episode two, then make the unpaid lover proof cost Mara trust in episode three.',
+			riskIfIgnored:
+				'Paying both debts at once would drain the binge engine and leave the next court consequence weak.',
+			confidence: 0.86
+		},
+		{
+			role: 'voice-actor-ghost',
+			finding:
+				'The audio spine works when every scene names Mara, the court, the lover, and the crown price aloud.',
+			evidence:
+				'Accepted artifacts repeatedly use court, lover proof, public name loss, and crown response as spoken anchors.',
+			revisionMove:
+				'Rewrite the ending line so the antagonist says Mara old name once and the crowd repeats the wrong title.',
+			riskIfIgnored:
+				'If the magic rule is only visual, audio listeners may miss who paid the name price.',
+			confidence: 0.8
+		},
+		{
+			role: 'contest-judge',
+			finding:
+				'The concept fits the medieval fantasy power lane because the cursed crown changes public authority fast.',
+			evidence:
+				'The contest brief asks for cursed-object pressure before lore, and the accepted artifacts show court betrayal.',
+			revisionMove:
+				'Put the cursed crown consequence in the first two minutes and make the court price public before royal history.',
+			riskIfIgnored:
+				'If the submission waits too long on crown mechanics, it may read like generic palace intrigue.',
+			confidence: 0.84
+		},
+		{
+			role: 'continuity-keeper',
+			finding:
+				'Mara erased name, the lover witness, and the crown belief rule must stay locked as continuity facts.',
+			evidence:
+				'Cold-open, debt, cliffhanger, and trope artifacts all depend on the same name theft and witness proof.',
+			revisionMove:
+				'Track who knows Mara old name after every public ceremony and mark each witness memory as paid or stolen.',
+			riskIfIgnored:
+				'Loose name continuity would make the antagonist proof feel fake and weaken every later payoff.',
+			confidence: 0.9
+		}
+	],
+	consensus:
+		'The story is demo-ready as a concept if public name theft, lover proof, and cursed crown cost stay in one audible chain.',
+	topRevisionMove:
+		'Rebuild episode two around one court witness using Mara stolen name to collect a public price while the lover withholds proof.',
+	greenlight: 'ready-for-demo'
 };

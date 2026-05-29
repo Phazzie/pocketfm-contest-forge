@@ -15,7 +15,8 @@ describe('story module registry', () => {
 			'cold-open-lab',
 			'cliffhanger-futures',
 			'binge-debt-ledger',
-			'trope-mutation-lab'
+			'trope-mutation-lab',
+			'council-review'
 		]);
 		expect(defaultStoryModuleRegistry.get('cold-open-lab').label).toBe('Cold Open Lab');
 		expect(defaultStoryModuleRegistry.find('missing-module')).toBeUndefined();
