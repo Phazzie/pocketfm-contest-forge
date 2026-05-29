@@ -164,4 +164,7 @@ Every module result should additionally record module ID, module version, qualit
   env vars and the repo access-code secret are configured. The smoke request must post to the
   SvelteKit action with the target deployment origin so CSRF protection still rejects true
   cross-site form posts.
+- Production smoke was locally proven on 2026-05-29 against
+  `https://pocketfm-contest-forge.vercel.app` with accepted `xai`
+  `cold-open-lab.v2` output.
 - Browser tests should verify unavailable, loading, partial, and success states.
