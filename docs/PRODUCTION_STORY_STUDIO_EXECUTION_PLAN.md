@@ -601,6 +601,12 @@ src/lib/story-modules/modules/council-review/module.spec.ts`, and `npm run check
   files. Full `npm run verify` passed with 104 tests, zero Svelte errors/warnings, and a production
   build. `npm run verify:ui` passed against `http://127.0.0.1:5173/` with no overlay, 27 controls,
   Story Studio action visible, and no browser errors.
+- 2026-05-29 13:25 - Opened PR #15:
+  `https://github.com/Phazzie/pocketfm-contest-forge/pull/15`. GitHub `Verify` passed, Vercel
+  preview deployment passed at
+  `https://pocketfm-contest-forge-2yb69ulcf-phazzies-projects.vercel.app`, and CodeRabbit review
+  was still pending. Remote browser smoke against that preview was blocked by Vercel Authentication
+  before app load with 401/403 responses, matching the existing preview-protection risk.
 
 ## Interfaces and Dependencies
 
