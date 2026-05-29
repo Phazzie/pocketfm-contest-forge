@@ -68,6 +68,8 @@
   real provider success/failure instead of aborting early.
 - Hardened the live `cold-open-lab.v2` prompt so Grok must produce short audio-readable variant
   sentences, visible payoff paths, and no prose-gate generic writing-advice phrases.
+- Added defensive cold-open prompt subject fallback text so malformed blank protagonist input does
+  not leak awkward interpolation into provider instructions.
 - Fixed review findings for explicit protagonist handling, unique mechanism validation, and root lockfile hygiene.
 - Updated the Svelte workbench to render module run results and fixture-demo provenance.
 - Added autonomous work spec for the Story Module Platform.

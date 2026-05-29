@@ -32,6 +32,8 @@ export function buildColdOpenLabProviderInput(input: ColdOpenLabInput): Serializ
 export function buildColdOpenLabProviderMessages(
 	input: ColdOpenLabInput
 ): StoryModuleProviderMessage[] {
+	const protagonistPromptName = promptSubjectName(input);
+
 	return [
 		{
 			role: 'system',
@@ -42,7 +44,7 @@ export function buildColdOpenLabProviderMessages(
 				'Do not include comments, markdown, bullets outside JSON, or extra prose.',
 				'Use exactly one rejectionRisk value per variant: low, medium, or high.',
 				'Each variant.text must be one complete sentence, 12-20 words, with no semicolon.',
-				`Each variant.text must name ${input.protagonistName} or another concrete subject, show first-minute scene pressure, and include a specific cost, debt, status wound, or relationship price.`,
+				`Each variant.text must name ${protagonistPromptName} or another concrete subject, show first-minute scene pressure, and include a specific cost, debt, status wound, or relationship price.`,
 				'Each firstMinuteQuestion must include its payoff path using a concrete clue, proof, cost, price, debt, consequence, or next-episode reveal.',
 				'Every acquisitionStrategy, audioNote, winnerRationale, and rejectionNote must use scene-specific nouns from this seed, not general craft language.',
 				`Never print these generic phrases in any JSON value: ${formatForbiddenGenericPhrases()}.`,
@@ -82,4 +84,8 @@ export function buildColdOpenLabProviderMessages(
 
 function formatForbiddenGenericPhrases(): string {
 	return GENERIC_WRITING_ADVICE_PHRASES.map((phrase) => `"${phrase}"`).join(', ');
+}
+
+function promptSubjectName(input: ColdOpenLabInput): string {
+	return input.protagonistName.trim() || 'the protagonist';
 }

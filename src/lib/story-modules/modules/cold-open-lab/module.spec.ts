@@ -38,6 +38,16 @@ describe('cold open lab module', () => {
 		}
 	});
 
+	it('keeps provider prompts readable when the protagonist name is blank', () => {
+		const messages = buildColdOpenLabProviderMessages({
+			...coldOpenLabFixtureInput,
+			protagonistName: ' '
+		});
+		const promptText = messages.map((message) => message.content).join('\n');
+
+		expect(promptText).toContain('must name the protagonist or another concrete subject');
+	});
+
 	it('fails closed in live mode while no provider exists', async () => {
 		const context = {
 			...createModuleFixtureContext(coldOpenLabFixtureInput),
