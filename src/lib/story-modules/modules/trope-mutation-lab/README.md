@@ -24,4 +24,5 @@ Quality gates:
 `trope-mutation-lab.v2` hardens the provider prompt after production smoke reached this module and
 failed closed on weak `episodePressure` output. Every live `episodePressure` item must now begin with
 `Every episode`, `Each episode`, or `Whenever`, and it must carry a concrete recurring cost word.
-Tone-only advice, escalation language, or suspense-only pressure remains a prose-quality rejection.
+The live quality gate enforces the same prefix rule. Tone-only advice, escalation language, or
+suspense-only pressure remains a prose-quality rejection.

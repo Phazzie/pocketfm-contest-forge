@@ -5,7 +5,8 @@
 ## Unreleased
 
 - Hardened `trope-mutation-lab.v2` after production smoke reached the module and rejected weak
-  episode pressure; live pressure items must now be repeatable and carry concrete recurring costs.
+  episode pressure; live pressure items must now start with a repeat cue and carry concrete
+  recurring costs.
 - Made the live Story Studio runner respect selected mechanisms before provider execution, returning
   locked artifacts for deselected live tools instead of spending xAI calls.
 - Excluded the live-only `council-review` module from fixture/demo forge output until that path has

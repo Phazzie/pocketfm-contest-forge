@@ -113,7 +113,8 @@ the JSON input block and are not interpolated into system instructions.
 module and failed closed on `PROSE_QUALITY_REJECTION`. Each live `episodePressure` item must now
 start with a repeatable cue (`Every episode`, `Each episode`, or `Whenever`) and include a concrete
 cost word such as betrayal, debt, family, lover, public, relationship, reputation, secret, status,
-or trust. This aligns the prompt with the existing quality gate instead of weakening the gate.
+or trust. The live quality gate mirrors that prefix rule so the prompt and acceptance criteria stay
+aligned instead of weakening the gate.
 
 ## xAI Grok Adapter
 

@@ -270,8 +270,32 @@ describe('live module executor', () => {
 		expect(promptText).toContain(
 			'Every episodePressure item must include at least one concrete cost word'
 		);
+		expect(promptText).toContain('Do not generate episodePressure items that only describe tone');
 		expect(promptText).toContain('betrayal, cost, debt, family, lover, name');
 		expect(promptText).toContain('Every episode victory costs the protagonist public status');
+	});
+
+	it('rejects trope-mutation episode pressure that carries cost but omits the v2 repeat cue', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(
+				JSON.stringify({
+					...tropeMutationLabFixtureOutput,
+					episodePressure: [
+						'Every victory must cost Mara a witness, name, or intimate memory.',
+						'Every public proof must create a private accusation and family debt.',
+						'Every romantic advance must strengthen the antagonist claim and cost Mara public trust.'
+					]
+				} satisfies TropeMutationLabOutput)
+			)
+		);
+		const result = await runTropeMutationLab(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+		expect(result.issues.map((issue) => issue.message).join(' ')).toContain(
+			'start with a repeat cue'
+		);
 	});
 
 	it('accepts non-medieval trope scene proof through genre-aware quality terms', async () => {
@@ -288,8 +312,8 @@ describe('live module executor', () => {
 						'Mara exposes her lover in the pack den, then loses public alpha status and family trust when the bond answers.',
 					episodePressure: [
 						'Every episode forces a pack ritual to repeat while costing Mara family trust.',
-						'Every public alpha challenge must create a relationship debt.',
-						'Every forbidden bond advance must cost public status inside the pack.'
+						'Each episode public alpha challenge must create a relationship debt.',
+						'Whenever the forbidden bond advances, Mara must pay public status inside the pack.'
 					]
 				} satisfies TropeMutationLabOutput)
 			)

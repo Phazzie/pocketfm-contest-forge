@@ -73,7 +73,8 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       285-second application budget.
 - [x] 2026-05-29 17:20 UTC - Production live smoke reached `trope-mutation-lab` and failed closed
       on weak episode-pressure prose instead of falling back. Hardened `trope-mutation-lab.v2` so
-      provider output must describe repeatable, concrete cost-bearing episode pressure.
+      provider output must start episode pressure with repeat cues and carry concrete costs, and
+      mirrored that rule in the live quality gate.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -292,10 +293,11 @@ check before each provider call. Rationale: the route should preserve typed Stor
 when the full chain runs long; if the remaining budget is too low, locking the next artifact is
 better than risking a Vercel 504 page.
 
-2026-05-29 17:20 UTC - Keep the `trope-mutation-lab` quality gate strict and harden the prompt to
-match it. Rationale: the quality gate rejected weak Grok episode-pressure output in production
+2026-05-29 17:20 UTC - Keep the `trope-mutation-lab` quality gate strict and harden the prompt and
+gate together. Rationale: the quality gate rejected weak Grok episode-pressure output in production
 smoke, and the product principle is to fail closed or improve provider instructions, not accept
-abstract story advice.
+abstract story advice. If the prompt states an exact repeat-cue rule, live acceptance must enforce
+the same rule.
 
 ## Outcomes & Retrospective
 
@@ -730,6 +732,15 @@ src/lib/application/liveModuleExecutor.spec.ts` returned 3 files and 39 tests pa
 src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 files and 26 tests
   passing. `npm run guard:no-live-fallback` and `npm run guard:docs-drift` passed. Full
   `npm run verify` passed with 21 test files and 109 tests, zero Svelte errors/warnings, and a
+  production build.
+- 2026-05-29 17:40 UTC - PR #17 review found that the new prompt prefix rule also needed live
+  quality-gate enforcement. Added the prefix check, updated valid fixture/test output, and reworded
+  the prompt prohibition from "Reject" to "Do not generate." Focused
+  `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
+src/lib/application/runLiveStoryStudio.spec.ts
+src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 3 files and 39 tests
+  passing. `npm run guard:no-live-fallback` and `npm run guard:docs-drift` passed. Full
+  `npm run verify` passed with 21 test files and 110 tests, zero Svelte errors/warnings, and a
   production build.
 
 ## Interfaces and Dependencies
