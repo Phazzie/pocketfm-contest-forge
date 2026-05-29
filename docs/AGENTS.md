@@ -6,6 +6,7 @@ Docs are part of the product architecture. Keep them current when code or produc
 
 ## Required Docs
 
+- Root `DESIGN.md`: UI direction, visual rules, component expectations, and screenshot acceptance
 - `ARCHITECTURE.md`: dependency direction and system shape
 - `AI_ORCHESTRATION.md`: live AI strategy, council roles, schemas, failures
 - `PROSE_QUALITY.md`: rubric for good writing output

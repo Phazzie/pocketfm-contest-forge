@@ -59,6 +59,12 @@ changes, cross-boundary contracts, or multi-hour autonomous work, create or upda
 described in `.agent/PLANS.md` before implementation. The ExecPlan is a living document and must be
 kept current through design, implementation, validation, and handoff.
 
+## Design System
+
+For UI work, read `DESIGN.md` before editing routes or components. The current product direction is
+the colorful Serial Story Studio: quirky story artifacts and writer-room language, conventional
+controls and accessible task flow.
+
 ## Prose Quality Rule
 
 Do not accept AI output just because it is well formatted. Good output must be specific, surprising, playable by voice, emotionally legible, and useful for a serial contest strategy.
@@ -73,6 +79,7 @@ Update docs when relevant:
 - `docs/LESSONS_LEARNED.md`: mistakes, corrections, product principles
 - `docs/TRACKING.md`: open issues, review findings, risks, decisions to revisit
 - `docs/AI_ORCHESTRATION.md`: provider, prompt, schema, or AI council changes
+- `DESIGN.md`: UI direction, visual rules, component expectations, and screenshot acceptance
 
 ## Verification
 
