@@ -105,6 +105,21 @@ describe('live module executor', () => {
 		expect(result.provenance.provider).toBe('xai');
 	});
 
+	it('fails closed with a quota issue when the provider account cannot spend', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerFailure(
+				'PROVIDER_QUOTA_EXCEEDED',
+				'xAI provider quota or billing limit blocked generation.'
+			)
+		);
+		const result = await runColdOpen(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROVIDER_QUOTA_EXCEEDED');
+		expect(result.trackingEvents[0]?.metadata?.failureCode).toBe('PROVIDER_QUOTA_EXCEEDED');
+	});
+
 	it('fails closed on provider timeout', async () => {
 		const provider = new FakeStoryModuleProvider(
 			providerFailure('PROVIDER_TIMEOUT', 'The fake provider exceeded its deadline.')

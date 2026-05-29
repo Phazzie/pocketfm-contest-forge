@@ -113,3 +113,14 @@ quality-gate messages, provider provenance, and recent tracking events.
 Remaining concern: this is still a request/response demo, and production full-chain live smoke is
 blocked by xAI billing/spend. Browser verification must stay part of every visible UI change because
 dense artifact surfaces can regress on mobile quickly.
+
+## Checkpoint 15: Provider Quota Clarity
+
+The provider boundary now distinguishes xAI quota, billing, credit, monthly spend, and provider
+rate-limit failures from generic provider unavailability. Those cases map to
+`PROVIDER_QUOTA_EXCEEDED`, propagate through `LiveModuleExecutor`, and render as failed Story Studio
+artifact issues without substituting fixture output. PR #26 review also hardened the classifier
+against provider wording variants such as `rate-limit`, `rate_limit`, and `usage_limit`.
+
+Remaining concern: this improves failure clarity but does not remove the external blocker. A full
+accepted production live AI smoke still requires xAI credits/spend to be restored.

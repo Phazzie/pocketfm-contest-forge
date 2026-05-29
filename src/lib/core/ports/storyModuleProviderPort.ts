@@ -14,6 +14,7 @@ export const storyModuleProviderNameSchema = z.enum([
 
 export const storyModuleProviderFailureCodeSchema = z.enum([
 	'PROVIDER_UNAVAILABLE',
+	'PROVIDER_QUOTA_EXCEEDED',
 	'PROVIDER_TIMEOUT',
 	'MALFORMED_JSON',
 	'SCHEMA_VALIDATION_FAILED',

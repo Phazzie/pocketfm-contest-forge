@@ -111,6 +111,15 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       deploy. Main CI passed for `b804046`, Vercel production deployment
       `dpl_CeAJSsu1vs4g32LXv6XAwW9tjrJQ` is ready, deploy readiness passed, and the production
       browser smoke passed against `https://pocketfm-contest-forge.vercel.app`.
+- [x] 2026-05-29 21:04 UTC - Added a provider quota/billing failure contract so xAI credit,
+      billing, monthly spend, and provider rate-limit blocks map to `PROVIDER_QUOTA_EXCEEDED`
+      instead of a generic unavailable issue.
+- [x] 2026-05-29 21:06 UTC - Verified the provider quota failure contract locally. Focused
+      provider/executor tests, required guards, and full verification passed with no fallback or
+      type-escape regressions.
+- [x] 2026-05-29 21:18 UTC - Addressed PR #26 review feedback by normalizing hyphenated and
+      underscored provider quota wording before classification, with regression coverage for
+      `rate-limit`, `rate_limit`, and `usage_limit`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
 - [ ] Restore xAI credits/spend and prove a full accepted production live AI smoke run.
@@ -243,6 +252,15 @@ The visible UI milestone is presentational only. `src/routes/+page.svelte` still
 wiring, while `src/lib/components/story-studio/LiveRunPanel.svelte` and `SeedPanel.svelte` render
 existing `StoryStudioRun` data. The new judge rail summarizes artifact issues, next actions, and
 provenance already present on the contract; it does not create quality judgments in Svelte.
+
+The xAI billing/spend blocker deserves its own failure shape. Treating it as only
+`PROVIDER_UNAVAILABLE` made the UI truthful but less diagnostic. The provider port now includes
+`PROVIDER_QUOTA_EXCEEDED`, and the xAI adapter maps credit, billing, spend-limit, and provider
+rate-limit responses into that code while preserving fail-closed behavior.
+
+Provider error wording can vary by delimiter. PR #26 review caught that `rate-limit` and
+`rate_limit` should classify the same way as `rate limit`; the xAI adapter now normalizes hyphens
+and underscores before checking quota/billing terms.
 
 ## Decision Log
 
@@ -379,6 +397,16 @@ it; generic critique would recreate the static-council technical debt this modul
 logic milestone. Rationale: the remaining plan item was visual/demo maturity, and the live module
 chain already owns provider calls, schema validation, quality gates, provenance, and fail-closed
 behavior. Svelte components may summarize contract fields but must not synthesize advice or scores.
+
+2026-05-29 21:04 UTC - Add `PROVIDER_QUOTA_EXCEEDED` to the provider and module issue contracts.
+Rationale: xAI credits/monthly spend is the current production blocker, and a billing/quota limit is
+not the same operator action as a missing API key or bad account permission. It should still fail
+closed, but the visible artifact issue should name the spend/credit action clearly.
+
+2026-05-29 21:18 UTC - Normalize provider error delimiters before quota classification. Rationale:
+provider error bodies are not a stable API contract, so `rate limit`, `rate-limit`, and `rate_limit`
+should all route to the same fail-closed quota issue without weakening generic 403 permission
+handling.
 
 ## Outcomes & Retrospective
 
@@ -903,6 +931,15 @@ src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 file
 https://pocketfm-contest-forge.vercel.app` passed, and production browser smoke passed with body
   length 3259, 27 controls, Story Studio action visible, and no browser errors. Full live AI smoke
   was not retried because xAI credits/monthly spend remains the external blocker.
+- 2026-05-29 21:06 UTC - Provider quota clarity checks passed. Focused
+  `npm run test -- src/lib/adapters/ai/xaiStoryModuleProvider.spec.ts
+src/lib/application/liveModuleExecutor.spec.ts` returned 2 files and 49 tests passing.
+  `npm run guard:no-live-fallback` passed for 5 registered modules and `npm run guard:docs-drift`
+  passed for 6 changed app code/script files. Full `npm run verify` passed with 22 test files, 125
+  tests, zero Svelte errors/warnings, no approved explicit `any` lines, and a production build.
+- 2026-05-29 21:18 UTC - PR #26 review hardening added delimiter-variant quota tests. Focused
+  provider/executor tests now cover 53 tests. Full `npm run verify` passed again with 22 test files,
+  129 tests, zero Svelte errors/warnings, no approved explicit `any` lines, and a production build.
 
 ## Interfaces and Dependencies
 
