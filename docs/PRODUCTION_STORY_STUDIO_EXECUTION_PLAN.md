@@ -607,6 +607,9 @@ src/lib/story-modules/modules/council-review/module.spec.ts`, and `npm run check
   `https://pocketfm-contest-forge-2yb69ulcf-phazzies-projects.vercel.app`, and CodeRabbit review
   was still pending. Remote browser smoke against that preview was blocked by Vercel Authentication
   before app load with 401/403 responses, matching the existing preview-protection risk.
+- 2026-05-29 13:30 - PR review noted a potential hydration mismatch from
+  `toLocaleDateString()` in the Svelte template. Replaced the locale formatting with stable ISO date
+  labels before merge.
 
 ## Interfaces and Dependencies
 
