@@ -9,6 +9,10 @@ import {
 } from '$lib/core/domain/proseQuality';
 import { bingeDebtLedgerOutputSchema } from '$lib/story-modules/modules/binge-debt-ledger/contract';
 import { cliffhangerFuturesOutputSchema } from '$lib/story-modules/modules/cliffhanger-futures/contract';
+import {
+	tropeMutationLabInputSchema,
+	tropeMutationLabOutputSchema
+} from '$lib/story-modules/modules/trope-mutation-lab/contract';
 
 export type LiveModuleQualityGate = (review: ProseQualityReview) => ProseQualityResult;
 
@@ -49,6 +53,13 @@ export const defaultLiveModuleQualityGateRegistry: LiveModuleQualityGateRegistry
 			buildReview: buildCliffhangerFuturesQualityReview,
 			qualityGate: evaluateCliffhangerFuturesQuality
 		}
+	],
+	[
+		'trope-mutation-lab',
+		{
+			buildReview: buildTropeMutationLabQualityReview,
+			qualityGate: evaluateTropeMutationLabQuality
+		}
 	]
 ]);
 
@@ -83,6 +94,16 @@ function buildCliffhangerFuturesQualityReview(
 ): ProseQualityReview {
 	return {
 		moduleId: request.moduleId,
+		output: request.output
+	};
+}
+
+function buildTropeMutationLabQualityReview(
+	request: LiveModuleQualityReviewRequest
+): ProseQualityReview {
+	return {
+		moduleId: request.moduleId,
+		input: request.input,
 		output: request.output
 	};
 }
@@ -253,6 +274,124 @@ function evaluateCliffhangerFuturesQuality(review: ProseQualityReview): ProseQua
 	};
 }
 
+function evaluateTropeMutationLabQuality(review: ProseQualityReview): ProseQualityResult {
+	const parsedOutput = tropeMutationLabOutputSchema.safeParse(review.output);
+	const parsedInput = tropeMutationLabInputSchema.safeParse(review.input);
+	const issues: ProseQualityIssue[] = [];
+
+	if (!parsedOutput.success) {
+		return evaluateModuleProseQuality(review);
+	}
+
+	const output = parsedOutput.data;
+	const proseText = [
+		output.expectedTrope,
+		output.mutationRule,
+		output.preservedPromise,
+		output.confusionGuardrail,
+		output.serialEngine,
+		output.sceneProof,
+		...output.episodePressure,
+		output.rejectionNote
+	].join(' ');
+	const lowerProse = proseText.toLowerCase();
+	const lowerTrope = output.expectedTrope.toLowerCase();
+	const lowerMutation = output.mutationRule.toLowerCase();
+
+	const genericPhrase = GENERIC_WRITING_ADVICE_PHRASES.find((phrase) =>
+		lowerProse.includes(phrase)
+	);
+
+	if (genericPhrase) {
+		issues.push({
+			code: 'GENERIC_WRITING_ADVICE',
+			field: `${review.moduleId}.output`,
+			message: `Trope Mutation Lab used generic writing-advice phrasing: "${genericPhrase}".`,
+			severity: 'error'
+		});
+	}
+
+	if (!hasAny(lowerTrope, familiarTropeTerms)) {
+		issues.push({
+			code: 'NO_PROSE_CANDIDATES',
+			field: `${review.moduleId}.expectedTrope`,
+			message: 'Trope Mutation Lab must start from a recognizable genre doorway.',
+			severity: 'error'
+		});
+	}
+
+	if (!hasAny(lowerMutation, mutationTerms) || lowerMutation === lowerTrope) {
+		issues.push({
+			code: 'ABSTRACT_SCENE_PRESSURE',
+			field: `${review.moduleId}.mutationRule`,
+			message: 'Trope Mutation Lab must name a specific inversion, subversion, or rule change.',
+			severity: 'error'
+		});
+	}
+
+	if (!hasAny(output.serialEngine.toLowerCase(), serialEngineTerms)) {
+		issues.push({
+			code: 'ABSTRACT_SCENE_PRESSURE',
+			field: `${review.moduleId}.serialEngine`,
+			message: 'Trope Mutation Lab must describe a repeatable episode engine.',
+			severity: 'error'
+		});
+	}
+
+	if (
+		!hasAny(output.sceneProof.toLowerCase(), tropeSceneTerms) ||
+		!hasAny(output.sceneProof.toLowerCase(), debtCostTerms)
+	) {
+		issues.push({
+			code: 'MISSING_SPECIFIC_COST',
+			field: `${review.moduleId}.sceneProof`,
+			message:
+				'Trope Mutation Lab needs one concrete scene proof with a place, action, and relationship or status cost.',
+			severity: 'error'
+		});
+	}
+
+	const contestTerms = parsedInput.success
+		? contestPromiseTerms([
+				parsedInput.data.contestGenre,
+				parsedInput.data.contestName,
+				...parsedInput.data.mandatoryElements,
+				parsedInput.data.emotionalPromise,
+				parsedInput.data.tabooLever
+			])
+		: [];
+
+	if (contestTerms.length > 0 && !hasAny(lowerProse, contestTerms)) {
+		issues.push({
+			code: 'MISSING_SPECIFIC_COST',
+			field: `${review.moduleId}.preservedPromise`,
+			message:
+				'Trope Mutation Lab must preserve at least one concrete contest lane or mandatory element.',
+			severity: 'error'
+		});
+	}
+
+	const weakEpisodePressure = output.episodePressure.filter(
+		(pressure) =>
+			!hasAny(pressure.toLowerCase(), serialEngineTerms) ||
+			!hasAny(pressure.toLowerCase(), debtCostTerms)
+	);
+
+	if (weakEpisodePressure.length > 0) {
+		issues.push({
+			code: 'ABSTRACT_SCENE_PRESSURE',
+			field: `${review.moduleId}.episodePressure`,
+			message: 'Trope Mutation Lab episode pressure must be repeatable and carry a concrete cost.',
+			severity: 'error'
+		});
+	}
+
+	return {
+		accepted: issues.every((issue) => issue.severity !== 'error'),
+		issues
+	};
+}
+
 function readStringProperty(value: unknown, key: string): string | undefined {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
 	const property = (value as Record<string, unknown>)[key];
@@ -261,6 +400,15 @@ function readStringProperty(value: unknown, key: string): string | undefined {
 
 function hasAny(text: string, terms: string[]): boolean {
 	return terms.some((term) => text.includes(term));
+}
+
+function contestPromiseTerms(values: string[]): string[] {
+	const terms = values
+		.flatMap((value) => value.toLowerCase().split(/[^a-z0-9]+/))
+		.map((term) => term.trim())
+		.filter((term) => term.length >= 4 && !contestStopWords.has(term));
+
+	return [...new Set(terms)];
 }
 
 const debtCostTerms = [
@@ -280,6 +428,87 @@ const debtCostTerms = [
 	'status',
 	'trust'
 ];
+
+const familiarTropeTerms = [
+	'arranged',
+	'betrayal',
+	'chosen',
+	'curse',
+	'cursed',
+	'enemies',
+	'forbidden',
+	'heir',
+	'identity',
+	'marriage',
+	'power',
+	'prophecy',
+	'revenge',
+	'rightful',
+	'secret',
+	'throne',
+	'vampire',
+	'werewolf'
+];
+
+const mutationTerms = [
+	'but',
+	'except',
+	'instead',
+	'invert',
+	'inverts',
+	'mutation',
+	'only',
+	'reverse',
+	'reverses',
+	'rule',
+	'subvert',
+	'subverts',
+	'twist',
+	'while'
+];
+
+const serialEngineTerms = [
+	'each',
+	'episode',
+	'every',
+	'payoff',
+	'recur',
+	'recurring',
+	'repeat',
+	'repeatable',
+	'serial',
+	'whenever'
+];
+
+const tropeSceneTerms = [
+	'accusation',
+	'altar',
+	'court',
+	'crowd',
+	'crown',
+	'execution',
+	'lover',
+	'name',
+	'public',
+	'room',
+	'throne',
+	'trial',
+	'witness'
+];
+
+const contestStopWords = new Set([
+	'and',
+	'contest',
+	'every',
+	'from',
+	'genre',
+	'into',
+	'makes',
+	'promise',
+	'story',
+	'that',
+	'with'
+]);
 
 const cliffhangerPayoffTerms = [
 	'because',

@@ -24,6 +24,7 @@ export interface ProseQualityResult {
 export interface ProseQualityReview {
 	moduleId: string;
 	protagonistName?: string;
+	input?: unknown;
 	output: unknown;
 }
 

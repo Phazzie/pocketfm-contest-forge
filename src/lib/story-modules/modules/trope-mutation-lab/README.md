@@ -7,7 +7,9 @@ Keeps a familiar genre doorway while changing one trope rule enough to create re
 Mode rules:
 
 - `fixture` and `demo` may return deterministic fixture output.
-- `live` fails closed until a provider adapter exists.
+- Direct `module.run(..., live)` fails closed instead of returning fixture output.
+- Production live execution uses `LiveModuleExecutor`, `buildTropeMutationLabProviderMessages`,
+  `buildTropeMutationLabProviderInput`, and the `LiveModuleQualityGateRegistry`.
 - Prompt text is owned in `prompts.ts` and versioned by `TROPE_MUTATION_LAB_PROMPT_VERSION`.
 
 Quality gates:

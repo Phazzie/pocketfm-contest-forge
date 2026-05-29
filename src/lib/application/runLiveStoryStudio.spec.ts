@@ -13,6 +13,7 @@ import { createStoryModuleRegistry, defaultStoryModules } from '$lib/story-modul
 import type { ColdOpenLabOutput } from '$lib/story-modules/modules/cold-open-lab/contract';
 import type { BingeDebtLedgerOutput } from '$lib/story-modules/modules/binge-debt-ledger/contract';
 import type { CliffhangerFuturesOutput } from '$lib/story-modules/modules/cliffhanger-futures/contract';
+import type { TropeMutationLabOutput } from '$lib/story-modules/modules/trope-mutation-lab/contract';
 
 const generatedAt = '2026-05-29T11:08:00.000Z';
 const requestedAt = '2026-05-29T11:08:01.000Z';
@@ -40,11 +41,12 @@ class FakeStoryModuleProvider implements StoryModuleProvider {
 }
 
 describe('run live story studio', () => {
-	it('returns accepted cold-open, debt-ledger, and cliffhanger artifacts', async () => {
+	it('returns accepted cold-open, debt-ledger, cliffhanger, and trope artifacts', async () => {
 		const provider = new FakeStoryModuleProvider([
 			providerSuccess(JSON.stringify(validColdOpenOutput)),
 			providerSuccess(JSON.stringify(validBingeDebtLedgerOutput)),
-			providerSuccess(JSON.stringify(validCliffhangerFuturesOutput))
+			providerSuccess(JSON.stringify(validCliffhangerFuturesOutput)),
+			providerSuccess(JSON.stringify(validTropeMutationLabOutput))
 		]);
 		const result = await runUseCase(provider);
 
@@ -72,20 +74,23 @@ describe('run live story studio', () => {
 			expect(result.data.artifacts[2]?.result?.output).toMatchObject({
 				recommendationId: 'enemy-knows-name'
 			});
-			expect(result.data.artifacts.slice(3).every((artifact) => artifact.status === 'locked')).toBe(
-				true
-			);
+			expect(result.data.artifacts[3]?.status).toBe('accepted');
+			expect(result.data.artifacts[3]?.result?.output).toMatchObject({
+				sceneProof: expect.stringContaining('court trial')
+			});
+			expect(result.data.artifacts[4]?.status).toBe('locked');
 			expect(result.data.qualitySummary).toMatchObject({
-				accepted: 3,
+				accepted: 4,
 				failed: 0,
-				locked: 2
+				locked: 1
 			});
 			expect(result.data.contestFreshness.status).toBe('unknown');
 		}
-		expect(provider.requests).toHaveLength(3);
+		expect(provider.requests).toHaveLength(4);
 		expect(provider.requests[0]?.moduleId).toBe('cold-open-lab');
 		expect(provider.requests[1]?.moduleId).toBe('binge-debt-ledger');
 		expect(provider.requests[2]?.moduleId).toBe('cliffhanger-futures');
+		expect(provider.requests[3]?.moduleId).toBe('trope-mutation-lab');
 	});
 
 	it('rejects invalid forge requests before calling the provider', async () => {
@@ -198,6 +203,36 @@ describe('run live story studio', () => {
 			'cold-open-lab',
 			'binge-debt-ledger',
 			'cliffhanger-futures'
+		]);
+	});
+
+	it('surfaces trope provider failure as a failed artifact without fixture fallback', async () => {
+		const provider = new FakeStoryModuleProvider([
+			providerSuccess(JSON.stringify(validColdOpenOutput)),
+			providerSuccess(JSON.stringify(validBingeDebtLedgerOutput)),
+			providerSuccess(JSON.stringify(validCliffhangerFuturesOutput)),
+			providerFailure('SCHEMA_VALIDATION_FAILED', 'The fake provider returned a weak trope.')
+		]);
+		const result = await runUseCase(provider);
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			const trope = result.data.artifacts[3];
+
+			expect(trope?.status).toBe('failed');
+			expect(trope?.result?.output).toBeUndefined();
+			expect(trope?.issues.map((issue) => issue.code)).toContain('SCHEMA_VALIDATION_FAILED');
+			expect(result.data.qualitySummary).toMatchObject({
+				accepted: 3,
+				failed: 1,
+				locked: 1
+			});
+		}
+		expect(provider.requests.map((request) => request.moduleId)).toEqual([
+			'cold-open-lab',
+			'binge-debt-ledger',
+			'cliffhanger-futures',
+			'trope-mutation-lab'
 		]);
 	});
 
@@ -370,4 +405,24 @@ const validCliffhangerFuturesOutput: CliffhangerFuturesOutput = {
 	recommendationId: 'enemy-knows-name',
 	marketRationale:
 		'The winning cliffhanger reprices the public name debt and has a clean next-episode proof path.'
+};
+
+const validTropeMutationLabOutput: TropeMutationLabOutput = {
+	expectedTrope: 'the rightful heir proves identity and reclaims the throne',
+	mutationRule:
+		'the crown only recognizes whoever can make the public believe the cruelest version of the truth',
+	preservedPromise: 'the listener still gets court betrayal, cursed power, and public revenge.',
+	confusionGuardrail:
+		'State the rule through trial, punishment, and witness memory before adding royal history.',
+	serialEngine:
+		'Each episode forces Mara to win public belief while losing a witness, name, or private memory.',
+	sceneProof:
+		'Mara wins a court trial by making the crowd believe her lover lied, then the crown erases the witness name from every public record.',
+	episodePressure: [
+		'Every victory must cost Mara a witness, name, or intimate memory.',
+		'Every public proof must create a private accusation.',
+		'Every romantic advance must strengthen the antagonist claim and cost Mara public trust.'
+	],
+	rejectionNote:
+		'Do not invert the trope so far that the throne no longer matters; the familiar power fantasy must remain legible.'
 };

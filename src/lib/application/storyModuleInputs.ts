@@ -11,7 +11,10 @@ import type {
 	BingeDebtLedgerOutput,
 	LedgerDebt
 } from '$lib/story-modules/modules/binge-debt-ledger/contract';
-import type { CliffhangerFuturesInput } from '$lib/story-modules/modules/cliffhanger-futures/contract';
+import type {
+	CliffhangerFuturesInput,
+	CliffhangerFuturesOutput
+} from '$lib/story-modules/modules/cliffhanger-futures/contract';
 import type {
 	ColdOpenLabInput,
 	ColdOpenLabOutput
@@ -128,6 +131,35 @@ export function buildTropeMutationLabInput(
 		tabooLever: request.seed.tabooLever,
 		riskTolerance: request.riskTolerance
 	};
+}
+
+export function buildTropeMutationLabInputFromLiveArtifacts(
+	request: ForgeRequest,
+	brief: ContestBrief,
+	coldOpenOutput: ColdOpenLabOutput,
+	bingeDebtOutput: BingeDebtLedgerOutput,
+	cliffhangerOutput: CliffhangerFuturesOutput
+): TropeMutationLabInput {
+	const winningColdOpen =
+		coldOpenOutput.variants.find((variant) => variant.id === coldOpenOutput.winnerId) ??
+		coldOpenOutput.variants[0];
+	const recommendedCliffhanger =
+		cliffhangerOutput.candidates.find(
+			(candidate) => candidate.id === cliffhangerOutput.recommendationId
+		) ?? cliffhangerOutput.candidates[0];
+	const debtLabels = [...bingeDebtOutput.openedDebts, ...bingeDebtOutput.staleDebts].map(
+		(debt) => debt.label
+	);
+	const livePremiseParts = [
+		request.seed.logline,
+		winningColdOpen ? `Accepted cold open: ${winningColdOpen.text}` : '',
+		debtLabels.length > 0 ? `Accepted debts: ${debtLabels.join('; ')}` : '',
+		recommendedCliffhanger
+			? `Recommended cliffhanger: ${recommendedCliffhanger.text} Payoff path: ${recommendedCliffhanger.payoffPath}`
+			: ''
+	].filter((part) => part.trim().length > 0);
+
+	return buildTropeMutationLabInput(request, brief, livePremiseParts.join(' '));
 }
 
 export function buildModuleInput(

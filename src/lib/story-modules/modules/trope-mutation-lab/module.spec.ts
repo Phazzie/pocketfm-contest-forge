@@ -16,6 +16,8 @@ describe('trope mutation lab module', () => {
 		expect(result.status).toBe('success');
 		expect(result.output?.expectedTrope).toContain('rightful heir');
 		expect(result.output?.mutationRule).toContain('public believe');
+		expect(result.output?.serialEngine).toContain('Each episode');
+		expect(result.output?.sceneProof).toContain('court trial');
 		expect(result.output?.episodePressure.length).toBeGreaterThanOrEqual(3);
 		expect(result.provenance.moduleId).toBe('trope-mutation-lab');
 	});

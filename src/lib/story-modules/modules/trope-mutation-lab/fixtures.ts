@@ -20,10 +20,14 @@ export const tropeMutationLabFixtureOutput: TropeMutationLabOutput = {
 	preservedPromise: 'the listener still gets court betrayal, cursed power, and public revenge.',
 	confusionGuardrail:
 		'State the rule through trial, punishment, and witness memory before adding royal history.',
+	serialEngine:
+		'Each episode forces Mara to win public belief while losing a witness, name, or private memory.',
+	sceneProof:
+		'Mara wins a court trial by making the crowd believe her lover lied, then the crown erases the witness name from every public record.',
 	episodePressure: [
 		'Every victory must cost Mara a witness, name, or intimate memory.',
 		'Every public proof must create a private accusation.',
-		'Every romantic advance must strengthen the antagonist legal claim.'
+		'Every romantic advance must strengthen the antagonist claim and cost Mara public trust.'
 	],
 	rejectionNote:
 		'Do not invert the trope so far that the throne no longer matters; the familiar power fantasy must remain legible.'
