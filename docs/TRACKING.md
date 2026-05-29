@@ -21,7 +21,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Done   | P3       | Five sequential live provider calls could overrun deployment duration.                      | PR #15 review | Vercel max duration is explicit at 300 seconds and route-level provider/executor timeouts cap per-module hangs.       |
 | Done   | P3       | Production smoke timed out `cold-open-lab` at the 45-second route budget.                   | Live smoke    | Raised the route-level xAI/executor budget to 55/56 seconds while staying below the 300-second function duration.     |
 | Done   | P3       | 55/56-second module timeouts left too little all-timeout overhead before Vercel 504s.       | PR #16 review | Added a 285-second application budget with a 70-second remaining-time guard before each provider call.                |
-| Done   | P3       | Production smoke reached `trope-mutation-lab` but rejected weak episode pressure.           | Live smoke    | Hardened `trope-mutation-lab.v2` so episode pressure must be repeatable and carry a concrete recurring cost.          |
+| Done   | P3       | Production smoke reached `trope-mutation-lab` but rejected weak episode pressure.           | Live smoke    | Hardened `trope-mutation-lab.v2` so episode pressure must start with a repeat cue and carry concrete recurring cost.  |
 
 ## Product Risks
 

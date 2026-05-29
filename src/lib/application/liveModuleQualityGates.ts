@@ -398,6 +398,7 @@ function evaluateTropeMutationLabQuality(review: ProseQualityReview): ProseQuali
 
 	const weakEpisodePressure = output.episodePressure.filter(
 		(pressure) =>
+			!startsWithAny(pressure.toLowerCase(), tropeEpisodePressurePrefixes) ||
 			!hasAny(pressure.toLowerCase(), serialEngineTerms) ||
 			!hasAny(pressure.toLowerCase(), debtCostTerms)
 	);
@@ -406,7 +407,8 @@ function evaluateTropeMutationLabQuality(review: ProseQualityReview): ProseQuali
 		issues.push({
 			code: 'ABSTRACT_SCENE_PRESSURE',
 			field: `${review.moduleId}.episodePressure`,
-			message: 'Trope Mutation Lab episode pressure must be repeatable and carry a concrete cost.',
+			message:
+				'Trope Mutation Lab episode pressure must start with a repeat cue, be repeatable, and carry a concrete cost.',
 			severity: 'error'
 		});
 	}
@@ -544,6 +546,10 @@ function hasAny(text: string, terms: string[]): boolean {
 	return terms.some((term) => text.includes(term));
 }
 
+function startsWithAny(text: string, prefixes: string[]): boolean {
+	return prefixes.some((prefix) => text.trimStart().startsWith(prefix));
+}
+
 function contestPromiseTerms(values: string[]): string[] {
 	const terms = values
 		.flatMap((value) => value.toLowerCase().split(/[^a-z0-9]+/))
@@ -626,6 +632,8 @@ const serialEngineTerms = [
 	'serial',
 	'whenever'
 ];
+
+const tropeEpisodePressurePrefixes = ['every episode', 'each episode', 'whenever'];
 
 const tropeSceneTerms = [
 	'accusation',

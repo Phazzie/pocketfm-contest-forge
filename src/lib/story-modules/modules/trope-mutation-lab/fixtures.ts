@@ -25,9 +25,9 @@ export const tropeMutationLabFixtureOutput: TropeMutationLabOutput = {
 	sceneProof:
 		'Mara wins a court trial by making the crowd believe her lover lied, then the crown erases the witness name from every public record.',
 	episodePressure: [
-		'Every victory must cost Mara a witness, name, or intimate memory.',
-		'Every public proof must create a private accusation.',
-		'Every romantic advance must strengthen the antagonist claim and cost Mara public trust.'
+		'Every episode victory must cost Mara a witness, name, or intimate memory.',
+		'Each episode public proof must create a private accusation and family debt.',
+		'Whenever romantic advance helps Mara, it strengthens the antagonist claim and costs public trust.'
 	],
 	rejectionNote:
 		'Do not invert the trope so far that the throne no longer matters; the familiar power fantasy must remain legible.'

@@ -47,7 +47,7 @@ export function buildTropeMutationLabProviderMessages(
 				'The episodePressure array must include at least three repeatable episode pressures.',
 				'Every episodePressure item must start with "Every episode", "Each episode", or "Whenever".',
 				'Every episodePressure item must include at least one concrete cost word: betrayal, cost, debt, family, lover, name, price, public, relationship, reputation, secret, shame, status, or trust.',
-				'Reject episodePressure items that only describe tone, escalation, benefits, theme, or suspense without a recurring cost.',
+				'Do not generate episodePressure items that only describe tone, escalation, benefits, theme, or suspense without a recurring cost.',
 				'Do not use generic craft phrases such as strong hook, raise the stakes, emotional stakes, or build suspense.'
 			].join('\n')
 		},
