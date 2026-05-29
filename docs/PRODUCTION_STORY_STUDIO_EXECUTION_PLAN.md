@@ -37,7 +37,8 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       the initial `RunLiveStoryStudio` application use case. The use case runs the live cold-open
       path and returns locked artifacts for modules whose live gates are not implemented yet.
 - [ ] Move deterministic forge output out of the production route.
-- [ ] Generalize live module execution with module-specific quality gates.
+- [x] 2026-05-29 11:22 - Replaced the executor's broad supported-module set with a
+      module-specific live quality gate registry. Only `cold-open-lab` is registered by default.
 - [ ] Make `binge-debt-ledger` live-capable.
 - [ ] Make `cliffhanger-futures` live-capable.
 - [ ] Make `trope-mutation-lab` live-capable.
@@ -74,6 +75,9 @@ under `/Users/hbpheonix/fairytaleswithspice` no longer exists as the active app 
 The first production Story Studio boundary can be implemented before the route is rebuilt. This
 keeps contract and application behavior testable while the current UI still renders the old
 fixture-demo forge plan.
+
+Live-module enablement now depends on `LiveModuleQualityGateRegistry`, not a broad set of supported
+IDs. Each module must provide its own review builder before the executor will call the provider.
 
 ## Decision Log
 
@@ -121,6 +125,10 @@ there, and verification passed from that path.
 locked artifacts for the debt ledger, cliffhanger futures, trope mutation, and council review.
 Rationale: this gives the production route a truthful contract to render before every module is
 live-capable, and it avoids faking incomplete modules with deterministic prose.
+
+2026-05-29 11:22 - Live execution is enabled by a module-specific quality gate registry instead of
+`supportedModuleIds`. Rationale: the executor must know how to build a prose review for each
+module's output before it can safely call the provider.
 
 ## Outcomes & Retrospective
 
@@ -460,6 +468,9 @@ Initial evidence:
 src/lib/application/runLiveStoryStudio.spec.ts
 src/lib/application/runLiveColdOpenLab.spec.ts
 src/lib/application/forgeContestStory.spec.ts` returned 4 files and 19 tests passing.
+- 2026-05-29 11:22 - Focused executor tests passed after the quality-gate registry refactor:
+  `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
+src/lib/application/runLiveStoryStudio.spec.ts` returned 2 files and 20 tests passing.
 
 ## Interfaces and Dependencies
 

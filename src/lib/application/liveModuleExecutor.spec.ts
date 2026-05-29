@@ -159,6 +159,34 @@ describe('live module executor', () => {
 		expect(result.trackingEvents.map((event) => event.type)).toContain('quality-rejection');
 	});
 
+	it('uses the configured module-specific review builder before quality evaluation', async () => {
+		let reviewedProtagonistName: string | undefined;
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(validColdOpenOutput))
+		);
+		const result = await runColdOpen(provider, {
+			qualityGate: (review) => {
+				reviewedProtagonistName = review.protagonistName;
+				return { accepted: true, issues: [] };
+			},
+			qualityGateRegistry: new Map([
+				[
+					'cold-open-lab',
+					{
+						buildReview: ({ moduleId, output }) => ({
+							moduleId,
+							protagonistName: 'Custom Gate Lead',
+							output
+						})
+					}
+				]
+			])
+		});
+
+		expect(result.status).toBe('success');
+		expect(reviewedProtagonistName).toBe('Custom Gate Lead');
+	});
+
 	it('rejects modules without a configured live prose gate before calling the provider', async () => {
 		const provider = new FakeStoryModuleProvider(
 			providerSuccess(JSON.stringify(validColdOpenOutput))

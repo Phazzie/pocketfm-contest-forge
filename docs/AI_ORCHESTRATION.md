@@ -86,10 +86,11 @@ malformed JSON, returns schema-invalid JSON, or produces weak prose, the module 
 no fixture/demo output is substituted.
 
 Current live execution is intentionally enabled only for modules with configured quality gates. The
-default executor supports `cold-open-lab`; other modules must add module-specific prose extraction
-and acceptance rules before they can run through the provider boundary. Provider JSON repair handles
-raw JSON, markdown-fenced JSON, or the first balanced JSON object, but still records this as one
-repair attempt and fails closed if schema validation does not pass.
+default live quality gate registry supports `cold-open-lab`; other modules must add a
+module-specific review builder and acceptance rules before they can run through the provider
+boundary. Provider JSON repair handles raw JSON, markdown-fenced JSON, or the first balanced JSON
+object, but still records this as one repair attempt and fails closed if schema validation does not
+pass.
 
 The executor also enforces a configurable provider timeout. A hung provider returns a failed module
 result with `PROVIDER_TIMEOUT`; it must not leave the request pending indefinitely or backfill with
