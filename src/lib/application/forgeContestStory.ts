@@ -3,8 +3,6 @@
 import type { ContestResearchPort } from '$lib/core/ports/contestResearchPort';
 import type { StoryIntelligencePort } from '$lib/core/ports/storyIntelligencePort';
 import type {
-	ContestBrief,
-	EpisodeBlueprint,
 	ForgePlan,
 	ForgeRequest,
 	UseCaseResponse
@@ -13,6 +11,7 @@ import { validateForgeRequest } from '$lib/core/contracts/contestForgeContract';
 import { createStoryStateFromForgeRequest } from '$lib/core/story-state/storyStateValidation';
 import { ModuleRunner } from '$lib/application/moduleRunner';
 import { toStoryModulePlanResult } from '$lib/application/storyModulePlanResult';
+import { buildModuleInput } from '$lib/application/storyModuleInputs';
 import type { StoryModuleRegistry } from '$lib/story-modules/registry';
 import type { ModuleExecutionMode } from '$lib/story-modules/types';
 
@@ -147,76 +146,4 @@ export class ForgeContestStory {
 			}
 		};
 	}
-}
-
-function buildModuleInput(
-	moduleId: string,
-	request: ForgeRequest,
-	brief: ContestBrief,
-	pilot: EpisodeBlueprint,
-	storyState: ReturnType<typeof createStoryStateFromForgeRequest>,
-	premise: string
-): unknown {
-	const builders: Record<string, () => unknown> = {
-		'cold-open-lab': () => ({
-			workingTitle: request.seed.workingTitle,
-			protagonistName: request.seed.protagonistName,
-			logline: request.seed.logline,
-			emotionalPromise: request.seed.emotionalPromise,
-			tabooLever: request.seed.tabooLever,
-			contestName: brief.contestName,
-			contestLane: brief.id,
-			mandatoryElements: brief.mandatoryElements,
-			riskTolerance: request.riskTolerance
-		}),
-		'cliffhanger-futures': () => ({
-			episodeNumber: pilot.episodeNumber,
-			episodeTitle: pilot.title,
-			beats: pilot.beats.map((beat) => ({
-				id: beat.id,
-				minute: beat.minute,
-				function: beat.function,
-				text: beat.text,
-				unansweredQuestion: beat.unansweredQuestion
-			})),
-			unresolvedDebts: pilot.bingeDebtAdded,
-			contestLane: brief.id,
-			emotionalPromise: request.seed.emotionalPromise
-		}),
-		'binge-debt-ledger': () => ({
-			episodeNumber: pilot.episodeNumber,
-			episodeBeats: pilot.beats.map((beat) => beat.text),
-			secrets: storyState.secrets.map((secret) => secret.description),
-			promises: pilot.bingeDebtAdded,
-			priorLedger: {
-				open: storyState.debts.open.map(toLedgerDebt),
-				paid: storyState.debts.paid.map(toLedgerDebt),
-				stale: storyState.debts.stale.map(toLedgerDebt)
-			}
-		}),
-		'trope-mutation-lab': () => ({
-			contestGenre: request.seed.genre,
-			contestName: brief.contestName,
-			mandatoryElements: brief.mandatoryElements,
-			seedPremise: premise,
-			emotionalPromise: request.seed.emotionalPromise,
-			tabooLever: request.seed.tabooLever,
-			riskTolerance: request.riskTolerance
-		})
-	};
-
-	return builders[moduleId]?.() ?? {};
-}
-
-function toLedgerDebt(
-	debt: ReturnType<typeof createStoryStateFromForgeRequest>['debts']['open'][number]
-) {
-	return {
-		id: debt.id,
-		label: debt.label,
-		status: debt.status,
-		openedInEpisode: debt.openedInEpisode,
-		payoffWindow: debt.payoffWindow,
-		interest: debt.notes ?? `Debt pressure carries into ${debt.payoffWindow}.`
-	};
 }

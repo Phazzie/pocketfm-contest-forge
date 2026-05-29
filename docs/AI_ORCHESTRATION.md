@@ -17,7 +17,7 @@ live provider work from hiding unsafe output normalization behind casual suppres
 3. Build story state from the seed, contest brief, and episode history.
 4. Run registered story modules through runtime schemas and provider adapters.
 5. Run AI council roles against the seed, story state, and module outputs.
-6. Normalize provider outputs into the `ForgePlan` contract.
+6. Normalize provider outputs into production `StoryStudioRun` artifacts.
 7. Run prose quality checks.
 8. Return accepted, partial, or failed AI results with clear metadata.
 
@@ -139,6 +139,13 @@ adapter only from server-side load/action code or a server-only application serv
 authorizes the request with `STORY_AI_ACCESS_CODE`, applies a small per-client in-memory rate limit,
 and returns a `LiveColdOpenResponse` for the UI to render. Provider failures remain visible as failed
 module results; the action does not replace them with fixture prose.
+
+`src/lib/core/contracts/storyStudioContract.ts` now defines the production Story Studio response
+shape. `src/lib/application/runLiveStoryStudio.ts` is the first application use case for that
+contract: it runs the existing live `cold-open-lab` provider path, maps the module result into a
+production artifact, and returns locked artifacts for `binge-debt-ledger`, `cliffhanger-futures`,
+`trope-mutation-lab`, and `council-review` until those modules have their own live prompts and
+quality gates. Locked artifacts are explicit product states, not fallback prose.
 
 ## Provider Tracking
 

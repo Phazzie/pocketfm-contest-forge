@@ -41,6 +41,10 @@
   scaffold with live, fail-closed story artifacts and locked states.
 - Updated execution plan workspace paths after repo consolidation so future work starts from
   `/Users/hbpheonix/pocketfm`.
+- Added the production Story Studio contract and initial live runner, including locked artifact
+  states for modules that do not yet have live quality gates.
+- Extracted shared story-module input builders so fixture/demo forge output and live Story Studio
+  execution use the same module input assembly.
 - Added the story module provider port, fake-provider live executor, JSON repair, schema validation,
   provider provenance, and deterministic prose quality gate for `cold-open-lab`.
 - Hardened the live module boundary after review so markdown-fenced JSON can repair once, fixture

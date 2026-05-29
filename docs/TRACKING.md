@@ -51,6 +51,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Done   | Live smoke client timed out before provider timeout.                | Smoke script timeout now exceeds the xAI provider timeout so failures come from the live action path.                                                                                             |
 | Done   | Prompt subject text could leak user input into system instructions. | Names now stay in the JSON input block, with static system guidance and regression coverage for adversarial protagonist text.                                                                     |
 | Open   | Production route still centers fixture/demo forge output.           | Execute `docs/PRODUCTION_STORY_STUDIO_EXECUTION_PLAN.md` so production shows live artifacts, locked states, or explicit failures instead of deterministic creative prose.                         |
+| Open   | Story Studio runner is not wired into the route yet.                | Replace the current page action/load path with `RunLiveStoryStudio` after the remaining live-module gates are implemented or represented as locked artifacts in the UI.                           |
 
 ## Architecture Review Notes
 
@@ -64,6 +65,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Done   | Review found live demo polish issues.                        | Expired in-memory rate buckets now prune once the demo map grows, and failed live Grok panels use the same failure styling as failed modules.      | Keep temporary demo controls small until durable auth is chosen.                                        |
 | Done   | Review found live access quota loopholes.                    | Failed access-code attempts are rate-limited, paid-call quota is consumed after request validation, and stale live output clears when inputs edit. | Keep access and quota checks separate in future auth work.                                              |
 | Open   | Prose quality gate is deterministic and intentionally crude. | It blocks obvious generic/prose-invalid output, but it is not a substitute for model critique or taste.                                            | Add AI council critique after Grok adapter exists; keep deterministic gate as minimum acceptance floor. |
+| Done   | Production contract needed a truthful locked-artifact state. | `StoryStudioRun` now represents accepted, failed, and locked artifacts separately, so incomplete modules do not need fixture prose in production.  | Render this contract in the production route once UI work begins.                                       |
 
 ## Tracking Targets
 
