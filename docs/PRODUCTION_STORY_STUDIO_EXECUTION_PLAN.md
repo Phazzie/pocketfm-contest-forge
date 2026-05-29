@@ -90,6 +90,13 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [x] 2026-05-29 19:27 UTC - Production live smoke against the `council-review.v2` deploy was
       blocked before generation by xAI account credits or monthly spend limit. This is an external
       provider billing blocker, not a fixture fallback or module quality failure.
+- [x] 2026-05-29 19:45 UTC - Began the `DESIGN.md` UI milestone by extracting the monolithic
+      production route into typed Story Studio components under `src/lib/components/story-studio/`.
+      The route now owns state/action wiring while components own seed controls, artifact boards,
+      quality gates, provenance, and locked states.
+- [x] 2026-05-29 19:55 UTC - Verified the component extraction after tightening mobile/desktop
+      control sizing. Full guards, tests, Svelte diagnostics, production build, UI smoke, and manual
+      desktop/mobile overflow checks passed with no browser errors and no clipped controls.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -841,6 +848,15 @@ src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 file
   `cold-open-lab` could generate: xAI returned `HTTP 403` because the provider account has no
   available credits or has reached its monthly spending limit. No fixture output was accepted. The
   next smoke proof must wait until xAI billing/spend is restored.
+- 2026-05-29 19:55 UTC - Story Studio component extraction verification passed. Final commands
+  were `npm run guard:no-live-fallback`, `npm run guard:docs-drift`, `npm run verify`, and
+  `npm run verify:ui`; full verify reported 21 test files, 117 tests, zero Svelte errors/warnings,
+  no approved explicit `any` lines, and a production build. Browser smoke passed against
+  `http://127.0.0.1:5174/` with body length 2605, 27 controls, Story Studio action visible, and no
+  browser errors. Manual Playwright checks saved `.svelte-kit/screenshots/story-studio-desktop.png`
+  and `.svelte-kit/screenshots/story-studio-mobile.png`; desktop 1440x1100 and mobile 390x900 both
+  had `bodyScrollWidth` equal to viewport width, zero console/page errors, and no overflowing
+  elements.
 
 ## Interfaces and Dependencies
 

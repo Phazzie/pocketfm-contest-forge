@@ -90,3 +90,15 @@ visible status from those dates instead of hardcoding an unknown state in the ro
 
 Remaining concern: this is still manual source curation. A real submission sprint needs a research
 refresh workflow or a live research adapter before claiming the contest rules are current.
+
+## Checkpoint 13: Story Studio Component Boundaries
+
+The production route has been reduced to state and action wiring. Seed controls, live run summary,
+module artifact boards, locked states, quality issues, and provider provenance now live in typed
+Svelte components under `src/lib/components/story-studio/`. Components parse module-owned schemas
+only to render known output shapes; they do not synthesize story advice, call providers, or own
+domain acceptance rules.
+
+Remaining concern: this is a structural UI milestone, not the final visual redesign. The next UI
+pass should continue toward `DESIGN.md` with richer artifact layout and broader browser state
+coverage while keeping story rules outside Svelte.
