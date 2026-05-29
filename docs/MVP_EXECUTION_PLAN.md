@@ -65,8 +65,11 @@ protection so future work cannot silently add type escapes, fallback prose, or b
 
 ## Outcomes & Retrospective
 
-Not complete. Fill this in after the public Vercel production URL works with real Grok output,
-review comments are resolved, and all required PRs are merged.
+Superseded by `docs/PRODUCTION_STORY_STUDIO_EXECUTION_PLAN.md`. The cold-open-only MVP proved the
+server-side xAI adapter, access gate, fail-closed module boundary, Vercel deployment path, and
+initial live smoke. The current production route has moved on to the broader `runLiveStudio` Story
+Studio chain, so older `runLiveColdOpen` steps below remain historical implementation notes rather
+than the active target.
 
 ## Context and Orientation
 

@@ -29,12 +29,20 @@ try {
 		.locator('.vite-error-overlay, #webpack-dev-server-client-overlay, [data-nextjs-dialog]')
 		.count();
 	const controls = await page.locator('select, input, textarea, button').count();
-	const requiredText = await page.getByText('Pocket FM Writing Lab').count();
+	const requiredText = await page.getByText('Pocket FM Contest Forge').count();
+	const storyStudioAction = await page.getByText('Run Story Studio').count();
 
-	const result = { url, bodyLength, overlay, controls, requiredText, errors };
+	const result = { url, bodyLength, overlay, controls, requiredText, storyStudioAction, errors };
 	console.log(JSON.stringify(result, null, 2));
 
-	if (bodyLength < 200 || overlay > 0 || controls < 10 || requiredText < 1 || errors.length > 0) {
+	if (
+		bodyLength < 200 ||
+		overlay > 0 ||
+		controls < 10 ||
+		requiredText < 1 ||
+		storyStudioAction < 1 ||
+		errors.length > 0
+	) {
 		process.exitCode = 1;
 	}
 } finally {

@@ -4,7 +4,14 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseDevalue } from 'devalue';
 
-const SMOKE_REQUEST_TIMEOUT_MS = 150_000;
+const SMOKE_REQUEST_TIMEOUT_MS = 720_000;
+const REQUIRED_ARTIFACT_IDS = [
+	'cold-open-lab',
+	'binge-debt-ledger',
+	'cliffhanger-futures',
+	'trope-mutation-lab',
+	'council-review'
+];
 
 if (isMainModule()) {
 	try {
@@ -17,7 +24,9 @@ if (isMainModule()) {
 
 export async function run() {
 	if (process.env.RUN_LIVE_AI_SMOKE !== '1') {
-		console.log('SKIP: Set RUN_LIVE_AI_SMOKE=1, LIVE_AI_SMOKE_URL, and STORY_AI_ACCESS_CODE.');
+		console.log(
+			'SKIP: Set RUN_LIVE_AI_SMOKE=1, LIVE_AI_SMOKE_URL, and STORY_AI_ACCESS_CODE or LIVE_AI_SMOKE_ACCESS_CODE.'
+		);
 		return;
 	}
 
@@ -34,38 +43,60 @@ export async function run() {
 
 	const envelope = parseActionEnvelope(responseText);
 	const actionData = parseActionData(envelope);
-	const liveColdOpen = actionData?.liveColdOpen;
+	const storyStudio = actionData?.storyStudio;
 
 	if (envelope.type === 'failure') {
 		throw new Error(
-			`Live AI smoke action failed with action status ${actionStatus(envelope, response.status)}: ${failureMessage(liveColdOpen)}`
+			`Live AI smoke action failed with action status ${actionStatus(envelope, response.status)}: ${failureMessage(storyStudio)}`
 		);
 	}
 
-	if (!liveColdOpen?.success) {
-		throw new Error(`Live AI smoke did not return success: ${failureMessage(liveColdOpen)}`);
+	if (!storyStudio?.success) {
+		throw new Error(`Live AI smoke did not return success: ${failureMessage(storyStudio)}`);
 	}
 
-	const { moduleResult } = liveColdOpen.data;
-	const output = moduleResult.output;
+	const { artifacts, generationMode, qualitySummary } = storyStudio.data;
 
-	if (liveColdOpen.data.generationMode !== 'live-ai') {
-		throw new Error(
-			`Expected live-ai generation mode, received ${liveColdOpen.data.generationMode}.`
-		);
+	if (generationMode !== 'live-ai') {
+		throw new Error(`Expected live-ai generation mode, received ${generationMode}.`);
 	}
 
-	if (moduleResult.status !== 'success') {
-		throw new Error(
-			`Expected accepted live module output, received ${moduleResult.status}: ${issueMessages(moduleResult)}`
-		);
+	if (!Array.isArray(artifacts)) {
+		throw new Error('Expected Story Studio artifacts array in live smoke result.');
 	}
 
-	if (moduleResult.provenance.provider !== 'xai') {
-		throw new Error(`Expected xai provider, received ${moduleResult.provenance.provider}.`);
+	for (const artifactId of REQUIRED_ARTIFACT_IDS) {
+		const artifact = artifacts.find((candidate) => candidate.id === artifactId);
+
+		if (!artifact) {
+			throw new Error(`Expected Story Studio artifact ${artifactId} in live smoke result.`);
+		}
+
+		if (artifact.status !== 'accepted') {
+			throw new Error(
+				`Expected accepted ${artifactId}, received ${artifact.status}: ${issueMessages(artifact.result)}`
+			);
+		}
+
+		if (artifact.provenance?.provider !== 'xai') {
+			throw new Error(
+				`Expected xai provider for ${artifactId}, received ${artifact.provenance?.provider ?? 'none'}.`
+			);
+		}
 	}
 
-	if (!output || !Array.isArray(output.variants) || output.variants.length < 3) {
+	const coldOpenArtifact = artifacts.find((artifact) => artifact.id === 'cold-open-lab');
+	const coldOpenOutput = coldOpenArtifact?.result?.output;
+
+	if (!coldOpenArtifact?.provenance) {
+		throw new Error('Expected cold-open artifact provenance in live smoke result.');
+	}
+
+	if (
+		!coldOpenOutput ||
+		!Array.isArray(coldOpenOutput.variants) ||
+		coldOpenOutput.variants.length < 3
+	) {
 		throw new Error('Expected at least three accepted cold-open variants.');
 	}
 
@@ -73,14 +104,19 @@ export async function run() {
 		JSON.stringify(
 			{
 				url: targetUrl,
-				generationMode: liveColdOpen.data.generationMode,
-				status: moduleResult.status,
-				provider: moduleResult.provenance.provider,
-				model: moduleResult.provenance.model,
-				promptVersion: moduleResult.provenance.promptVersion,
-				latencyMs: moduleResult.provenance.latencyMs,
-				variantCount: output.variants.length,
-				winnerId: output.winnerId
+				generationMode,
+				acceptedArtifacts: qualitySummary.accepted,
+				failedArtifacts: qualitySummary.failed,
+				lockedArtifacts: qualitySummary.locked,
+				provider: coldOpenArtifact.provenance.provider,
+				model: coldOpenArtifact.provenance.model,
+				promptVersion: coldOpenArtifact.provenance.promptVersion,
+				latencyMs: artifacts.reduce(
+					(total, artifact) => total + (artifact.provenance?.latencyMs ?? 0),
+					0
+				),
+				variantCount: coldOpenOutput.variants.length,
+				winnerId: coldOpenOutput.winnerId
 			},
 			null,
 			2
@@ -133,7 +169,7 @@ export function liveActionRequest(targetUrl, accessCode) {
 export function liveActionUrl(value) {
 	const targetUrl = requiredNonEmptyString(value, 'Target URL');
 	const normalized = targetUrl.endsWith('/') ? targetUrl : `${targetUrl}/`;
-	return new URL('?/runLiveColdOpen', normalized);
+	return new URL('?/runLiveStudio', normalized);
 }
 
 function defaultLiveActionBody(accessCode) {
@@ -180,9 +216,9 @@ function parseActionEnvelope(responseText) {
 
 function httpFailureMessage(responseText) {
 	const envelope = parseOptionalActionEnvelope(responseText);
-	const liveColdOpen = parseOptionalActionData(envelope)?.liveColdOpen;
+	const storyStudio = parseOptionalActionData(envelope)?.storyStudio;
 
-	if (liveColdOpen) return failureMessage(liveColdOpen);
+	if (storyStudio) return failureMessage(storyStudio);
 
 	return responseExcerpt(responseText);
 }
@@ -215,10 +251,10 @@ function parseActionData(envelope) {
 	}
 }
 
-function failureMessage(liveColdOpen) {
-	if (!liveColdOpen) return 'No liveColdOpen payload returned.';
-	if (liveColdOpen.success) return 'Action succeeded but HTTP status indicated failure.';
-	return `${liveColdOpen.error.code}: ${liveColdOpen.error.message}`;
+function failureMessage(storyStudio) {
+	if (!storyStudio) return 'No storyStudio payload returned.';
+	if (storyStudio.success) return 'Action succeeded but HTTP status indicated failure.';
+	return `${storyStudio.error.code}: ${storyStudio.error.message}`;
 }
 
 function actionStatus(envelope, fallbackStatus) {

@@ -17,7 +17,8 @@
 - `npm run guard:type-escape-budget`: fail when executable app code contains explicit `any`.
 - `npm run guard:docs-drift`: fail when code changes are not paired with expected docs updates.
 - `npm run ai:smoke`: opt-in live AI smoke against a deployed or local URL. Skips unless
-  `RUN_LIVE_AI_SMOKE=1`, `LIVE_AI_SMOKE_URL`, and `STORY_AI_ACCESS_CODE` are present.
+  `RUN_LIVE_AI_SMOKE=1`, `LIVE_AI_SMOKE_URL`, and `STORY_AI_ACCESS_CODE` or
+  `LIVE_AI_SMOKE_ACCESS_CODE` are present.
 - `npm run hooks:install`: install `.githooks/pre-commit` and `.githooks/pre-push` into the parent repo.
 
 ## Recommended Git Hooks
@@ -69,8 +70,9 @@ Manual deployed live AI smoke:
 - Required GitHub secret: `LIVE_AI_SMOKE_ACCESS_CODE`
 - Behavior: installs dependencies, runs `npm run guard:no-live-fallback`, then runs
   `RUN_LIVE_AI_SMOKE=1 npm run ai:smoke` against the supplied URL.
-- Expected result: an accepted `live-ai` `cold-open-lab` result from provider `xai`; fixture fallback,
-  provider rejection, schema rejection, prose rejection, or missing access-code secret fails the job.
+- Expected result: accepted `live-ai` Story Studio artifacts from provider `xai`; fixture fallback,
+  provider rejection, schema rejection, prose rejection, locked artifacts, or missing access-code
+  secret fails the job.
 
 ## Future Scripts
 

@@ -54,14 +54,12 @@ paid Grok calls from a public URL.
 
 ## Checkpoint 9: Server-Side Live Demo Path
 
-The first paid-AI path is now isolated to a server-side `runLiveColdOpen` action. It preserves the
-writer's submitted seed, checks `STORY_AI_ACCESS_CODE`, applies a small in-memory rate limit, passes
-private env values into the xAI adapter on the server, and renders the resulting live module status
-separately from the fixture-demo full plan.
+The first paid-AI slice was isolated to a server-side cold-open action. That slice proved the access
+gate, quota separation, server-only xAI adapter, and fail-closed module rendering before the broader
+Story Studio route replaced it.
 
-Remaining concern: real Grok output has not yet been verified from Vercel preview or production, and
-the access/rate-limit layer is intentionally temporary. The MVP still needs deployment env vars and
-one real public URL smoke run before it is girlfriend-demo ready.
+Remaining concern: the access/rate-limit layer is intentionally temporary. The current broader Story
+Studio route still needs a deployed live smoke after the route migration.
 
 ## Checkpoint 10: Story Studio Module Chain
 
@@ -73,3 +71,13 @@ until the live artifact chain is accepted. No module substitutes fixture prose i
 
 Remaining concern: contest freshness and the production UI still need the same fail-closed treatment
 before the MVP can be called production-demo complete.
+
+## Checkpoint 11: Production Route Truthfulness
+
+The production route no longer imports `createDefaultForge()` or renders deterministic `ForgePlan`
+creative output as the main product. It loads a locked `StoryStudioRun`, submits to the server-side
+`runLiveStudio` action, and renders accepted, failed, rejected, or locked artifacts from
+`RunLiveStoryStudio`.
+
+Remaining concern: the route still needs component extraction, fuller browser state coverage,
+contest freshness dates, and a deployed `runLiveStudio` smoke before the MVP is shipping-complete.

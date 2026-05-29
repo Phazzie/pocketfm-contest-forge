@@ -58,6 +58,12 @@
   artifacts.
 - Updated live story-state writer decisions so provenance describes the live Story Studio module
   chain instead of the earlier cold-open-only slice.
+- Moved the default forge request into a pure application module so production routes can populate
+  controls without importing deterministic fixture forge wiring.
+- Replaced the production page's deterministic forge plan with locked/live `StoryStudioRun`
+  rendering and a server-side `runLiveStudio` action backed by `RunLiveStoryStudio`.
+- Updated browser and live AI smoke checks to target the Story Studio UI and `runLiveStudio` action
+  instead of the retired cold-open-only route action.
 - Added the story module provider port, fake-provider live executor, JSON repair, schema validation,
   provider provenance, and deterministic prose quality gate for `cold-open-lab`.
 - Hardened the live module boundary after review so markdown-fenced JSON can repair once, fixture
