@@ -35,7 +35,7 @@ interface ProseCandidate {
 	acquisitionStrategy?: string;
 }
 
-const genericAdvicePhrases = [
+export const GENERIC_WRITING_ADVICE_PHRASES = [
 	'add tension',
 	'build suspense',
 	'compelling hook',
@@ -50,7 +50,7 @@ const genericAdvicePhrases = [
 	"show don't tell",
 	'strong character arc',
 	'strong hook'
-];
+] as const;
 
 const concreteSceneTerms = [
 	'accusation',
@@ -228,7 +228,9 @@ export function evaluateModuleProseQuality(review: ProseQualityReview): ProseQua
 		});
 	}
 
-	const genericPhrase = genericAdvicePhrases.find((phrase) => lowerProse.includes(phrase));
+	const genericPhrase = GENERIC_WRITING_ADVICE_PHRASES.find((phrase) =>
+		lowerProse.includes(phrase)
+	);
 
 	if (genericPhrase) {
 		issues.push({

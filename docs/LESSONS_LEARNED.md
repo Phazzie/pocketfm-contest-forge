@@ -20,6 +20,15 @@ Passing tests does not prove good prose. Writing tools need taste checks, reject
 
 Decision: use `docs/PROSE_QUALITY.md` and AI council roles as gates before presenting creative recommendations as serious output.
 
+## Prompts Must Mirror Acceptance Gates
+
+Live Grok can reach the app and still produce output that should be rejected. Prompt instructions
+need to name the same concrete constraints that validators enforce: audio-readable sentence length,
+payoff paths, specific costs, and forbidden generic craft phrases.
+
+Decision: version provider prompts when prose-gate failures reveal missing constraints, and keep
+prompt wording aligned with the deterministic floor instead of loosening the gate.
+
 ## Track Review Findings Immediately
 
 The review caught issues that were not visible in green tests: nonsensical default prose, duplicate mechanism validation, and platform-specific install metadata.

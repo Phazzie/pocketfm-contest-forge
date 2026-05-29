@@ -66,6 +66,8 @@
   silently skip the deployed smoke and malformed entrypoint metadata fails closed.
 - Extended the live AI smoke request timeout beyond the provider timeout so deployed smoke captures
   real provider success/failure instead of aborting early.
+- Hardened the live `cold-open-lab.v2` prompt so Grok must produce short audio-readable variant
+  sentences, visible payoff paths, and no prose-gate generic writing-advice phrases.
 - Fixed review findings for explicit protagonist handling, unique mechanism validation, and root lockfile hygiene.
 - Updated the Svelte workbench to render module run results and fixture-demo provenance.
 - Added autonomous work spec for the Story Module Platform.
