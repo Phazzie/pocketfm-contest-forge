@@ -37,6 +37,8 @@
 - Converted the next autonomous execution plan into a living ExecPlan with progress, discoveries, decisions, recovery, and validation criteria.
 - Added a public hosted Grok MVP ExecPlan covering PRs, CI, Vercel, provider boundaries, quality gates, and public-demo abuse controls.
 - Added a self-contained next autonomous execution plan for the first live-AI-capable story module path.
+- Added a production Story Studio ExecPlan for replacing the remaining user-facing fixture/demo
+  scaffold with live, fail-closed story artifacts and locked states.
 - Added the story module provider port, fake-provider live executor, JSON repair, schema validation,
   provider provenance, and deterministic prose quality gate for `cold-open-lab`.
 - Hardened the live module boundary after review so markdown-fenced JSON can repair once, fixture

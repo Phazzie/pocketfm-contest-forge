@@ -16,14 +16,14 @@ Use this file for active issues, review findings, risks, and decisions that need
 
 ## Product Risks
 
-| Status    | Risk                                            | Why It Matters                                                    | Mitigation                                                                                                                          |
-| --------- | ----------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Mitigated | Heuristic creative output is user-facing.       | It can create false confidence and waste writer time.             | Current app labels output as fixture-demo; provider-bound live execution fails closed instead of substituting deterministic output. |
-| Done      | Story mechanisms are not first-class modules.   | New story tools will become switch cases and ad hoc UI rendering. | Four initial modules now run through registry and runtime schemas.                                                                  |
-| Open      | Contest data can drift.                         | Bad rules create bad submissions.                                 | Add research refresh workflow with retrieval dates and stale warnings.                                                              |
-| Open      | Scoring is heuristic.                           | Numeric confidence may look more authoritative than it is.        | Label scores as AI-audited only after live critique and calibration.                                                                |
-| Mitigated | No persistence/story bible yet.                 | Serial writing needs continuity tracking.                         | Story-state contract exists; persistence remains a future storage decision.                                                         |
-| Open      | Current UI is demo-grade, not production-grade. | Writers need a memorable, usable studio experience.               | Rebuild the UI toward the colorful Serial Story Studio direction in root `DESIGN.md`.                                               |
+| Status    | Risk                                            | Why It Matters                                                    | Mitigation                                                                                                                                  |
+| --------- | ----------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mitigated | Heuristic creative output is user-facing.       | It can create false confidence and waste writer time.             | Current app labels output as fixture-demo; provider-bound live execution fails closed instead of substituting deterministic output.         |
+| Done      | Story mechanisms are not first-class modules.   | New story tools will become switch cases and ad hoc UI rendering. | Four initial modules now run through registry and runtime schemas.                                                                          |
+| Open      | Contest data can drift.                         | Bad rules create bad submissions.                                 | Add research refresh workflow with retrieval dates and stale warnings.                                                                      |
+| Open      | Scoring is heuristic.                           | Numeric confidence may look more authoritative than it is.        | Label scores as AI-audited only after live critique and calibration.                                                                        |
+| Mitigated | No persistence/story bible yet.                 | Serial writing needs continuity tracking.                         | Story-state contract exists; persistence remains a future storage decision.                                                                 |
+| Open      | Current UI is demo-grade, not production-grade. | Writers need a memorable, usable studio experience.               | Execute `docs/PRODUCTION_STORY_STUDIO_EXECUTION_PLAN.md` and rebuild toward the colorful Serial Story Studio direction in root `DESIGN.md`. |
 
 ## Active Follow-Up
 
@@ -50,6 +50,7 @@ Use this file for active issues, review findings, risks, and decisions that need
 | Done   | Local live smoke could false-pass on Node 23.                       | Smoke script now falls back to resolved entrypoint detection when `import.meta.main` is unavailable.                                                                                              |
 | Done   | Live smoke client timed out before provider timeout.                | Smoke script timeout now exceeds the xAI provider timeout so failures come from the live action path.                                                                                             |
 | Done   | Prompt subject text could leak user input into system instructions. | Names now stay in the JSON input block, with static system guidance and regression coverage for adversarial protagonist text.                                                                     |
+| Open   | Production route still centers fixture/demo forge output.           | Execute `docs/PRODUCTION_STORY_STUDIO_EXECUTION_PLAN.md` so production shows live artifacts, locked states, or explicit failures instead of deterministic creative prose.                         |
 
 ## Architecture Review Notes
 
