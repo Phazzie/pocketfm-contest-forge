@@ -5,14 +5,10 @@ import { toStoryModulePlanResult } from '$lib/application/storyModulePlanResult'
 import type { LiveModuleExecutorConfig } from '$lib/application/liveModuleExecutor';
 import type { ContestResearchPort } from '$lib/core/ports/contestResearchPort';
 import type { StoryModuleProvider } from '$lib/core/ports/storyModuleProviderPort';
-import type {
-	ContestBrief,
-	ForgeRequest,
-	LiveColdOpenResponse
-} from '$lib/core/contracts/contestForgeContract';
+import type { ForgeRequest, LiveColdOpenResponse } from '$lib/core/contracts/contestForgeContract';
 import { validateForgeRequest } from '$lib/core/contracts/contestForgeContract';
 import { createStoryStateFromForgeRequest } from '$lib/core/story-state/storyStateValidation';
-import type { ColdOpenLabInput } from '$lib/story-modules/modules/cold-open-lab/contract';
+import { buildColdOpenLabInput } from '$lib/application/storyModuleInputs';
 import { coldOpenLabModule } from '$lib/story-modules/modules/cold-open-lab/module';
 import {
 	buildColdOpenLabProviderInput,
@@ -63,7 +59,7 @@ export class RunLiveColdOpenLab {
 		}
 
 		const now = this.now();
-		const input = buildColdOpenInput(request, brief);
+		const input = buildColdOpenLabInput(request, brief);
 		const storyState = createStoryStateFromForgeRequest(request, brief, undefined, {
 			generationMode: 'live-ai'
 		});
@@ -91,18 +87,4 @@ export class RunLiveColdOpenLab {
 			}
 		};
 	}
-}
-
-function buildColdOpenInput(request: ForgeRequest, brief: ContestBrief): ColdOpenLabInput {
-	return {
-		workingTitle: request.seed.workingTitle,
-		protagonistName: request.seed.protagonistName,
-		logline: request.seed.logline,
-		emotionalPromise: request.seed.emotionalPromise,
-		tabooLever: request.seed.tabooLever,
-		contestName: brief.contestName,
-		contestLane: brief.id,
-		mandatoryElements: brief.mandatoryElements,
-		riskTolerance: request.riskTolerance
-	};
 }

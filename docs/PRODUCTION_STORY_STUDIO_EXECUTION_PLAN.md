@@ -33,7 +33,9 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       `src/lib/application/liveModuleExecutor.ts`, and the module registry.
 - [x] 2026-05-29 09:36 - Updated this ExecPlan after repository consolidation. The canonical
       workspace is now `/Users/hbpheonix/pocketfm`.
-- [ ] Add the production studio contract and product-mode boundary.
+- [x] 2026-05-29 11:14 - Added `storyStudioContract`, shared story-module input builders, and
+      the initial `RunLiveStoryStudio` application use case. The use case runs the live cold-open
+      path and returns locked artifacts for modules whose live gates are not implemented yet.
 - [ ] Move deterministic forge output out of the production route.
 - [ ] Generalize live module execution with module-specific quality gates.
 - [ ] Make `binge-debt-ledger` live-capable.
@@ -68,6 +70,10 @@ a provider-backed council artifact with schema validation and prose review.
 
 After consolidation, `/Users/hbpheonix/pocketfm` is the canonical local repo. The older nested path
 under `/Users/hbpheonix/fairytaleswithspice` no longer exists as the active app checkout.
+
+The first production Story Studio boundary can be implemented before the route is rebuilt. This
+keeps contract and application behavior testable while the current UI still renders the old
+fixture-demo forge plan.
 
 ## Decision Log
 
@@ -110,6 +116,11 @@ switching provider interfaces before finishing the demo would add avoidable chur
 2026-05-29 09:36 - Use `/Users/hbpheonix/pocketfm` as the canonical workspace. Rationale: the
 current GitHub-connected repo, local commits, Vercel link, and dependency install were consolidated
 there, and verification passed from that path.
+
+2026-05-29 11:14 - The first `RunLiveStoryStudio` milestone returns a live cold-open artifact plus
+locked artifacts for the debt ledger, cliffhanger futures, trope mutation, and council review.
+Rationale: this gives the production route a truthful contract to render before every module is
+live-capable, and it avoids faking incomplete modules with deterministic prose.
 
 ## Outcomes & Retrospective
 
@@ -444,6 +455,11 @@ Initial evidence:
   accepted variants. This plan extends that single live panel into the full production story studio.
 - 2026-05-29 09:36 - The repo was consolidated to `/Users/hbpheonix/pocketfm`; `npm run verify`
   passed from the new canonical path.
+- 2026-05-29 11:14 - Baseline `npm run verify` passed before edits. Focused tests passed after the
+  first implementation slice: `npm run test -- src/lib/core/contracts/storyStudioContract.spec.ts
+src/lib/application/runLiveStoryStudio.spec.ts
+src/lib/application/runLiveColdOpenLab.spec.ts
+src/lib/application/forgeContestStory.spec.ts` returned 4 files and 19 tests passing.
 
 ## Interfaces and Dependencies
 
