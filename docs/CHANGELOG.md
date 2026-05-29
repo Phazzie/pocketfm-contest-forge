@@ -15,6 +15,8 @@
   public URL after the access-code secret is configured.
 - Added `npm run deploy:readiness` to audit main CI, open PRs, GitHub workflow/secret setup, Vercel
   linkage, and deployed smoke URL before claiming demo readiness.
+- Gave the scaffold-module subprocess test a named explicit timeout to avoid false local hook
+  failures under full verification load.
 - Added stricter TypeScript and ESLint quality gates with documented escape-hatch enforcement.
 - Removed the final explicit `any` from executable app code and tightened the type-escape guard to
   allow zero approved explicit `any` lines while using `unknown` at heterogeneous story-module
