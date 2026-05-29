@@ -14,6 +14,11 @@ import {
 	buildBingeDebtLedgerProviderInput,
 	buildBingeDebtLedgerProviderMessages
 } from '$lib/story-modules/modules/binge-debt-ledger/prompts';
+import type { CliffhangerFuturesOutput } from '$lib/story-modules/modules/cliffhanger-futures/contract';
+import {
+	cliffhangerFuturesFixtureInput,
+	cliffhangerFuturesFixtureOutput
+} from '$lib/story-modules/modules/cliffhanger-futures/fixtures';
 import type { ColdOpenLabOutput } from '$lib/story-modules/modules/cold-open-lab/contract';
 import { coldOpenLabFixtureInput } from '$lib/story-modules/modules/cold-open-lab/fixtures';
 import { coldOpenLabModule } from '$lib/story-modules/modules/cold-open-lab/module';
@@ -22,6 +27,11 @@ import {
 	buildColdOpenLabProviderMessages
 } from '$lib/story-modules/modules/cold-open-lab/prompts';
 import { cliffhangerFuturesModule } from '$lib/story-modules/modules/cliffhanger-futures/module';
+import {
+	buildCliffhangerFuturesProviderInput,
+	buildCliffhangerFuturesProviderMessages
+} from '$lib/story-modules/modules/cliffhanger-futures/prompts';
+import { tropeMutationLabModule } from '$lib/story-modules/modules/trope-mutation-lab/module';
 import { createModuleFixtureContext } from '$lib/story-modules/testSupport';
 
 const generatedAt = '2026-05-28T04:21:00.000Z';
@@ -190,6 +200,32 @@ describe('live module executor', () => {
 		expect(result.issues.map((issue) => issue.message).join(' ')).toContain('payoff window');
 	});
 
+	it('accepts valid cliffhanger-futures JSON through its module-specific quality gate', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(cliffhangerFuturesFixtureOutput))
+		);
+		const result = await runCliffhangerFutures(provider);
+
+		expect(result.status).toBe('success');
+		expect(result.output?.recommendationId).toBe('enemy-knows-name');
+		expect(result.provenance.promptVersion).toBe('cliffhanger-futures.v1');
+		expect(provider.requests[0]?.moduleId).toBe('cliffhanger-futures');
+	});
+
+	it('rejects weak cliffhanger-futures JSON without fixture fallback', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(weakCliffhangerFuturesOutput))
+		);
+		const result = await runCliffhangerFutures(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+		expect(result.issues.map((issue) => issue.message).join(' ')).toContain(
+			'next episode movement'
+		);
+	});
+
 	it('uses the configured module-specific review builder before quality evaluation', async () => {
 		let reviewedProtagonistName: string | undefined;
 		const provider = new FakeStoryModuleProvider(
@@ -227,7 +263,7 @@ describe('live module executor', () => {
 			mode: 'live' as const
 		};
 		const result = await new LiveModuleExecutor(provider).run({
-			module: cliffhangerFuturesModule,
+			module: tropeMutationLabModule,
 			context,
 			messages: buildColdOpenLabProviderMessages(coldOpenLabFixtureInput),
 			providerInput: buildColdOpenLabProviderInput(coldOpenLabFixtureInput)
@@ -276,6 +312,23 @@ async function runBingeDebtLedger(
 		context,
 		messages: buildBingeDebtLedgerProviderMessages(bingeDebtLedgerFixtureInput),
 		providerInput: buildBingeDebtLedgerProviderInput(bingeDebtLedgerFixtureInput)
+	});
+}
+
+async function runCliffhangerFutures(
+	provider: StoryModuleProvider,
+	config?: LiveModuleExecutorConfig
+) {
+	const context = {
+		...createModuleFixtureContext(cliffhangerFuturesFixtureInput),
+		mode: 'live' as const
+	};
+
+	return new LiveModuleExecutor(provider, config).run({
+		module: cliffhangerFuturesModule,
+		context,
+		messages: buildCliffhangerFuturesProviderMessages(cliffhangerFuturesFixtureInput),
+		providerInput: buildCliffhangerFuturesProviderInput(cliffhangerFuturesFixtureInput)
 	});
 }
 
@@ -430,4 +483,38 @@ const weakBingeDebtLedgerOutput: BingeDebtLedgerOutput = {
 		}
 	],
 	auditorNote: 'Raise the stakes for the audience.'
+};
+
+const weakCliffhangerFuturesOutput: CliffhangerFuturesOutput = {
+	candidates: [
+		{
+			id: 'vague-mystery-one',
+			text: 'Mara Vey finds a vague mystery in the palace that makes everyone wonder what happens later.',
+			unansweredQuestion: 'What is the mystery?',
+			futuresScore: 84,
+			volatility: 'low',
+			payoffPath: 'Build suspense later.',
+			payoffWarning: 'Keep it intriguing.'
+		},
+		{
+			id: 'vague-mystery-two',
+			text: 'Mara Vey sees an unclear shadow near the throne and the scene creates emotional stakes.',
+			unansweredQuestion: 'Who is hiding?',
+			futuresScore: 77,
+			volatility: 'medium',
+			payoffPath: 'Raise the stakes in a later chapter.',
+			payoffWarning: 'Make the audience curious.'
+		},
+		{
+			id: 'vague-mystery-three',
+			text: 'Mara Vey hears a secret phrase that creates a strong hook for the next scene.',
+			unansweredQuestion: 'What does the phrase mean?',
+			futuresScore: 73,
+			volatility: 'medium',
+			payoffPath: 'Reveal something surprising eventually.',
+			payoffWarning: 'Avoid weak setup.'
+		}
+	],
+	recommendationId: 'vague-mystery-one',
+	marketRationale: 'This has a compelling hook and can engage the audience.'
 };

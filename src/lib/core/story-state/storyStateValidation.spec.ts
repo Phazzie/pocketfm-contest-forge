@@ -25,7 +25,7 @@ describe('story state validation', () => {
 		expect(state.aiSuggestions).toEqual([]);
 	});
 
-	it('records live cold-open scope without claiming fixture-only execution', () => {
+	it('records live Story Studio scope without claiming fixture-only execution', () => {
 		const brief = new InMemoryContestResearchRepository().findById(defaultForgeRequest.contestId);
 		expect(brief).toBeDefined();
 		if (!brief) return;
@@ -36,8 +36,8 @@ describe('story state validation', () => {
 		const result = validateStoryState(state);
 
 		expect(result.success).toBe(true);
-		expect(state.writerDecisions[0]?.id).toBe('live-cold-open-only');
-		expect(state.writerDecisions[0]?.decision).toContain('provider-backed cold-open');
+		expect(state.writerDecisions[0]?.id).toBe('live-story-studio-chain');
+		expect(state.writerDecisions[0]?.decision).toContain('provider-backed AI boundary');
 		expect(state.writerDecisions[0]?.decision).not.toContain('fixture-backed');
 	});
 });

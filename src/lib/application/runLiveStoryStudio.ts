@@ -4,10 +4,15 @@ import { LiveModuleExecutor } from '$lib/application/liveModuleExecutor';
 import { toStoryModulePlanResult } from '$lib/application/storyModulePlanResult';
 import {
 	buildBingeDebtLedgerInputFromColdOpen,
+	buildCliffhangerFuturesInputFromLiveArtifacts,
 	buildColdOpenLabInput
 } from '$lib/application/storyModuleInputs';
 import type { LiveModuleExecutorConfig } from '$lib/application/liveModuleExecutor';
-import type { ForgeRequest } from '$lib/core/contracts/contestForgeContract';
+import type {
+	ContestBrief,
+	ForgeRequest,
+	StoryModulePlanResult
+} from '$lib/core/contracts/contestForgeContract';
 import {
 	createLockedStoryStudioArtifact,
 	createUnknownContestFreshness,
@@ -30,6 +35,11 @@ import {
 	buildBingeDebtLedgerProviderInput,
 	buildBingeDebtLedgerProviderMessages
 } from '$lib/story-modules/modules/binge-debt-ledger/prompts';
+import { bingeDebtLedgerOutputSchema } from '$lib/story-modules/modules/binge-debt-ledger/contract';
+import {
+	buildCliffhangerFuturesProviderInput,
+	buildCliffhangerFuturesProviderMessages
+} from '$lib/story-modules/modules/cliffhanger-futures/prompts';
 
 export interface RunLiveStoryStudioConfig {
 	now?: () => Date;
@@ -106,6 +116,7 @@ export class RunLiveStoryStudio {
 			providerInput: buildColdOpenLabProviderInput(coldOpenInput)
 		});
 		const coldOpenPlanResult = toStoryModulePlanResult(coldOpenModule, coldOpenResult);
+		const coldOpenArtifact = storyModuleResultToStudioArtifact('cold-open-lab', coldOpenPlanResult);
 		const bingeDebtArtifact = await this.runBingeDebtLedger({
 			executor,
 			coldOpenPlanResult,
@@ -113,10 +124,20 @@ export class RunLiveStoryStudio {
 			brief,
 			requestedAt
 		});
-		const artifacts: StoryStudioArtifact[] = [
-			storyModuleResultToStudioArtifact('cold-open-lab', coldOpenPlanResult),
+		const cliffhangerArtifact = await this.runCliffhangerFutures({
+			request,
+			executor,
+			coldOpenPlanResult,
 			bingeDebtArtifact,
-			...lockedFutureArtifacts()
+			storyState,
+			brief,
+			requestedAt
+		});
+		const artifacts: StoryStudioArtifact[] = [
+			coldOpenArtifact,
+			bingeDebtArtifact,
+			cliffhangerArtifact,
+			...lockedStrategyArtifacts()
 		];
 
 		return {
@@ -129,7 +150,7 @@ export class RunLiveStoryStudio {
 				artifacts,
 				qualitySummary: summarizeStoryStudioArtifacts(artifacts),
 				contestFreshness: createUnknownContestFreshness(),
-				trackingEvents: coldOpenPlanResult.trackingEvents
+				trackingEvents: artifacts.flatMap((artifact) => artifact.result?.trackingEvents ?? [])
 			}
 		};
 	}
@@ -138,7 +159,7 @@ export class RunLiveStoryStudio {
 		executor: LiveModuleExecutor;
 		coldOpenPlanResult: ReturnType<typeof toStoryModulePlanResult>;
 		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
-		brief: NonNullable<ReturnType<ContestResearchPort['findById']>>;
+		brief: ContestBrief;
 		requestedAt: Date;
 	}): Promise<StoryStudioArtifact> {
 		const parsedColdOpen = coldOpenLabOutputSchema.safeParse(input.coldOpenPlanResult.output);
@@ -191,14 +212,88 @@ export class RunLiveStoryStudio {
 			toStoryModulePlanResult(module, result)
 		);
 	}
+
+	private async runCliffhangerFutures(input: {
+		request: ForgeRequest;
+		executor: LiveModuleExecutor;
+		coldOpenPlanResult: StoryModulePlanResult;
+		bingeDebtArtifact: StoryStudioArtifact;
+		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
+		brief: ContestBrief;
+		requestedAt: Date;
+	}): Promise<StoryStudioArtifact> {
+		const parsedColdOpen = coldOpenLabOutputSchema.safeParse(input.coldOpenPlanResult.output);
+		const parsedBingeDebt = bingeDebtLedgerOutputSchema.safeParse(
+			input.bingeDebtArtifact.result?.output
+		);
+
+		if (input.coldOpenPlanResult.status !== 'success' || !parsedColdOpen.success) {
+			return createLockedStoryStudioArtifact({
+				id: 'cliffhanger-futures',
+				summary: 'Cliffhanger futures is locked until a cold-open artifact is accepted.',
+				nextAction: {
+					label: 'Accept cold open first',
+					reason:
+						'Cliffhanger Futures needs accepted live cold-open variants before it can price episode-ending listener questions.',
+					retryable: true
+				}
+			});
+		}
+
+		if (input.bingeDebtArtifact.status !== 'accepted' || !parsedBingeDebt.success) {
+			return createLockedStoryStudioArtifact({
+				id: 'cliffhanger-futures',
+				summary: 'Cliffhanger futures is locked until the debt ledger is accepted.',
+				nextAction: {
+					label: 'Accept debt ledger first',
+					reason:
+						'Cliffhanger Futures needs accepted live debts and payoff windows so it can reject fake unanswered questions.',
+					retryable: true
+				}
+			});
+		}
+
+		const module = this.moduleRegistry.find('cliffhanger-futures');
+
+		if (!module) {
+			return createLockedStoryStudioArtifact({
+				id: 'cliffhanger-futures',
+				nextAction: {
+					label: 'Register cliffhanger-futures',
+					reason: 'Cliffhanger Futures is not registered in the story module registry.',
+					retryable: false
+				}
+			});
+		}
+
+		const cliffhangerInput = buildCliffhangerFuturesInputFromLiveArtifacts(
+			input.request,
+			input.brief,
+			parsedColdOpen.data,
+			parsedBingeDebt.data
+		);
+		const result = await input.executor.run({
+			module,
+			context: {
+				input: cliffhangerInput,
+				storyState: input.storyState,
+				contestBrief: input.brief,
+				mode: 'live',
+				now: input.requestedAt
+			},
+			messages: buildCliffhangerFuturesProviderMessages(cliffhangerInput),
+			providerInput: buildCliffhangerFuturesProviderInput(cliffhangerInput)
+		});
+
+		return storyModuleResultToStudioArtifact(
+			'cliffhanger-futures',
+			toStoryModulePlanResult(module, result)
+		);
+	}
 }
 
-function lockedFutureArtifacts(): StoryStudioArtifact[] {
+function lockedStrategyArtifacts(): StoryStudioArtifact[] {
 	return [
-		createLockedStoryStudioArtifact({
-			id: 'cliffhanger-futures',
-			nextAction: liveGateNextAction('cliffhanger-futures')
-		}),
 		createLockedStoryStudioArtifact({
 			id: 'trope-mutation-lab',
 			nextAction: liveGateNextAction('trope-mutation-lab')

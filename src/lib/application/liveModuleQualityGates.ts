@@ -8,6 +8,7 @@ import {
 	type ProseQualityReview
 } from '$lib/core/domain/proseQuality';
 import { bingeDebtLedgerOutputSchema } from '$lib/story-modules/modules/binge-debt-ledger/contract';
+import { cliffhangerFuturesOutputSchema } from '$lib/story-modules/modules/cliffhanger-futures/contract';
 
 export type LiveModuleQualityGate = (review: ProseQualityReview) => ProseQualityResult;
 
@@ -41,6 +42,13 @@ export const defaultLiveModuleQualityGateRegistry: LiveModuleQualityGateRegistry
 			buildReview: buildBingeDebtLedgerQualityReview,
 			qualityGate: evaluateBingeDebtLedgerQuality
 		}
+	],
+	[
+		'cliffhanger-futures',
+		{
+			buildReview: buildCliffhangerFuturesQualityReview,
+			qualityGate: evaluateCliffhangerFuturesQuality
+		}
 	]
 ]);
 
@@ -62,6 +70,15 @@ function buildColdOpenQualityReview(request: LiveModuleQualityReviewRequest): Pr
 }
 
 function buildBingeDebtLedgerQualityReview(
+	request: LiveModuleQualityReviewRequest
+): ProseQualityReview {
+	return {
+		moduleId: request.moduleId,
+		output: request.output
+	};
+}
+
+function buildCliffhangerFuturesQualityReview(
 	request: LiveModuleQualityReviewRequest
 ): ProseQualityReview {
 	return {
@@ -145,6 +162,97 @@ function evaluateBingeDebtLedgerQuality(review: ProseQualityReview): ProseQualit
 	};
 }
 
+function evaluateCliffhangerFuturesQuality(review: ProseQualityReview): ProseQualityResult {
+	const parsed = cliffhangerFuturesOutputSchema.safeParse(review.output);
+	const issues: ProseQualityIssue[] = [];
+
+	if (!parsed.success) {
+		return evaluateModuleProseQuality(review);
+	}
+
+	const output = parsed.data;
+	const recommendationIds = new Set(output.candidates.map((candidate) => candidate.id));
+	const proseText = [
+		...output.candidates.flatMap((candidate) => [
+			candidate.text,
+			candidate.unansweredQuestion,
+			candidate.payoffPath,
+			candidate.payoffWarning
+		]),
+		output.marketRationale
+	].join(' ');
+	const lowerProse = proseText.toLowerCase();
+
+	if (!recommendationIds.has(output.recommendationId)) {
+		issues.push({
+			code: 'FAKE_CLIFFHANGER',
+			field: `${review.moduleId}.recommendationId`,
+			message: `Cliffhanger Futures recommendationId must match one candidate id: ${output.recommendationId}.`,
+			severity: 'error'
+		});
+	}
+
+	const genericPhrase = GENERIC_WRITING_ADVICE_PHRASES.find((phrase) =>
+		lowerProse.includes(phrase)
+	);
+
+	if (genericPhrase) {
+		issues.push({
+			code: 'GENERIC_WRITING_ADVICE',
+			field: `${review.moduleId}.output`,
+			message: `Cliffhanger Futures used generic writing-advice phrasing: "${genericPhrase}".`,
+			severity: 'error'
+		});
+	}
+
+	if (!hasAny(lowerProse, debtCostTerms)) {
+		issues.push({
+			code: 'MISSING_SPECIFIC_COST',
+			field: `${review.moduleId}.output`,
+			message:
+				'Cliffhanger Futures needs a relationship, public status, secret, trust, name, or price cost.',
+			severity: 'error'
+		});
+	}
+
+	for (const candidate of output.candidates) {
+		const lowerPayoffPath = candidate.payoffPath.toLowerCase();
+		const lowerWarning = candidate.payoffWarning.toLowerCase();
+
+		if (!hasAny(lowerPayoffPath, cliffhangerPayoffTerms)) {
+			issues.push({
+				code: 'FAKE_CLIFFHANGER',
+				field: `${review.moduleId}.candidates.${candidate.id}.payoffPath`,
+				message: `Cliffhanger ${candidate.id} needs a playable next-episode payoff path, not only withheld information.`,
+				severity: 'error'
+			});
+		}
+
+		if (!hasAny(lowerPayoffPath, cliffhangerNextEpisodeTerms)) {
+			issues.push({
+				code: 'FAKE_CLIFFHANGER',
+				field: `${review.moduleId}.candidates.${candidate.id}.payoffPath`,
+				message: `Cliffhanger ${candidate.id} must name the next episode movement or consequence.`,
+				severity: 'error'
+			});
+		}
+
+		if (!hasAny(lowerWarning, cliffhangerWarningTerms)) {
+			issues.push({
+				code: 'FAKE_CLIFFHANGER',
+				field: `${review.moduleId}.candidates.${candidate.id}.payoffWarning`,
+				message: `Cliffhanger ${candidate.id} must name the audience-frustration risk if payoff is delayed.`,
+				severity: 'error'
+			});
+		}
+	}
+
+	return {
+		accepted: issues.every((issue) => issue.severity !== 'error'),
+		issues
+	};
+}
+
 function readStringProperty(value: unknown, key: string): string | undefined {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
 	const property = (value as Record<string, unknown>)[key];
@@ -171,4 +279,52 @@ const debtCostTerms = [
 	'shame',
 	'status',
 	'trust'
+];
+
+const cliffhangerPayoffTerms = [
+	'because',
+	'choice',
+	'clue',
+	'confession',
+	'consequence',
+	'cost',
+	'debt',
+	'episode',
+	'forces',
+	'learns',
+	'moves',
+	'pay',
+	'payoff',
+	'price',
+	'proof',
+	'reveal',
+	'reveals',
+	'witness'
+];
+
+const cliffhangerNextEpisodeTerms = [
+	'episode',
+	'next',
+	'consequence',
+	'clue',
+	'proof',
+	'reveal',
+	'reveals',
+	'witness'
+];
+
+const cliffhangerWarningTerms = [
+	'audience',
+	'abstract',
+	'confuse',
+	'delayed',
+	'fake',
+	'frustrate',
+	'frustrating',
+	'lore',
+	'risks',
+	'risk',
+	'secondary',
+	'trust',
+	'withhold'
 ];
