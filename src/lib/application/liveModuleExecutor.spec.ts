@@ -307,7 +307,10 @@ describe('live module executor', () => {
 			'The mutationRule must include at least one explicit rule-change cue word'
 		);
 		expect(promptText).toContain(
-			'but, except, instead, invert, only, reverse, rule, subvert, twist, or while'
+			'except, instead, invert, mutation, only, reverse, rule, subvert, or twist'
+		);
+		expect(promptText).toContain(
+			'The familiar power reward only works when each public victory exposes a relationship debt.'
 		);
 		expect(promptText).toContain(
 			'Every episodePressure item must start with "Every episode", "Each episode", or "Whenever".'
@@ -318,6 +321,25 @@ describe('live module executor', () => {
 		expect(promptText).toContain('Do not generate episodePressure items that only describe tone');
 		expect(promptText).toContain('betrayal, cost, debt, family, lover, name');
 		expect(promptText).toContain('Every episode victory costs the protagonist public status');
+	});
+
+	it('rejects trope-mutation rules that use weak conjunction without a real rule-change cue', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(
+				JSON.stringify({
+					...tropeMutationLabFixtureOutput,
+					mutationRule: 'the heir wants revenge but also wants love'
+				} satisfies TropeMutationLabOutput)
+			)
+		);
+		const result = await runTropeMutationLab(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+		expect(result.issues.map((issue) => issue.message).join(' ')).toContain(
+			'specific inversion, subversion, or rule change'
+		);
 	});
 
 	it('rejects trope-mutation rules that omit an explicit inversion or rule-change cue', async () => {

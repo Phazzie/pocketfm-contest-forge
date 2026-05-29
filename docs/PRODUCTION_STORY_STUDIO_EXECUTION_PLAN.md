@@ -81,7 +81,8 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       that rule in the live quality gate.
 - [x] 2026-05-29 18:02 UTC - Production live smoke again reached `trope-mutation-lab` and failed
       closed on a mutation rule without an explicit inversion/subversion cue. Hardened
-      `trope-mutation-lab.v3` so mutation rules must include a visible rule-change cue word.
+      `trope-mutation-lab.v4` so mutation rules must include a visible rule-change cue word and
+      weak conjunctions are not accepted as cues.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -793,6 +794,12 @@ src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 file
   passing. `npm run guard:no-live-fallback` and `npm run guard:docs-drift` passed. Full
   `npm run verify` passed with 21 test files and 113 tests, zero Svelte errors/warnings, and a
   production build.
+- 2026-05-29 18:55 UTC - PR #19 review found that weak conjunction cues and a medieval-biased
+  mutation example could still steer or accept bad output. `trope-mutation-lab.v4` now drops
+  `but`/`while` from accepted cue words, uses a genre-neutral output example, and adds a weak-rule
+  regression. Focused trope tests returned 2 files and 31 tests passing. `npm run guard:no-live-fallback`
+  and `npm run guard:docs-drift` passed. Full `npm run verify` passed with 21 test files and 114
+  tests, zero Svelte errors/warnings, and a production build.
 
 ## Interfaces and Dependencies
 
