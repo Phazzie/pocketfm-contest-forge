@@ -153,7 +153,7 @@ made for that module. `council-review` runs only after the prior live artifacts 
 
 The route uses a deployment-specific budget for the full Story Studio chain. The SvelteKit Vercel
 adapter is configured with a 300-second function max duration, while the route's xAI transport
-timeout is 45 seconds and the executor wrapper timeout is 46 seconds per module. That caps the
+timeout is 55 seconds and the executor wrapper timeout is 56 seconds per module. That caps the
 five-module worst case below the Vercel Fluid Compute default maximum while still failing closed
 with visible module failures if a provider call hangs or times out.
 
