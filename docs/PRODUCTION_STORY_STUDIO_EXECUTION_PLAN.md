@@ -79,6 +79,9 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       closed on weak payoff-warning prose instead of falling back. Hardened
       `cliffhanger-futures.v2` so warnings must start with an audience-risk prefix, and mirrored
       that rule in the live quality gate.
+- [x] 2026-05-29 18:02 UTC - Production live smoke again reached `trope-mutation-lab` and failed
+      closed on a mutation rule without an explicit inversion/subversion cue. Hardened
+      `trope-mutation-lab.v3` so mutation rules must include a visible rule-change cue word.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -190,6 +193,11 @@ The next production live smoke showed variance in earlier module output: it fail
 `cliffhanger-futures` because two `payoffWarning` fields described volatility without naming the
 audience-frustration risk. The gate was already catching the issue, so the right fix is to align the
 prompt and fixture examples with the gate's audience-risk requirement.
+
+The follow-up smoke then reached `trope-mutation-lab` again and failed on the mutation-rule gate.
+The existing gate was correct to reject a rule that did not visibly invert, subvert, or change the
+trope. The prompt needs to force the model to include the same cue words the gate already accepts,
+or production will keep failing on semantically vague rules.
 
 ## Decision Log
 
@@ -312,6 +320,10 @@ the same rule.
 prompt and gate together. Rationale: payoff warnings are only useful if they name the audience-risk
 created by delaying or obscuring the payoff; volatility-only warnings let fake cliffhangers appear
 strategic.
+
+2026-05-29 18:02 UTC - Keep the `trope-mutation-lab` mutation-rule quality gate strict and harden
+the prompt around explicit cue words. Rationale: a mutation needs a visible rule change, not just a
+newly phrased premise or emotional benefit.
 
 ## Outcomes & Retrospective
 
@@ -768,6 +780,18 @@ src/lib/application/runLiveStoryStudio.spec.ts
 src/lib/story-modules/modules/cliffhanger-futures/module.spec.ts` returned 3 files and 41 tests
   passing. `npm run guard:no-live-fallback` and `npm run guard:docs-drift` passed. Full
   `npm run verify` passed with 21 test files and 112 tests, zero Svelte errors/warnings, and a
+  production build.
+- 2026-05-29 18:00 UTC - Post-merge production smoke run
+  `https://github.com/Phazzie/pocketfm-contest-forge/actions/runs/26653454324` failed closed after
+  2 minutes 40 seconds: `trope-mutation-lab` failed with `PROSE_QUALITY_REJECTION` because the
+  mutation rule did not name a specific inversion, subversion, or rule change. No fixture output was
+  accepted. Follow-up branch `fix/trope-mutation-rule-cue` hardens the provider prompt around
+  explicit rule-change cue words.
+- 2026-05-29 18:22 UTC - Trope mutation rule-cue hardening verification passed. Focused
+  `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
+src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 files and 30 tests
+  passing. `npm run guard:no-live-fallback` and `npm run guard:docs-drift` passed. Full
+  `npm run verify` passed with 21 test files and 113 tests, zero Svelte errors/warnings, and a
   production build.
 
 ## Interfaces and Dependencies
