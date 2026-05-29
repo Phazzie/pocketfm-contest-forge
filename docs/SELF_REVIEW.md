@@ -102,3 +102,14 @@ domain acceptance rules.
 Remaining concern: this is a structural UI milestone, not the final visual redesign. The next UI
 pass should continue toward `DESIGN.md` with richer artifact layout and broader browser state
 coverage while keeping story rules outside Svelte.
+
+## Checkpoint 14: Production UI Polish
+
+The Story Studio surface now follows the `DESIGN.md` layout more closely: seed inputs are grouped
+into Story, Contest, and Runtime sections; the output starts with a dark story thesis band; live
+modules read as an artifact runway and board; and a sticky judge rail carries status counts,
+quality-gate messages, provider provenance, and recent tracking events.
+
+Remaining concern: this is still a request/response demo, and production full-chain live smoke is
+blocked by xAI billing/spend. Browser verification must stay part of every visible UI change because
+dense artifact surfaces can regress on mobile quickly.

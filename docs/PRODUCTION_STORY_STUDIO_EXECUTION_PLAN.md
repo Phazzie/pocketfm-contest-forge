@@ -101,7 +101,12 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       verified the production deploy. Main CI passed for `4b255fa`, Vercel production deployment
       `dpl_53VDS863mA7kwmyih72FKtTKhB5S` is ready, deploy readiness passed, and the production
       browser smoke passed against `https://pocketfm-contest-forge.vercel.app`.
-- [ ] Rebuild the visible UI to match `DESIGN.md`.
+- [x] 2026-05-29 20:45 UTC - Rebuilt the visible Story Studio UI toward `DESIGN.md`: seed controls
+      are grouped into collapsible Story/Contest/Runtime sections, the output now starts with a
+      dark story thesis band, live modules render as an artifact runway and board, and a sticky
+      judge rail shows gate counts, quality messages, provider trail, and recent tracking.
+- [x] 2026-05-29 20:49 UTC - Verified the Story Studio UI polish locally. Required guards, full
+      verify, UI smoke, and manual desktop/mobile overflow checks passed with no browser errors.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
 - [ ] Validate locally, deploy, and prove production smoke.
@@ -229,6 +234,11 @@ first provider call with xAI `HTTP 403` because the provider account has exhaust
 its monthly spending limit. That means the code still fails closed and does not backfill fixture
 output, but production live smoke cannot prove an accepted full-chain run until the xAI account can
 make paid requests again.
+
+The visible UI milestone is presentational only. `src/routes/+page.svelte` still owns state/action
+wiring, while `src/lib/components/story-studio/LiveRunPanel.svelte` and `SeedPanel.svelte` render
+existing `StoryStudioRun` data. The new judge rail summarizes artifact issues, next actions, and
+provenance already present on the contract; it does not create quality judgments in Svelte.
 
 ## Decision Log
 
@@ -360,6 +370,11 @@ newly phrased premise or emotional benefit.
 cost-bearing revision moves and explicit risk prefixes. Rationale: final council output is only
 useful if every role gives a playable change with a story cost and names the consequence of ignoring
 it; generic critique would recreate the static-council technical debt this module replaced.
+
+2026-05-29 20:45 UTC - Treat the Story Studio UI polish as a presentation milestone, not a story
+logic milestone. Rationale: the remaining plan item was visual/demo maturity, and the live module
+chain already owns provider calls, schema validation, quality gates, provenance, and fail-closed
+behavior. Svelte components may summarize contract fields but must not synthesize advice or scores.
 
 ## Outcomes & Retrospective
 
@@ -868,6 +883,15 @@ src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 file
   Production browser smoke passed with body length 2605, 27 controls, Story Studio action visible,
   and no browser errors. Live AI smoke was not retried because xAI credits/monthly spend remains
   the external blocker.
+- 2026-05-29 20:49 UTC - UI polish verification passed. `npm run guard:no-live-fallback` passed for
+  5 registered modules, `npm run guard:docs-drift` passed for 2 changed app code/script files, and
+  `npm run verify` passed with 22 test files, 121 tests, zero Svelte errors/warnings, no approved
+  explicit `any` lines, and a production build. `npm run verify:ui` passed against
+  `http://127.0.0.1:5173/` with body length 3259, 27 controls, Story Studio action visible, and no
+  browser errors. Manual Playwright checks saved `.svelte-kit/screenshots/story-studio-desktop.png`
+  and `.svelte-kit/screenshots/story-studio-mobile.png`; desktop 1440x1100 and mobile 390x900 both
+  had `bodyScrollWidth` equal to viewport width, zero console/page errors, and no overflowing
+  elements.
 
 ## Interfaces and Dependencies
 
