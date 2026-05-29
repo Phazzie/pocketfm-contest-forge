@@ -1,10 +1,12 @@
 // Created: 2026-05-28 09:20
 
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parse as parseDevalue } from 'devalue';
 
-const SMOKE_REQUEST_TIMEOUT_MS = 30_000;
+const SMOKE_REQUEST_TIMEOUT_MS = 150_000;
 
-if (import.meta.main) {
+if (isMainModule()) {
 	try {
 		await run();
 	} catch (error) {
@@ -269,4 +271,17 @@ function requiredNonEmptyString(value, name) {
 
 function errorMessage(error) {
 	return error instanceof Error ? error.message : String(error);
+}
+
+export function isMainModule(meta = import.meta, argv = globalThis.process?.argv) {
+	if (meta?.main === true) return true;
+
+	const entrypoint = argv?.[1];
+	if (typeof entrypoint !== 'string' || typeof meta?.url !== 'string') return false;
+
+	try {
+		return fileURLToPath(meta.url) === resolve(entrypoint);
+	} catch {
+		return false;
+	}
 }
