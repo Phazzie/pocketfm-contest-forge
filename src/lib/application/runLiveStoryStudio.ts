@@ -5,7 +5,8 @@ import { toStoryModulePlanResult } from '$lib/application/storyModulePlanResult'
 import {
 	buildBingeDebtLedgerInputFromColdOpen,
 	buildCliffhangerFuturesInputFromLiveArtifacts,
-	buildColdOpenLabInput
+	buildColdOpenLabInput,
+	buildTropeMutationLabInputFromLiveArtifacts
 } from '$lib/application/storyModuleInputs';
 import type { LiveModuleExecutorConfig } from '$lib/application/liveModuleExecutor';
 import type {
@@ -40,6 +41,11 @@ import {
 	buildCliffhangerFuturesProviderInput,
 	buildCliffhangerFuturesProviderMessages
 } from '$lib/story-modules/modules/cliffhanger-futures/prompts';
+import { cliffhangerFuturesOutputSchema } from '$lib/story-modules/modules/cliffhanger-futures/contract';
+import {
+	buildTropeMutationLabProviderInput,
+	buildTropeMutationLabProviderMessages
+} from '$lib/story-modules/modules/trope-mutation-lab/prompts';
 
 export interface RunLiveStoryStudioConfig {
 	now?: () => Date;
@@ -133,11 +139,22 @@ export class RunLiveStoryStudio {
 			brief,
 			requestedAt
 		});
+		const tropeArtifact = await this.runTropeMutationLab({
+			request,
+			executor,
+			coldOpenPlanResult,
+			bingeDebtArtifact,
+			cliffhangerArtifact,
+			storyState,
+			brief,
+			requestedAt
+		});
 		const artifacts: StoryStudioArtifact[] = [
 			coldOpenArtifact,
 			bingeDebtArtifact,
 			cliffhangerArtifact,
-			...lockedStrategyArtifacts()
+			tropeArtifact,
+			lockedCouncilArtifact()
 		];
 
 		return {
@@ -290,31 +307,95 @@ export class RunLiveStoryStudio {
 			toStoryModulePlanResult(module, result)
 		);
 	}
+
+	private async runTropeMutationLab(input: {
+		request: ForgeRequest;
+		executor: LiveModuleExecutor;
+		coldOpenPlanResult: StoryModulePlanResult;
+		bingeDebtArtifact: StoryStudioArtifact;
+		cliffhangerArtifact: StoryStudioArtifact;
+		storyState: ReturnType<typeof createStoryStateFromForgeRequest>;
+		brief: ContestBrief;
+		requestedAt: Date;
+	}): Promise<StoryStudioArtifact> {
+		const parsedColdOpen = coldOpenLabOutputSchema.safeParse(input.coldOpenPlanResult.output);
+		const parsedBingeDebt = bingeDebtLedgerOutputSchema.safeParse(
+			input.bingeDebtArtifact.result?.output
+		);
+		const parsedCliffhanger = cliffhangerFuturesOutputSchema.safeParse(
+			input.cliffhangerArtifact.result?.output
+		);
+
+		if (
+			input.coldOpenPlanResult.status !== 'success' ||
+			!parsedColdOpen.success ||
+			input.bingeDebtArtifact.status !== 'accepted' ||
+			!parsedBingeDebt.success ||
+			input.cliffhangerArtifact.status !== 'accepted' ||
+			!parsedCliffhanger.success
+		) {
+			return createLockedStoryStudioArtifact({
+				id: 'trope-mutation-lab',
+				summary:
+					'Trope mutation lab is locked until cold-open, debt-ledger, and cliffhanger artifacts are accepted.',
+				nextAction: {
+					label: 'Accept prior artifacts first',
+					reason:
+						'Trope Mutation Lab needs accepted live story artifacts so it can mutate the actual contest premise instead of generic genre advice.',
+					retryable: true
+				}
+			});
+		}
+
+		const module = this.moduleRegistry.find('trope-mutation-lab');
+
+		if (!module) {
+			return createLockedStoryStudioArtifact({
+				id: 'trope-mutation-lab',
+				nextAction: {
+					label: 'Register trope-mutation-lab',
+					reason: 'Trope Mutation Lab is not registered in the story module registry.',
+					retryable: false
+				}
+			});
+		}
+
+		const tropeInput = buildTropeMutationLabInputFromLiveArtifacts(
+			input.request,
+			input.brief,
+			parsedColdOpen.data,
+			parsedBingeDebt.data,
+			parsedCliffhanger.data
+		);
+		const result = await input.executor.run({
+			module,
+			context: {
+				input: tropeInput,
+				storyState: input.storyState,
+				contestBrief: input.brief,
+				mode: 'live',
+				now: input.requestedAt
+			},
+			messages: buildTropeMutationLabProviderMessages(tropeInput),
+			providerInput: buildTropeMutationLabProviderInput(tropeInput)
+		});
+
+		return storyModuleResultToStudioArtifact(
+			'trope-mutation-lab',
+			toStoryModulePlanResult(module, result)
+		);
+	}
 }
 
-function lockedStrategyArtifacts(): StoryStudioArtifact[] {
-	return [
-		createLockedStoryStudioArtifact({
-			id: 'trope-mutation-lab',
-			nextAction: liveGateNextAction('trope-mutation-lab')
-		}),
-		createLockedStoryStudioArtifact({
-			id: 'council-review',
-			summary: 'Council review is locked until live story artifacts exist for critique.',
-			nextAction: {
-				label: 'Implement council-review module',
-				reason:
-					'Council review must be a registered story module with its own schema, prompt, fixture, provenance, and quality gate.',
-				retryable: false
-			}
-		})
-	];
-}
-
-function liveGateNextAction(moduleId: string) {
-	return {
-		label: 'Implement live quality gate',
-		reason: `${moduleId} needs a module-specific prompt, provider input, prose extraction, and acceptance gate before it can run live.`,
-		retryable: false
-	};
+function lockedCouncilArtifact(): StoryStudioArtifact {
+	return createLockedStoryStudioArtifact({
+		id: 'council-review',
+		summary: 'Council review is locked until live story artifacts exist for critique.',
+		nextAction: {
+			label: 'Implement council-review module',
+			reason:
+				'Council review must be a registered story module with its own schema, prompt, fixture, provenance, and quality gate.',
+			retryable: false
+		}
+	});
 }

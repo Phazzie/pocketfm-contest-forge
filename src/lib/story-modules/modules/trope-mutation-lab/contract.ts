@@ -17,6 +17,8 @@ export const tropeMutationLabOutputSchema = z.object({
 	mutationRule: z.string().min(1),
 	preservedPromise: z.string().min(1),
 	confusionGuardrail: z.string().min(1),
+	serialEngine: z.string().min(1),
+	sceneProof: z.string().min(1),
 	episodePressure: z.array(z.string().min(1)).min(3),
 	rejectionNote: z.string().min(1)
 });

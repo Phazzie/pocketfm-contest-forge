@@ -51,6 +51,8 @@
   support, and Story Studio execution from accepted cold-open variants.
 - Made `cliffhanger-futures` live-capable through provider prompt builders, quality-gate registry
   support, and Story Studio execution from accepted cold-open and debt-ledger artifacts.
+- Made `trope-mutation-lab` live-capable through a stronger output contract, provider prompt
+  builders, quality-gate registry support, and Story Studio execution from accepted live artifacts.
 - Updated live story-state writer decisions so provenance describes the live Story Studio module
   chain instead of the earlier cold-open-only slice.
 - Added the story module provider port, fake-provider live executor, JSON repair, schema validation,

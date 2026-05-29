@@ -31,7 +31,16 @@ import {
 	buildCliffhangerFuturesProviderInput,
 	buildCliffhangerFuturesProviderMessages
 } from '$lib/story-modules/modules/cliffhanger-futures/prompts';
+import type { TropeMutationLabOutput } from '$lib/story-modules/modules/trope-mutation-lab/contract';
+import {
+	tropeMutationLabFixtureInput,
+	tropeMutationLabFixtureOutput
+} from '$lib/story-modules/modules/trope-mutation-lab/fixtures';
 import { tropeMutationLabModule } from '$lib/story-modules/modules/trope-mutation-lab/module';
+import {
+	buildTropeMutationLabProviderInput,
+	buildTropeMutationLabProviderMessages
+} from '$lib/story-modules/modules/trope-mutation-lab/prompts';
 import { createModuleFixtureContext } from '$lib/story-modules/testSupport';
 
 const generatedAt = '2026-05-28T04:21:00.000Z';
@@ -226,6 +235,32 @@ describe('live module executor', () => {
 		);
 	});
 
+	it('accepts valid trope-mutation JSON through its module-specific quality gate', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(tropeMutationLabFixtureOutput))
+		);
+		const result = await runTropeMutationLab(provider);
+
+		expect(result.status).toBe('success');
+		expect(result.output?.sceneProof).toContain('court trial');
+		expect(result.provenance.promptVersion).toBe('trope-mutation-lab.v1');
+		expect(provider.requests[0]?.moduleId).toBe('trope-mutation-lab');
+	});
+
+	it('rejects weak trope-mutation JSON without fixture fallback', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(JSON.stringify(weakTropeMutationLabOutput))
+		);
+		const result = await runTropeMutationLab(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+		expect(result.issues.map((issue) => issue.message).join(' ')).toContain(
+			'repeatable episode engine'
+		);
+	});
+
 	it('uses the configured module-specific review builder before quality evaluation', async () => {
 		let reviewedProtagonistName: string | undefined;
 		const provider = new FakeStoryModuleProvider(
@@ -263,7 +298,11 @@ describe('live module executor', () => {
 			mode: 'live' as const
 		};
 		const result = await new LiveModuleExecutor(provider).run({
-			module: tropeMutationLabModule,
+			module: {
+				...coldOpenLabModule,
+				id: 'unsupported-live-module',
+				label: 'Unsupported Live Module'
+			},
 			context,
 			messages: buildColdOpenLabProviderMessages(coldOpenLabFixtureInput),
 			providerInput: buildColdOpenLabProviderInput(coldOpenLabFixtureInput)
@@ -329,6 +368,23 @@ async function runCliffhangerFutures(
 		context,
 		messages: buildCliffhangerFuturesProviderMessages(cliffhangerFuturesFixtureInput),
 		providerInput: buildCliffhangerFuturesProviderInput(cliffhangerFuturesFixtureInput)
+	});
+}
+
+async function runTropeMutationLab(
+	provider: StoryModuleProvider,
+	config?: LiveModuleExecutorConfig
+) {
+	const context = {
+		...createModuleFixtureContext(tropeMutationLabFixtureInput),
+		mode: 'live' as const
+	};
+
+	return new LiveModuleExecutor(provider, config).run({
+		module: tropeMutationLabModule,
+		context,
+		messages: buildTropeMutationLabProviderMessages(tropeMutationLabFixtureInput),
+		providerInput: buildTropeMutationLabProviderInput(tropeMutationLabFixtureInput)
 	});
 }
 
@@ -517,4 +573,19 @@ const weakCliffhangerFuturesOutput: CliffhangerFuturesOutput = {
 	],
 	recommendationId: 'vague-mystery-one',
 	marketRationale: 'This has a compelling hook and can engage the audience.'
+};
+
+const weakTropeMutationLabOutput: TropeMutationLabOutput = {
+	expectedTrope: 'a story idea',
+	mutationRule: 'make it more interesting',
+	preservedPromise: 'keep the genre promise and emotional stakes',
+	confusionGuardrail: 'avoid confusing the audience',
+	serialEngine: 'make chapters compelling',
+	sceneProof: 'a scene happens and things change',
+	episodePressure: [
+		'Every episode should raise the stakes.',
+		'Every episode should build suspense.',
+		'Every episode should keep readers engaged.'
+	],
+	rejectionNote: 'This might not have a strong hook.'
 };

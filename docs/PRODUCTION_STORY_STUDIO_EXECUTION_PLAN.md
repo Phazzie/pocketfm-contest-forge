@@ -46,7 +46,9 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [x] 2026-05-29 11:40 - Made `cliffhanger-futures` live-capable through provider prompt builders,
       a module-specific quality gate, and `RunLiveStoryStudio` execution after accepted cold-open
       and debt-ledger output.
-- [ ] Make `trope-mutation-lab` live-capable.
+- [x] 2026-05-29 11:55 - Made `trope-mutation-lab` live-capable through a stronger output
+      contract, provider prompt builders, a module-specific quality gate, and `RunLiveStoryStudio`
+      execution after accepted cold-open, debt-ledger, and cliffhanger output.
 - [ ] Add live council review as a story module.
 - [ ] Replace heuristic production scoring with live qualitative assessment.
 - [ ] Add contest brief freshness metadata and stale-state UI.
@@ -68,9 +70,9 @@ use case half-live by mixing live and deterministic sections.
 
 `LiveModuleExecutor` is intentionally conservative: it supports only modules with configured
 module-specific quality gates. The default registry now covers `cold-open-lab`, `binge-debt-ledger`,
-and `cliffhanger-futures`; other modules stay blocked until their gates exist. Keep that posture.
-Broadly enabling all registered modules would create the exact technical debt this plan is meant to
-avoid.
+`cliffhanger-futures`, and `trope-mutation-lab`; other modules stay blocked until their gates exist.
+Keep that posture. Broadly enabling all registered modules would create the exact technical debt
+this plan is meant to avoid.
 
 The current AI council is not live AI. It is a static prompt runbook embedded in
 `ForgeContestStory`. In production it should be either hidden as a developer runbook or replaced by
@@ -95,6 +97,11 @@ execution goes through `LiveModuleExecutor`.
 input is assembled from accepted cold-open variants plus accepted open/stale debt labels instead of
 the deterministic pilot episode. This keeps the production chain honest while still giving the
 module the episode-beat and unresolved-debt shapes its contract expects.
+
+`trope-mutation-lab` needed a stronger output contract before it could be live-capable. The old
+schema could preserve a familiar doorway and mutation rule, but it did not force a repeatable serial
+engine or concrete scene proof. Those are now schema-backed fields so weak provider output cannot
+pass as abstract genre commentary.
 
 ## Decision Log
 
@@ -155,6 +162,11 @@ production chain; accepted live cold-open variants are the first honest story ar
 artifacts in the production runner. Rationale: a cliffhanger futures market without live debts would
 either price generic suspense or invent missing promises; locking it until the debt ledger passes is
 more truthful than adding fallback prose.
+
+2026-05-29 11:55 - `trope-mutation-lab` depends on accepted cold-open, debt-ledger, and cliffhanger
+artifacts in the production runner. Rationale: trope mutation can technically run from a seed, but
+for the production Story Studio path it should mutate the actual accepted live premise rather than
+give generic genre advice disconnected from the prior artifacts.
 
 ## Outcomes & Retrospective
 
@@ -507,6 +519,12 @@ src/lib/story-modules/modules/binge-debt-ledger/module.spec.ts` returned 3 files
 src/lib/application/runLiveStoryStudio.spec.ts
 src/lib/story-modules/modules/cliffhanger-futures/module.spec.ts` returned 3 files and 27 tests
   passing.
+- 2026-05-29 11:55 - Focused trope mutation tests passed:
+  `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
+src/lib/application/runLiveStoryStudio.spec.ts
+src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts
+src/lib/story-modules/modules/cliffhanger-futures/module.spec.ts
+src/lib/core/domain/proseQuality.spec.ts` returned 5 files and 37 tests passing.
 
 ## Interfaces and Dependencies
 
