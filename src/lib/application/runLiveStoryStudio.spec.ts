@@ -12,6 +12,7 @@ import type {
 import { createStoryModuleRegistry, defaultStoryModules } from '$lib/story-modules/registry';
 import type { ColdOpenLabOutput } from '$lib/story-modules/modules/cold-open-lab/contract';
 import type { BingeDebtLedgerOutput } from '$lib/story-modules/modules/binge-debt-ledger/contract';
+import type { CliffhangerFuturesOutput } from '$lib/story-modules/modules/cliffhanger-futures/contract';
 
 const generatedAt = '2026-05-29T11:08:00.000Z';
 const requestedAt = '2026-05-29T11:08:01.000Z';
@@ -39,10 +40,11 @@ class FakeStoryModuleProvider implements StoryModuleProvider {
 }
 
 describe('run live story studio', () => {
-	it('returns an accepted cold-open artifact and locked future artifacts', async () => {
+	it('returns accepted cold-open, debt-ledger, and cliffhanger artifacts', async () => {
 		const provider = new FakeStoryModuleProvider([
 			providerSuccess(JSON.stringify(validColdOpenOutput)),
-			providerSuccess(JSON.stringify(validBingeDebtLedgerOutput))
+			providerSuccess(JSON.stringify(validBingeDebtLedgerOutput)),
+			providerSuccess(JSON.stringify(validCliffhangerFuturesOutput))
 		]);
 		const result = await runUseCase(provider);
 
@@ -66,19 +68,24 @@ describe('run live story studio', () => {
 			expect(result.data.artifacts[1]?.result?.output).toMatchObject({
 				openedDebts: expect.arrayContaining([expect.objectContaining({ id: 'debt-stolen-name' })])
 			});
-			expect(result.data.artifacts.slice(2).every((artifact) => artifact.status === 'locked')).toBe(
+			expect(result.data.artifacts[2]?.status).toBe('accepted');
+			expect(result.data.artifacts[2]?.result?.output).toMatchObject({
+				recommendationId: 'enemy-knows-name'
+			});
+			expect(result.data.artifacts.slice(3).every((artifact) => artifact.status === 'locked')).toBe(
 				true
 			);
 			expect(result.data.qualitySummary).toMatchObject({
-				accepted: 2,
+				accepted: 3,
 				failed: 0,
-				locked: 3
+				locked: 2
 			});
 			expect(result.data.contestFreshness.status).toBe('unknown');
 		}
-		expect(provider.requests).toHaveLength(2);
+		expect(provider.requests).toHaveLength(3);
 		expect(provider.requests[0]?.moduleId).toBe('cold-open-lab');
 		expect(provider.requests[1]?.moduleId).toBe('binge-debt-ledger');
+		expect(provider.requests[2]?.moduleId).toBe('cliffhanger-futures');
 	});
 
 	it('rejects invalid forge requests before calling the provider', async () => {
@@ -163,6 +170,34 @@ describe('run live story studio', () => {
 		expect(provider.requests.map((request) => request.moduleId)).toEqual([
 			'cold-open-lab',
 			'binge-debt-ledger'
+		]);
+	});
+
+	it('surfaces cliffhanger provider failure as a failed artifact without fixture fallback', async () => {
+		const provider = new FakeStoryModuleProvider([
+			providerSuccess(JSON.stringify(validColdOpenOutput)),
+			providerSuccess(JSON.stringify(validBingeDebtLedgerOutput)),
+			providerFailure('PROSE_QUALITY_REJECTION', 'The fake provider produced a fake cliffhanger.')
+		]);
+		const result = await runUseCase(provider);
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			const cliffhanger = result.data.artifacts[2];
+
+			expect(cliffhanger?.status).toBe('failed');
+			expect(cliffhanger?.result?.output).toBeUndefined();
+			expect(cliffhanger?.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+			expect(result.data.qualitySummary).toMatchObject({
+				accepted: 2,
+				failed: 1,
+				locked: 2
+			});
+		}
+		expect(provider.requests.map((request) => request.moduleId)).toEqual([
+			'cold-open-lab',
+			'binge-debt-ledger',
+			'cliffhanger-futures'
 		]);
 	});
 
@@ -293,4 +328,46 @@ const validBingeDebtLedgerOutput: BingeDebtLedgerOutput = {
 	],
 	auditorNote:
 		'The ledger works because every open debt carries a public status wound or relationship price.'
+};
+
+const validCliffhangerFuturesOutput: CliffhangerFuturesOutput = {
+	candidates: [
+		{
+			id: 'enemy-knows-name',
+			text: 'The antagonist speaks Mara Vey old name, and the stolen crown answers him like a bride.',
+			unansweredQuestion: 'Why does the enemy know the erased name?',
+			futuresScore: 88,
+			volatility: 'medium',
+			payoffPath:
+				'Episode two reveals the antagonist bought a name clue from the lover witness at a public price.',
+			payoffWarning:
+				'Audience trust risk rises if the name proof is withheld beyond the next court consequence.'
+		},
+		{
+			id: 'lover-signed-order',
+			text: 'The lover witness signs the execution order with Mara Vey forgotten childhood signature.',
+			unansweredQuestion: 'How did the lover get a signature only Mara should know?',
+			futuresScore: 79,
+			volatility: 'high',
+			payoffPath:
+				'The next episode forces a partial confession that prices the lover relationship debt.',
+			payoffWarning:
+				'Romantic volatility risks frustrating the audience if the crown consequence becomes secondary.'
+		},
+		{
+			id: 'crown-chose-wrong',
+			text: 'The crown names Mara Vey heir, then drains the crowd memory of why they should care.',
+			unansweredQuestion:
+				'Can a rightful claim survive if no listener inside the story remembers it?',
+			futuresScore: 74,
+			volatility: 'medium',
+			payoffPath:
+				'Episode two creates one witness clue immune to the memory drain before the debt turns abstract.',
+			payoffWarning:
+				'Audience frustration rises if the witness arrives after the memory rule becomes lore.'
+		}
+	],
+	recommendationId: 'enemy-knows-name',
+	marketRationale:
+		'The winning cliffhanger reprices the public name debt and has a clean next-episode proof path.'
 };

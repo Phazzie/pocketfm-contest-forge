@@ -145,10 +145,10 @@ export function createStoryStateFromForgeRequest(
 function writerDecisionForGenerationMode(mode: StoryStateGenerationMode): WriterDecision {
 	if (mode === 'live-ai') {
 		return {
-			id: 'live-cold-open-only',
-			decision: 'Run only the provider-backed cold-open module through the live AI boundary.',
+			id: 'live-story-studio-chain',
+			decision: 'Run live-capable Story Studio modules through the provider-backed AI boundary.',
 			rationale:
-				'The full forge remains fixture-demo until every live module has provider, schema, and prose gates.',
+				'Modules stay locked until they have provider prompts, runtime schemas, and prose gates.',
 			madeAt: '2026-05-28'
 		};
 	}

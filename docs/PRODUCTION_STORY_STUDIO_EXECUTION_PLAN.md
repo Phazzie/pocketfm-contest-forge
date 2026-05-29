@@ -38,11 +38,14 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       path and returns locked artifacts for modules whose live gates are not implemented yet.
 - [ ] Move deterministic forge output out of the production route.
 - [x] 2026-05-29 11:22 - Replaced the executor's broad supported-module set with a
-      module-specific live quality gate registry. Only `cold-open-lab` is registered by default.
+      module-specific live quality gate registry. At that milestone, only `cold-open-lab` was
+      registered by default.
 - [x] 2026-05-29 11:32 - Made `binge-debt-ledger` live-capable through provider prompt builders,
       a module-specific quality gate, and `RunLiveStoryStudio` execution after accepted cold-open
       output.
-- [ ] Make `cliffhanger-futures` live-capable.
+- [x] 2026-05-29 11:40 - Made `cliffhanger-futures` live-capable through provider prompt builders,
+      a module-specific quality gate, and `RunLiveStoryStudio` execution after accepted cold-open
+      and debt-ledger output.
 - [ ] Make `trope-mutation-lab` live-capable.
 - [ ] Add live council review as a story module.
 - [ ] Replace heuristic production scoring with live qualitative assessment.
@@ -63,9 +66,11 @@ screen.
 returns `AI_PROVIDER_UNAVAILABLE`. Keep that fail-closed behavior. Do not try to make the old forge
 use case half-live by mixing live and deterministic sections.
 
-`LiveModuleExecutor` is intentionally conservative: it supports `cold-open-lab` by default and
-blocks other modules until module-specific quality gates exist. Keep that posture. Broadly enabling
-all registered modules would create the exact technical debt this plan is meant to avoid.
+`LiveModuleExecutor` is intentionally conservative: it supports only modules with configured
+module-specific quality gates. The default registry now covers `cold-open-lab`, `binge-debt-ledger`,
+and `cliffhanger-futures`; other modules stay blocked until their gates exist. Keep that posture.
+Broadly enabling all registered modules would create the exact technical debt this plan is meant to
+avoid.
 
 The current AI council is not live AI. It is a static prompt runbook embedded in
 `ForgeContestStory`. In production it should be either hidden as a developer runbook or replaced by
@@ -85,6 +90,11 @@ IDs. Each module must provide its own review builder before the executor will ca
 cannot be used in production, its live input is built from accepted cold-open variants, seed story
 state, and existing secrets. Direct `module.run(..., live)` still fails closed; provider-backed live
 execution goes through `LiveModuleExecutor`.
+
+`cliffhanger-futures` can run live after accepted cold-open and binge debt artifacts exist. Its live
+input is assembled from accepted cold-open variants plus accepted open/stale debt labels instead of
+the deterministic pilot episode. This keeps the production chain honest while still giving the
+module the episode-beat and unresolved-debt shapes its contract expects.
 
 ## Decision Log
 
@@ -140,6 +150,11 @@ module's output before it can safely call the provider.
 2026-05-29 11:32 - `binge-debt-ledger` uses accepted cold-open variants as first-episode beats for
 the live path. Rationale: using the deterministic pilot would preserve the demo scaffold in the
 production chain; accepted live cold-open variants are the first honest story artifact available.
+
+2026-05-29 11:40 - `cliffhanger-futures` depends on both accepted cold-open and accepted debt-ledger
+artifacts in the production runner. Rationale: a cliffhanger futures market without live debts would
+either price generic suspense or invent missing promises; locking it until the debt ledger passes is
+more truthful than adding fallback prose.
 
 ## Outcomes & Retrospective
 
@@ -486,6 +501,11 @@ src/lib/application/runLiveStoryStudio.spec.ts` returned 2 files and 20 tests pa
   `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
 src/lib/application/runLiveStoryStudio.spec.ts
 src/lib/story-modules/modules/binge-debt-ledger/module.spec.ts` returned 3 files and 24 tests
+  passing.
+- 2026-05-29 11:40 - Focused cliffhanger tests passed:
+  `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
+src/lib/application/runLiveStoryStudio.spec.ts
+src/lib/story-modules/modules/cliffhanger-futures/module.spec.ts` returned 3 files and 27 tests
   passing.
 
 ## Interfaces and Dependencies

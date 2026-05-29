@@ -36,5 +36,6 @@ export const cliffhangerFuturesOutputSchema = z.object({
 });
 
 export type CliffhangerFuturesInput = z.infer<typeof cliffhangerFuturesInputSchema>;
+export type CliffhangerBeat = z.infer<typeof cliffhangerBeatSchema>;
 export type CliffhangerCandidate = z.infer<typeof cliffhangerCandidateSchema>;
 export type CliffhangerFuturesOutput = z.infer<typeof cliffhangerFuturesOutputSchema>;

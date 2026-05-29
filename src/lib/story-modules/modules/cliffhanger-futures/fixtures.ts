@@ -47,7 +47,7 @@ export const cliffhangerFuturesFixtureOutput: CliffhangerFuturesOutput = {
 			volatility: 'medium',
 			payoffPath: 'Episode two can reveal the antagonist bought one memory from the lover witness.',
 			payoffWarning:
-				'Do not reveal the full erasure conspiracy before the third public humiliation.'
+				'Audience trust risk rises if the full erasure conspiracy is withheld past the third public humiliation.'
 		},
 		{
 			id: 'lover-signed-order',
@@ -56,7 +56,8 @@ export const cliffhangerFuturesFixtureOutput: CliffhangerFuturesOutput = {
 			futuresScore: 79,
 			volatility: 'high',
 			payoffPath: 'Pay with a partial confession and a new lie by episode three.',
-			payoffWarning: 'High romantic charge risks making the crown rule feel secondary.'
+			payoffWarning:
+				'High romantic charge risks making the crown rule feel secondary before the name price is clear.'
 		},
 		{
 			id: 'crown-chose-wrong',
@@ -66,7 +67,8 @@ export const cliffhangerFuturesFixtureOutput: CliffhangerFuturesOutput = {
 			futuresScore: 74,
 			volatility: 'medium',
 			payoffPath: 'Use episode two to create one witness immune to the memory drain.',
-			payoffWarning: 'Needs a human witness fast or it becomes abstract lore.'
+			payoffWarning:
+				'Audience frustration rises if the immune witness arrives after the memory drain becomes abstract lore.'
 		}
 	],
 	recommendationId: 'enemy-knows-name',

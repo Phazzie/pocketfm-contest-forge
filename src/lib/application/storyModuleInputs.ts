@@ -8,6 +8,7 @@ import type {
 import type { StoryState, StoryDebt } from '$lib/core/story-state/storyStateContract';
 import type {
 	BingeDebtLedgerInput,
+	BingeDebtLedgerOutput,
 	LedgerDebt
 } from '$lib/story-modules/modules/binge-debt-ledger/contract';
 import type { CliffhangerFuturesInput } from '$lib/story-modules/modules/cliffhanger-futures/contract';
@@ -50,6 +51,30 @@ export function buildCliffhangerFuturesInput(
 			unansweredQuestion: beat.unansweredQuestion
 		})),
 		unresolvedDebts: pilot.bingeDebtAdded,
+		contestLane: brief.id,
+		emotionalPromise: request.seed.emotionalPromise
+	};
+}
+
+export function buildCliffhangerFuturesInputFromLiveArtifacts(
+	request: ForgeRequest,
+	brief: ContestBrief,
+	coldOpenOutput: ColdOpenLabOutput,
+	bingeDebtOutput: BingeDebtLedgerOutput
+): CliffhangerFuturesInput {
+	return {
+		episodeNumber: 1,
+		episodeTitle: `${request.seed.workingTitle}: Live Story Studio Pilot`,
+		beats: coldOpenOutput.variants.map((variant, index) => ({
+			id: variant.id,
+			minute: index * 2,
+			function: liveCliffhangerBeatFunction(index),
+			text: variant.text,
+			unansweredQuestion: variant.firstMinuteQuestion
+		})),
+		unresolvedDebts: [...bingeDebtOutput.openedDebts, ...bingeDebtOutput.staleDebts].map(
+			(debt) => debt.label
+		),
 		contestLane: brief.id,
 		emotionalPromise: request.seed.emotionalPromise
 	};
@@ -136,4 +161,10 @@ function toLedgerDebt(debt: StoryDebt): LedgerDebt {
 		payoffWindow: debt.payoffWindow,
 		interest: debt.notes ?? `Debt pressure carries into ${debt.payoffWindow}.`
 	};
+}
+
+function liveCliffhangerBeatFunction(index: number): string {
+	if (index === 0) return 'live-cold-open-pressure';
+	if (index === 1) return 'listener-question-pressure';
+	return 'unresolved-debt-pressure';
 }

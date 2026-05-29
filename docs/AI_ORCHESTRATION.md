@@ -69,7 +69,8 @@ Current registered modules:
 
 - `cold-open-lab` can run through `LiveModuleExecutor` and the xAI provider adapter;
 - `binge-debt-ledger` can run through `LiveModuleExecutor` after accepted cold-open output;
-- `cliffhanger-futures` still needs a live prompt, provider input, and quality gate;
+- `cliffhanger-futures` can run through `LiveModuleExecutor` after accepted cold-open and
+  binge-debt output;
 - `trope-mutation-lab` still needs a live prompt, provider input, and quality gate.
 
 Direct module `run()` methods still fail closed in live mode unless explicitly designed otherwise.
@@ -87,11 +88,11 @@ malformed JSON, returns schema-invalid JSON, or produces weak prose, the module 
 no fixture/demo output is substituted.
 
 Current live execution is intentionally enabled only for modules with configured quality gates. The
-default live quality gate registry supports `cold-open-lab` and `binge-debt-ledger`; other modules
-must add a module-specific review builder and acceptance rules before they can run through the
-provider boundary. Provider JSON repair handles raw JSON, markdown-fenced JSON, or the first
-balanced JSON object, but still records this as one repair attempt and fails closed if schema
-validation does not pass.
+default live quality gate registry supports `cold-open-lab`, `binge-debt-ledger`, and
+`cliffhanger-futures`; other modules must add a module-specific review builder and acceptance rules
+before they can run through the provider boundary. Provider JSON repair handles raw JSON,
+markdown-fenced JSON, or the first balanced JSON object, but still records this as one repair
+attempt and fails closed if schema validation does not pass.
 
 The executor also enforces a configurable provider timeout. A hung provider returns a failed module
 result with `PROVIDER_TIMEOUT`; it must not leave the request pending indefinitely or backfill with
@@ -145,10 +146,10 @@ module results; the action does not replace them with fixture prose.
 `src/lib/core/contracts/storyStudioContract.ts` now defines the production Story Studio response
 shape. `src/lib/application/runLiveStoryStudio.ts` is the first application use case for that
 contract: it runs the existing live `cold-open-lab` provider path, maps the module result into a
-production artifact, runs `binge-debt-ledger` from accepted cold-open variants, and returns locked
-artifacts for `cliffhanger-futures`, `trope-mutation-lab`, and `council-review` until those modules
-have their own live prompts and quality gates. Locked artifacts are explicit product states, not
-fallback prose.
+production artifact, runs `binge-debt-ledger` from accepted cold-open variants, runs
+`cliffhanger-futures` from accepted cold-open and debt-ledger output, and returns locked artifacts
+for `trope-mutation-lab` and `council-review` until those modules have their own live prompts and
+quality gates. Locked artifacts are explicit product states, not fallback prose.
 
 ## Provider Tracking
 

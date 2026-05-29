@@ -46,9 +46,13 @@
 - Extracted shared story-module input builders so fixture/demo forge output and live Story Studio
   execution use the same module input assembly.
 - Replaced the live executor's broad supported-module set with a module-specific quality-gate
-  registry that still only enables `cold-open-lab` by default.
+  registry that enables live modules only after module-specific gates are added.
 - Made `binge-debt-ledger` live-capable through provider prompt builders, quality-gate registry
   support, and Story Studio execution from accepted cold-open variants.
+- Made `cliffhanger-futures` live-capable through provider prompt builders, quality-gate registry
+  support, and Story Studio execution from accepted cold-open and debt-ledger artifacts.
+- Updated live story-state writer decisions so provenance describes the live Story Studio module
+  chain instead of the earlier cold-open-only slice.
 - Added the story module provider port, fake-provider live executor, JSON repair, schema validation,
   provider provenance, and deterministic prose quality gate for `cold-open-lab`.
 - Hardened the live module boundary after review so markdown-fenced JSON can repair once, fixture

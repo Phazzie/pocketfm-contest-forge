@@ -21,7 +21,7 @@ export const cliffhangerFuturesModule: StoryModule<
 	category: 'retention',
 	inputSchema: cliffhangerFuturesInputSchema,
 	outputSchema: cliffhangerFuturesOutputSchema,
-	requiredState: ['episodeHistory', 'debts.open', 'contestBrief'],
+	requiredState: ['protagonist', 'desireTaboo', 'contestBrief'],
 	promptVersion: CLIFFHANGER_FUTURES_PROMPT_VERSION,
 	qualityGates: ['no-fake-cliffhangers', 'payoff-path-exists', 'next-episode-pull'],
 	async run(context) {
