@@ -75,6 +75,10 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       on weak episode-pressure prose instead of falling back. Hardened `trope-mutation-lab.v2` so
       provider output must start episode pressure with repeat cues and carry concrete costs, and
       mirrored that rule in the live quality gate.
+- [x] 2026-05-29 17:50 UTC - Production live smoke reached `cliffhanger-futures` and failed
+      closed on weak payoff-warning prose instead of falling back. Hardened
+      `cliffhanger-futures.v2` so warnings must start with an audience-risk prefix, and mirrored
+      that rule in the live quality gate.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -181,6 +185,11 @@ The second post-merge production live smoke improved enough to reach `trope-muta
 failed closed with `PROSE_QUALITY_REJECTION` because `episodePressure` lacked repeatable concrete
 costs. This is the right failure mode: prompt pressure should be tightened to match the existing
 quality gate instead of lowering the gate or substituting fixture prose.
+
+The next production live smoke showed variance in earlier module output: it failed closed at
+`cliffhanger-futures` because two `payoffWarning` fields described volatility without naming the
+audience-frustration risk. The gate was already catching the issue, so the right fix is to align the
+prompt and fixture examples with the gate's audience-risk requirement.
 
 ## Decision Log
 
@@ -298,6 +307,11 @@ gate together. Rationale: the quality gate rejected weak Grok episode-pressure o
 smoke, and the product principle is to fail closed or improve provider instructions, not accept
 abstract story advice. If the prompt states an exact repeat-cue rule, live acceptance must enforce
 the same rule.
+
+2026-05-29 17:50 UTC - Keep the `cliffhanger-futures` warning quality gate strict and harden the
+prompt and gate together. Rationale: payoff warnings are only useful if they name the audience-risk
+created by delaying or obscuring the payoff; volatility-only warnings let fake cliffhangers appear
+strategic.
 
 ## Outcomes & Retrospective
 
@@ -741,6 +755,19 @@ src/lib/application/runLiveStoryStudio.spec.ts
 src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 3 files and 39 tests
   passing. `npm run guard:no-live-fallback` and `npm run guard:docs-drift` passed. Full
   `npm run verify` passed with 21 test files and 110 tests, zero Svelte errors/warnings, and a
+  production build.
+- 2026-05-29 17:47 UTC - Post-merge production smoke run
+  `https://github.com/Phazzie/pocketfm-contest-forge/actions/runs/26652877352` failed closed after
+  1 minute 50 seconds: `cliffhanger-futures` failed with `PROSE_QUALITY_REJECTION` because two
+  `payoffWarning` fields did not name the audience-frustration risk if payoff is delayed. No
+  fixture output was accepted. Follow-up branch `fix/cliffhanger-warning-risk` hardens the provider
+  prompt and gate around explicit audience-risk warning prefixes.
+- 2026-05-29 17:54 UTC - Cliffhanger warning hardening verification passed. Focused
+  `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
+src/lib/application/runLiveStoryStudio.spec.ts
+src/lib/story-modules/modules/cliffhanger-futures/module.spec.ts` returned 3 files and 41 tests
+  passing. `npm run guard:no-live-fallback` and `npm run guard:docs-drift` passed. Full
+  `npm run verify` passed with 21 test files and 112 tests, zero Svelte errors/warnings, and a
   production build.
 
 ## Interfaces and Dependencies

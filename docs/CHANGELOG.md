@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Hardened `cliffhanger-futures.v2` after production smoke rejected payoff warnings that described
+  volatility without naming audience frustration; live warnings must now start with an audience-risk
+  prefix.
 - Hardened `trope-mutation-lab.v2` after production smoke reached the module and rejected weak
   episode pressure; live pressure items must now start with a repeat cue and carry concrete
   recurring costs.

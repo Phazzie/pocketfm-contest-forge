@@ -17,3 +17,11 @@ Quality gates:
 - no fake cliffhangers
 - payoff path exists
 - next-episode pull
+- payoff warning starts with `Audience frustration risk:` or `Audience trust risk:`
+- warning names a delayed payoff, fake cliffhanger, audience confusion, trust break, abstract lore,
+  or hidden-proof risk
+
+`cliffhanger-futures.v2` hardens the provider prompt after production smoke rejected warnings that
+described volatility without naming the audience-frustration risk. The live quality gate enforces
+the same warning prefix so a candidate cannot pass with a warning that only describes tone, romance,
+theme, or general stakes.

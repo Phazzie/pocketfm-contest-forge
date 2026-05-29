@@ -116,6 +116,12 @@ cost word such as betrayal, debt, family, lover, public, relationship, reputatio
 or trust. The live quality gate mirrors that prefix rule so the prompt and acceptance criteria stay
 aligned instead of weakening the gate.
 
+`cliffhanger-futures.v2` hardens payoff warning instructions after production Story Studio smoke
+rejected candidate warnings that described volatility without naming audience frustration. Each live
+`payoffWarning` must now start with `Audience frustration risk:` or `Audience trust risk:` and name
+a delayed payoff, fake cliffhanger, confusion, trust break, abstract lore, or hidden-proof risk. The
+live quality gate enforces the same prefix.
+
 ## xAI Grok Adapter
 
 `src/lib/adapters/ai/xaiStoryModuleProvider.ts` implements `StoryModuleProvider` for the xAI

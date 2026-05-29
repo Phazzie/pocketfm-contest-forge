@@ -279,7 +279,10 @@ function evaluateCliffhangerFuturesQuality(review: ProseQualityReview): ProseQua
 			});
 		}
 
-		if (!hasAny(lowerWarning, cliffhangerWarningTerms)) {
+		if (
+			!startsWithAny(lowerWarning, cliffhangerWarningPrefixes) ||
+			!hasAny(lowerWarning, cliffhangerWarningTerms)
+		) {
 			issues.push({
 				code: 'FAKE_CLIFFHANGER',
 				field: `${review.moduleId}.candidates.${candidate.id}.payoffWarning`,
@@ -775,3 +778,5 @@ const cliffhangerWarningTerms = [
 	'trust',
 	'withhold'
 ];
+
+const cliffhangerWarningPrefixes = ['audience frustration risk:', 'audience trust risk:'];
