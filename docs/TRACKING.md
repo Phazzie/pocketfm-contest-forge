@@ -26,28 +26,28 @@ Use this file for active issues, review findings, risks, and decisions that need
 
 ## Active Follow-Up
 
-| Status | Item                                                              | Next Action                                                                                                                                  |
-| ------ | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Done   | Fake-provider live module boundary is absent.                     | Added provider port, live executor, JSON repair, schema validation, prose gate, and fake-provider tests for `cold-open-lab`.                 |
-| Done   | Real Grok provider adapter is still absent.                       | Added xAI Responses API adapter behind the provider port with env validation, provider metadata, timeout handling, and secret-safe tests.    |
-| Open   | Story-state contract is in-memory only.                           | Add persistence after storage choice is made.                                                                                                |
-| Open   | Fixture module prose still needs live quality review.             | Run prose rubric and AI council once provider output exists.                                                                                 |
-| Open   | Future multi-hour work needs stricter execution plans.            | Use `.agent/PLANS.md` and the global `exec-plan` skill for complex autonomous runs.                                                          |
-| Done   | Type safety should enforce a literal no-`any` policy.             | Removed the registry `any` escape; heterogeneous module lookup uses `unknown`, and `guard:type-escape-budget` allows zero approved `any`.    |
-| Done   | Main branch needs remote quality enforcement.                     | Branch protection requires PRs, conversation resolution, and the `Verify` status check.                                                      |
-| Open   | Low npm audit finding exists through SvelteKit cookie.            | Track upstream fix; CI should fail on moderate and higher vulnerabilities.                                                                   |
-| Doing  | Public MVP needs Vercel and Grok delivery plan.                   | Public deployment, Grok transport, server action, and access gate exist; next step is stable deployed smoke with prose-gate-accepted output. |
-| Open   | CI UI smoke currently relies on preview build output.             | Keep `npm run verify` before `npm run verify:ui` in CI or add an explicit build preflight.                                                   |
-| Open   | CI UI smoke must not leave server children running.               | Keep process-group cleanup in `scripts/verify-ui.mjs` covered by local and remote smoke.                                                     |
-| Done   | Vercel project is not yet proven from public URL.                 | Production URL is deployed and `npm run deploy:readiness` passes against `https://pocketfm-contest-forge.vercel.app`.                        |
-| Done   | Vercel CLI is not authenticated in the local shell.               | Vercel CLI is authenticated as `phazzie` and the local project link is active.                                                               |
-| Doing  | Real deployed Grok smoke is not yet proven.                       | The deployed action reaches xAI and fails closed on weak prose; harden `cold-open-lab.v2`, redeploy, and rerun smoke.                        |
-| Done   | Live Grok adapter is not wired into UI/server action.             | Added server-only `runLiveColdOpen` action, preserves submitted input, and renders live module success/failure separately.                   |
-| Done   | GitHub Actions warns about Node 20 action runtime.                | Updated pinned `actions/checkout` and `actions/setup-node` refs to Node 24-compatible releases.                                              |
-| Done   | Deployed live smoke was blocked by SvelteKit CSRF.                | Smoke script now sends the target deployment as `Origin` while keeping the action header and access-code gate.                               |
-| Done   | Local live smoke could false-pass on Node 23.                     | Smoke script now falls back to resolved entrypoint detection when `import.meta.main` is unavailable.                                         |
-| Done   | Live smoke client timed out before provider timeout.              | Smoke script timeout now exceeds the xAI provider timeout so failures come from the live action path.                                        |
-| Done   | Blank protagonist input could make provider instructions awkward. | Added a prompt-subject fallback and regression test while preserving contract-level protagonist validation.                                  |
+| Status | Item                                                                | Next Action                                                                                                                                  |
+| ------ | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Done   | Fake-provider live module boundary is absent.                       | Added provider port, live executor, JSON repair, schema validation, prose gate, and fake-provider tests for `cold-open-lab`.                 |
+| Done   | Real Grok provider adapter is still absent.                         | Added xAI Responses API adapter behind the provider port with env validation, provider metadata, timeout handling, and secret-safe tests.    |
+| Open   | Story-state contract is in-memory only.                             | Add persistence after storage choice is made.                                                                                                |
+| Open   | Fixture module prose still needs live quality review.               | Run prose rubric and AI council once provider output exists.                                                                                 |
+| Open   | Future multi-hour work needs stricter execution plans.              | Use `.agent/PLANS.md` and the global `exec-plan` skill for complex autonomous runs.                                                          |
+| Done   | Type safety should enforce a literal no-`any` policy.               | Removed the registry `any` escape; heterogeneous module lookup uses `unknown`, and `guard:type-escape-budget` allows zero approved `any`.    |
+| Done   | Main branch needs remote quality enforcement.                       | Branch protection requires PRs, conversation resolution, and the `Verify` status check.                                                      |
+| Open   | Low npm audit finding exists through SvelteKit cookie.              | Track upstream fix; CI should fail on moderate and higher vulnerabilities.                                                                   |
+| Doing  | Public MVP needs Vercel and Grok delivery plan.                     | Public deployment, Grok transport, server action, and access gate exist; next step is stable deployed smoke with prose-gate-accepted output. |
+| Open   | CI UI smoke currently relies on preview build output.               | Keep `npm run verify` before `npm run verify:ui` in CI or add an explicit build preflight.                                                   |
+| Open   | CI UI smoke must not leave server children running.                 | Keep process-group cleanup in `scripts/verify-ui.mjs` covered by local and remote smoke.                                                     |
+| Done   | Vercel project is not yet proven from public URL.                   | Production URL is deployed and `npm run deploy:readiness` passes against `https://pocketfm-contest-forge.vercel.app`.                        |
+| Done   | Vercel CLI is not authenticated in the local shell.                 | Vercel CLI is authenticated as `phazzie` and the local project link is active.                                                               |
+| Doing  | Real deployed Grok smoke is not yet proven.                         | The deployed action reaches xAI and fails closed on weak prose; harden `cold-open-lab.v2`, redeploy, and rerun smoke.                        |
+| Done   | Live Grok adapter is not wired into UI/server action.               | Added server-only `runLiveColdOpen` action, preserves submitted input, and renders live module success/failure separately.                   |
+| Done   | GitHub Actions warns about Node 20 action runtime.                  | Updated pinned `actions/checkout` and `actions/setup-node` refs to Node 24-compatible releases.                                              |
+| Done   | Deployed live smoke was blocked by SvelteKit CSRF.                  | Smoke script now sends the target deployment as `Origin` while keeping the action header and access-code gate.                               |
+| Done   | Local live smoke could false-pass on Node 23.                       | Smoke script now falls back to resolved entrypoint detection when `import.meta.main` is unavailable.                                         |
+| Done   | Live smoke client timed out before provider timeout.                | Smoke script timeout now exceeds the xAI provider timeout so failures come from the live action path.                                        |
+| Done   | Prompt subject text could leak user input into system instructions. | Names now stay in the JSON input block, with static system guidance and regression coverage for adversarial protagonist text.                |
 
 ## Architecture Review Notes
 

@@ -100,7 +100,8 @@ spoken variant sentences to 12-20 words, requires concrete first-minute pressure
 language, and mirrors the deterministic gate's generic writing-advice phrase list so live output is
 less likely to fail on abstract craft language such as "emotional stakes." Its prompt builder also
 falls back to "the protagonist" if malformed blank name input reaches message construction, keeping
-provider instructions readable without accepting invalid contracts.
+provider instructions readable without accepting invalid contracts. User-controlled names remain in
+the JSON input block and are not interpolated into system instructions.
 
 ## xAI Grok Adapter
 
