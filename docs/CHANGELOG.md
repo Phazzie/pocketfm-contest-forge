@@ -16,6 +16,8 @@
   so sequential live module hangs fail closed inside the deployment budget.
 - Increased the route-level Story Studio provider budget after production smoke proved 45 seconds
   was too tight for `grok-4.20-multi-agent` cold-open generation.
+- Added a remaining-time guard to the live Story Studio runner so it locks the next artifact before
+  starting a provider call that could outlast the Vercel request budget.
 - Added the runtime-schema-backed Story Module Platform with Zod contracts, module registry, module runner, provenance, statuses, issues, and tracking events.
 - Converted `cold-open-lab`, `cliffhanger-futures`, `binge-debt-ledger`, and `trope-mutation-lab` into first-class modules with owned contracts, prompts, fixtures, tests, and README files.
 - Added story-state contracts for protagonist, antagonist, supporting cast, desire/taboo, secrets, mechanics, episode history, debt ledgers, continuity facts, writer decisions, and accepted/rejected AI suggestions.

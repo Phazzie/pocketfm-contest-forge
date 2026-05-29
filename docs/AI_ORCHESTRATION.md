@@ -155,7 +155,10 @@ The route uses a deployment-specific budget for the full Story Studio chain. The
 adapter is configured with a 300-second function max duration, while the route's xAI transport
 timeout is 55 seconds and the executor wrapper timeout is 56 seconds per module. That caps the
 five-module worst case below the Vercel Fluid Compute default maximum while still failing closed
-with visible module failures if a provider call hangs or times out.
+with visible module failures if a provider call hangs or times out. `RunLiveStoryStudio` also
+checks the remaining request budget before starting each provider call and locks the next artifact
+when less than 70 seconds remain in the 285-second application budget, so Vercel can return a typed
+Story Studio response instead of a platform timeout page.
 
 `src/lib/core/contracts/storyStudioContract.ts` now defines the production Story Studio response
 shape. `src/lib/application/runLiveStoryStudio.ts` is the first application use case for that
