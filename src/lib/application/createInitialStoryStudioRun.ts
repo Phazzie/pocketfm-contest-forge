@@ -2,8 +2,8 @@
 
 import type { ContestBrief } from '$lib/core/contracts/contestForgeContract';
 import {
+	createContestFreshnessFromBrief,
 	createLockedStoryStudioArtifact,
-	createUnknownContestFreshness,
 	storyStudioArtifactIds,
 	storyStudioArtifactLabels,
 	summarizeStoryStudioArtifacts,
@@ -33,7 +33,7 @@ export function createInitialStoryStudioRun(
 		requestedAt: requestedAt.toISOString(),
 		artifacts,
 		qualitySummary: summarizeStoryStudioArtifacts(artifacts),
-		contestFreshness: createUnknownContestFreshness(),
+		contestFreshness: createContestFreshnessFromBrief(brief, requestedAt),
 		trackingEvents: []
 	};
 }

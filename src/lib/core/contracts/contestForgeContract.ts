@@ -26,6 +26,15 @@ export interface ContestEvidence {
 	confidence: 'direct' | 'reported' | 'inferred';
 }
 
+export type ContestBriefFreshnessSource = 'curated' | 'live-research';
+
+export interface ContestBriefFreshness {
+	source: ContestBriefFreshnessSource;
+	retrievedAt: string;
+	staleAfter: string;
+	warning?: string;
+}
+
 export interface ContestBrief {
 	id: ContestGenre;
 	contestName: string;
@@ -35,6 +44,7 @@ export interface ContestBrief {
 	mandatoryElements: string[];
 	judgingSignals: string[];
 	evidence: ContestEvidence[];
+	freshness: ContestBriefFreshness;
 }
 
 export interface StorySeedInput {

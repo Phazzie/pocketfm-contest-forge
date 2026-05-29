@@ -16,8 +16,8 @@ import type {
 	StoryModulePlanResult
 } from '$lib/core/contracts/contestForgeContract';
 import {
+	createContestFreshnessFromBrief,
 	createLockedStoryStudioArtifact,
-	createUnknownContestFreshness,
 	storyModuleResultToStudioArtifact,
 	summarizeStoryStudioArtifacts,
 	type StoryStudioArtifact,
@@ -179,7 +179,7 @@ export class RunLiveStoryStudio {
 				requestedAt: requestedAt.toISOString(),
 				artifacts,
 				qualitySummary: summarizeStoryStudioArtifacts(artifacts),
-				contestFreshness: createUnknownContestFreshness(),
+				contestFreshness: createContestFreshnessFromBrief(brief, requestedAt),
 				trackingEvents: artifacts.flatMap((artifact) => artifact.result?.trackingEvents ?? [])
 			}
 		};

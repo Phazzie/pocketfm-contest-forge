@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+	createContestFreshnessFromBrief,
 	createLockedStoryStudioArtifact,
 	createUnknownContestFreshness,
 	isStoryStudioArtifactId,
@@ -9,6 +10,7 @@ import {
 	summarizeStoryStudioArtifacts
 } from './storyStudioContract';
 import type {
+	ContestBrief,
 	StoryModulePlanProvenance,
 	StoryModulePlanResult
 } from '$lib/core/contracts/contestForgeContract';
@@ -81,12 +83,37 @@ describe('story studio contract', () => {
 		});
 	});
 
-	it('marks contest freshness as unknown until source dates are implemented', () => {
+	it('keeps an explicit unknown fallback for defensive unavailable states', () => {
 		expect(createUnknownContestFreshness()).toEqual({
 			source: 'curated',
 			status: 'unknown',
 			warning: 'Contest brief freshness is not tracked yet.'
 		});
+	});
+
+	it('derives fresh contest freshness from curated source dates', () => {
+		const freshness = createContestFreshnessFromBrief(
+			contestBrief({ staleAfter: '2026-06-05T16:00:00.000Z' }),
+			new Date('2026-05-29T16:00:00.000Z')
+		);
+
+		expect(freshness).toEqual({
+			source: 'curated',
+			status: 'fresh',
+			retrievedAt: '2026-05-29T16:00:00.000Z',
+			staleAfter: '2026-06-05T16:00:00.000Z',
+			warning: 'Verify current official rules before submitting.'
+		});
+	});
+
+	it('marks contest freshness stale after the stale-after date', () => {
+		const freshness = createContestFreshnessFromBrief(
+			contestBrief({ staleAfter: '2026-05-28T16:00:00.000Z' }),
+			new Date('2026-05-29T16:00:00.000Z')
+		);
+
+		expect(freshness.status).toBe('stale');
+		expect(freshness.warning).toContain('verify current official rules');
 	});
 });
 
@@ -131,3 +158,29 @@ const provenance: StoryModulePlanProvenance = {
 	sourceContestBriefVersion: 'format-v1',
 	generatedAt
 };
+
+function contestBrief(input: { staleAfter: string }): ContestBrief {
+	return {
+		id: 'medieval-fantasy',
+		contestName: 'Medieval Fantasy Audio Serial',
+		formatSignal: 'Short audio episodes.',
+		prizeSignal: 'Reported prize pool.',
+		promptPressure: 'Fast medieval premise.',
+		mandatoryElements: ['kingdom-scale stakes'],
+		judgingSignals: ['fast cold open'],
+		evidence: [
+			{
+				sourceName: 'Public listing',
+				url: 'https://example.com/contest',
+				insight: 'Public contest listing.',
+				confidence: 'reported'
+			}
+		],
+		freshness: {
+			source: 'curated',
+			retrievedAt: '2026-05-29T16:00:00.000Z',
+			staleAfter: input.staleAfter,
+			warning: 'Verify current official rules before submitting.'
+		}
+	};
+}

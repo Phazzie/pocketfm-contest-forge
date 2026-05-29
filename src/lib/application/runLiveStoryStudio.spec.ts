@@ -89,7 +89,12 @@ describe('run live story studio', () => {
 				failed: 0,
 				locked: 0
 			});
-			expect(result.data.contestFreshness.status).toBe('unknown');
+			expect(result.data.contestFreshness).toMatchObject({
+				source: 'curated',
+				status: 'fresh',
+				retrievedAt: '2026-05-29T16:00:00.000Z',
+				staleAfter: '2026-06-05T16:00:00.000Z'
+			});
 		}
 		expect(provider.requests).toHaveLength(5);
 		expect(provider.requests[0]?.moduleId).toBe('cold-open-lab');

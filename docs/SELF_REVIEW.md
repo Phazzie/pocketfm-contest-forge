@@ -69,7 +69,7 @@ opens fail, cliffhanger futures locks when either accepted cold-open or accepted
 is missing, trope mutation locks until the prior live artifacts exist, and council review locks
 until the live artifact chain is accepted. No module substitutes fixture prose in live mode.
 
-Remaining concern: contest freshness and the production UI still need the same fail-closed treatment
+Remaining concern: the production UI still needs fuller component extraction and deployed smoke
 before the MVP can be called production-demo complete.
 
 ## Checkpoint 11: Production Route Truthfulness
@@ -79,5 +79,14 @@ creative output as the main product. It loads a locked `StoryStudioRun`, submits
 `runLiveStudio` action, and renders accepted, failed, rejected, or locked artifacts from
 `RunLiveStoryStudio`.
 
-Remaining concern: the route still needs component extraction, fuller browser state coverage,
-contest freshness dates, and a deployed `runLiveStudio` smoke before the MVP is shipping-complete.
+Remaining concern: the route still needs component extraction, fuller browser state coverage, and a
+deployed `runLiveStudio` smoke before the MVP is shipping-complete.
+
+## Checkpoint 12: Contest Freshness
+
+Contest freshness now has a contract-level source of truth. Curated `ContestBrief` records carry
+retrieved and stale-after dates plus warnings, and `StoryStudioRun.contestFreshness` derives the
+visible status from those dates instead of hardcoding an unknown state in the route.
+
+Remaining concern: this is still manual source curation. A real submission sprint needs a research
+refresh workflow or a live research adapter before claiming the contest rules are current.

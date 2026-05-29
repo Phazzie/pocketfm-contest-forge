@@ -13,7 +13,7 @@ live provider work from hiding unsafe output normalization behind casual suppres
 ## Production Flow
 
 1. Validate `ForgeRequest`.
-2. Resolve current contest brief and source freshness.
+2. Resolve current contest brief and source freshness from `ContestBrief.freshness`.
 3. Build story state from the seed, contest brief, and episode history.
 4. Run registered story modules through runtime schemas and provider adapters.
 5. Run AI council roles against the seed, story state, and module outputs.
@@ -159,6 +159,10 @@ The Svelte page renders this `StoryStudioRun` contract directly. It no longer im
 readiness scores as production advice. The default request lives in
 `src/lib/application/defaultForgeRequest.ts` so the route can populate controls without importing
 the deterministic fixture forge.
+
+Contest freshness is contract-backed rather than a UI string. Curated briefs carry `retrievedAt`,
+`staleAfter`, and a source warning; `StoryStudioRun.contestFreshness` derives `fresh`, `stale`, or
+`unknown` from those dates and keeps stale warnings visible while still allowing a live run.
 
 ## Provider Tracking
 

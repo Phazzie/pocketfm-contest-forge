@@ -20,5 +20,11 @@ describe('create initial Story Studio run', () => {
 		expect(run.artifacts.every((artifact) => artifact.status === 'locked')).toBe(true);
 		expect(run.artifacts.every((artifact) => artifact.result === undefined)).toBe(true);
 		expect(run.qualitySummary.locked).toBe(storyStudioArtifactIds.length);
+		expect(run.contestFreshness).toMatchObject({
+			source: 'curated',
+			status: 'fresh',
+			retrievedAt: '2026-05-29T16:00:00.000Z',
+			staleAfter: '2026-06-05T16:00:00.000Z'
+		});
 	});
 });

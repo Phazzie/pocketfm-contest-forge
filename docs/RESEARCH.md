@@ -13,6 +13,13 @@ Key external signals used by the prototype:
 - Reporting on Pocket FM's 2026 Jaipur Literature Festival presence says its Writers' Benefits Programme includes app writing contests, high-concept universes, and cash prizes up to INR 1 lakh per contest: https://businesssource.in/2026/01/13/pocket-fm-joins-jaipur-literature-festival-2026-as-official-storytelling-partner-puts-writers-at-the-centre-of-indias-next-storytelling-wave/
 - TechCrunch reporting republished by Yahoo Finance says Pocket FM is rolling out AI tools that help writers transform narratives, improve episode endings, and work faster on long audio serials: https://finance.yahoo.com/news/pocket-fm-gives-writers-ai-164849455.html
 
+## Source Freshness
+
+Curated source metadata was refreshed on 2026-05-29 and is marked stale after 2026-06-05. The
+production UI shows those dates and keeps warnings visible because public contest listings and app
+writing prompts can change. Before using the app for a real submission sprint, refresh the official
+Pocket FM contest pages and update `ContestBrief.freshness`.
+
 ## Product Bet
 
 Winning is treated as a retention design problem:

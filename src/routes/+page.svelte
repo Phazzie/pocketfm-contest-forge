@@ -275,6 +275,20 @@
 				<div class="brief-strip">
 					<span>{studioRun.brief.formatSignal}</span>
 					<span>{studioRun.contestFreshness.status}</span>
+					{#if studioRun.contestFreshness.retrievedAt}
+						<span
+							>Retrieved {new Date(
+								studioRun.contestFreshness.retrievedAt
+							).toLocaleDateString()}</span
+						>
+					{/if}
+					{#if studioRun.contestFreshness.staleAfter}
+						<span
+							>Stale after {new Date(
+								studioRun.contestFreshness.staleAfter
+							).toLocaleDateString()}</span
+						>
+					{/if}
 					{#if studioRun.contestFreshness.warning}
 						<span>{studioRun.contestFreshness.warning}</span>
 					{/if}
