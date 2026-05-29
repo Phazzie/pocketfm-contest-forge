@@ -109,6 +109,12 @@ falls back to "the protagonist" if malformed blank name input reaches message co
 provider instructions readable without accepting invalid contracts. User-controlled names remain in
 the JSON input block and are not interpolated into system instructions.
 
+`trope-mutation-lab.v2` hardens the provider prompt after production Story Studio smoke reached the
+module and failed closed on `PROSE_QUALITY_REJECTION`. Each live `episodePressure` item must now
+start with a repeatable cue (`Every episode`, `Each episode`, or `Whenever`) and include a concrete
+cost word such as betrayal, debt, family, lover, public, relationship, reputation, secret, status,
+or trust. This aligns the prompt with the existing quality gate instead of weakening the gate.
+
 ## xAI Grok Adapter
 
 `src/lib/adapters/ai/xaiStoryModuleProvider.ts` implements `StoryModuleProvider` for the xAI

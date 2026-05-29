@@ -17,3 +17,11 @@ Quality gates:
 - familiar doorway
 - strange room
 - genre promise
+- repeatable episode pressure
+- concrete relationship, public status, secret, trust, name, debt, or price cost
+- scene proof with a playable place/action/cost
+
+`trope-mutation-lab.v2` hardens the provider prompt after production smoke reached this module and
+failed closed on weak `episodePressure` output. Every live `episodePressure` item must now begin with
+`Every episode`, `Each episode`, or `Whenever`, and it must carry a concrete recurring cost word.
+Tone-only advice, escalation language, or suspense-only pressure remains a prose-quality rejection.

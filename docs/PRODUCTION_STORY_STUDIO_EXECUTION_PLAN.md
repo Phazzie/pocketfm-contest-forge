@@ -71,6 +71,9 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       review noted that five near-timeout module calls could still risk a platform 504. The runner
       now locks the next artifact before provider execution when less than 70 seconds remain in its
       285-second application budget.
+- [x] 2026-05-29 17:20 UTC - Production live smoke reached `trope-mutation-lab` and failed closed
+      on weak episode-pressure prose instead of falling back. Hardened `trope-mutation-lab.v2` so
+      provider output must describe repeatable, concrete cost-bearing episode pressure.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -172,6 +175,11 @@ PR #16 review correctly caught that longer per-module timeouts are not enough by
 five-call chain can still approach the platform limit if every module hangs near timeout. The runner
 now checks elapsed time before each provider call and returns a controlled locked artifact instead
 of starting work that is unlikely to finish before Vercel terminates the request.
+
+The second post-merge production live smoke improved enough to reach `trope-mutation-lab`, then
+failed closed with `PROSE_QUALITY_REJECTION` because `episodePressure` lacked repeatable concrete
+costs. This is the right failure mode: prompt pressure should be tightened to match the existing
+quality gate instead of lowering the gate or substituting fixture prose.
 
 ## Decision Log
 
@@ -283,6 +291,11 @@ behavior.
 check before each provider call. Rationale: the route should preserve typed Story Studio state even
 when the full chain runs long; if the remaining budget is too low, locking the next artifact is
 better than risking a Vercel 504 page.
+
+2026-05-29 17:20 UTC - Keep the `trope-mutation-lab` quality gate strict and harden the prompt to
+match it. Rationale: the quality gate rejected weak Grok episode-pressure output in production
+smoke, and the product principle is to fail closed or improve provider instructions, not accept
+abstract story advice.
 
 ## Outcomes & Retrospective
 
@@ -705,6 +718,18 @@ src/lib/application/liveModuleExecutor.spec.ts` returned 3 files and 39 tests pa
   `npm run test -- src/lib/application/runLiveStoryStudio.spec.ts` returned 1 file and 12 tests
   passing. `npm run guard:no-live-fallback` and `npm run guard:docs-drift` passed. Full
   `npm run verify` passed with 21 test files and 108 tests, zero Svelte errors/warnings, and a
+  production build.
+- 2026-05-29 17:20 UTC - Post-merge production smoke run
+  `https://github.com/Phazzie/pocketfm-contest-forge/actions/runs/26651457205` failed closed after
+  2 minutes 12 seconds: `trope-mutation-lab` failed with `PROSE_QUALITY_REJECTION` because episode
+  pressure was not repeatable and cost-bearing enough. No fixture output was accepted. Follow-up
+  branch `fix/trope-mutation-cost-pressure` hardens the provider prompt and records the expected
+  pressure shape in tests and docs.
+- 2026-05-29 17:27 UTC - Trope prompt hardening verification passed. Focused
+  `npm run test -- src/lib/application/liveModuleExecutor.spec.ts
+src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 files and 26 tests
+  passing. `npm run guard:no-live-fallback` and `npm run guard:docs-drift` passed. Full
+  `npm run verify` passed with 21 test files and 109 tests, zero Svelte errors/warnings, and a
   production build.
 
 ## Interfaces and Dependencies
