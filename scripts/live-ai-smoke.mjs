@@ -4,14 +4,16 @@ import { parse as parseDevalue } from 'devalue';
 
 const SMOKE_REQUEST_TIMEOUT_MS = 30_000;
 
-try {
-	await run();
-} catch (error) {
-	console.error(`FAILED: ${errorMessage(error)}`);
-	process.exit(1);
+if (import.meta.main) {
+	try {
+		await run();
+	} catch (error) {
+		console.error(`FAILED: ${errorMessage(error)}`);
+		process.exit(1);
+	}
 }
 
-async function run() {
+export async function run() {
 	if (process.env.RUN_LIVE_AI_SMOKE !== '1') {
 		console.log('SKIP: Set RUN_LIVE_AI_SMOKE=1, LIVE_AI_SMOKE_URL, and STORY_AI_ACCESS_CODE.');
 		return;
@@ -84,19 +86,15 @@ async function run() {
 	);
 }
 
-async function fetchLiveAction(targetUrl, accessCode) {
+export async function fetchLiveAction(targetUrl, accessCode) {
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), SMOKE_REQUEST_TIMEOUT_MS);
 	timeout.unref?.();
+	const request = liveActionRequest(targetUrl, accessCode);
 
 	try {
-		return await fetch(liveActionUrl(targetUrl), {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-				'x-sveltekit-action': 'true'
-			},
-			body: defaultLiveActionBody(accessCode),
+		return await fetch(request.url, {
+			...request.init,
 			signal: controller.signal
 		});
 	} catch (error) {
@@ -112,8 +110,27 @@ async function fetchLiveAction(targetUrl, accessCode) {
 	}
 }
 
-function liveActionUrl(value) {
-	const normalized = value.endsWith('/') ? value : `${value}/`;
+export function liveActionRequest(targetUrl, accessCode) {
+	const normalizedAccessCode = requiredNonEmptyString(accessCode, 'Access code');
+	const url = liveActionUrl(targetUrl);
+
+	return {
+		url,
+		init: {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+				Origin: url.origin,
+				'x-sveltekit-action': 'true'
+			},
+			body: defaultLiveActionBody(normalizedAccessCode)
+		}
+	};
+}
+
+export function liveActionUrl(value) {
+	const targetUrl = requiredNonEmptyString(value, 'Target URL');
+	const normalized = targetUrl.endsWith('/') ? targetUrl : `${targetUrl}/`;
 	return new URL('?/runLiveColdOpen', normalized);
 }
 
@@ -240,6 +257,14 @@ function requiredEnv(name) {
 	}
 
 	return value;
+}
+
+function requiredNonEmptyString(value, name) {
+	if (typeof value !== 'string' || !value.trim()) {
+		throw new Error(`${name} must be a non-empty string.`);
+	}
+
+	return value.trim();
 }
 
 function errorMessage(error) {
