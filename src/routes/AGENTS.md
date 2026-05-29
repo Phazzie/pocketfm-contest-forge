@@ -6,6 +6,8 @@ Svelte routes are presentation and interaction layers. Keep business logic in ap
 
 ## UI Rules
 
+- Read `DESIGN.md` before visible UI changes. The selected direction is Serial Story Studio:
+  colorful, tactile story artifacts with conventional controls and accessible flow.
 - Do not generate creative strategy directly in components.
 - Do not hide AI/provider failures.
 - Show unavailable AI states clearly.
