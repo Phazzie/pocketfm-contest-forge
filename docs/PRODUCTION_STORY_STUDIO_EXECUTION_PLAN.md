@@ -87,6 +87,9 @@ locked state. It must not display heuristic or fixture prose as a replacement.
       failed closed on abstract revision moves and vague risks. Hardened `council-review.v2` so
       every role revision move needs a concrete story cost and every risk starts with
       `Specific risk:` or `Audience risk:`.
+- [x] 2026-05-29 19:27 UTC - Production live smoke against the `council-review.v2` deploy was
+      blocked before generation by xAI account credits or monthly spend limit. This is an external
+      provider billing blocker, not a fixture fallback or module quality failure.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
@@ -209,6 +212,12 @@ and trope mutation had all produced accepted live artifacts in one deployed run.
 was still useful: several roles gave critique-shaped advice without concrete story costs or a
 specific risk if ignored. The council prompt needs the same explicit cue discipline as the prior
 modules, and the quality gate should enforce those cues instead of trusting natural-language intent.
+
+After `council-review.v2` deployed, the next production smoke failed in less than one second at the
+first provider call with xAI `HTTP 403` because the provider account has exhausted credits or hit
+its monthly spending limit. That means the code still fails closed and does not backfill fixture
+output, but production live smoke cannot prove an accepted full-chain run until the xAI account can
+make paid requests again.
 
 ## Decision Log
 
@@ -827,6 +836,11 @@ src/lib/story-modules/modules/trope-mutation-lab/module.spec.ts` returned 2 file
   `npm run guard:docs-drift` passed for 6 changed app code/script files. Full `npm run verify`
   passed with 21 test files and 117 tests, zero Svelte errors/warnings, no approved explicit
   `any` lines, and a production build.
+- 2026-05-29 19:27 UTC - Post-merge production smoke run
+  `https://github.com/Phazzie/pocketfm-contest-forge/actions/runs/26657708931` failed closed before
+  `cold-open-lab` could generate: xAI returned `HTTP 403` because the provider account has no
+  available credits or has reached its monthly spending limit. No fixture output was accepted. The
+  next smoke proof must wait until xAI billing/spend is restored.
 
 ## Interfaces and Dependencies
 
