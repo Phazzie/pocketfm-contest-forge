@@ -1,39 +1,45 @@
 <script lang="ts">
-	import { createDefaultForge, defaultForgeRequest } from '$lib/application/createDefaultForge';
 	import type {
 		ContestGenre,
-		ForgePlan,
-		LiveColdOpenResponse,
+		ForgeRequest,
 		MechanismId,
-		RiskTolerance,
-		UseCaseResponse
+		RiskTolerance
 	} from '$lib/core/contracts/contestForgeContract';
+	import type {
+		StoryStudioArtifact,
+		StoryStudioResponse
+	} from '$lib/core/contracts/storyStudioContract';
+	import { defaultForgeRequest } from '$lib/application/defaultForgeRequest';
+	import { bingeDebtLedgerOutputSchema } from '$lib/story-modules/modules/binge-debt-ledger/contract';
+	import { cliffhangerFuturesOutputSchema } from '$lib/story-modules/modules/cliffhanger-futures/contract';
 	import { coldOpenLabOutputSchema } from '$lib/story-modules/modules/cold-open-lab/contract';
+	import { councilReviewOutputSchema } from '$lib/story-modules/modules/council-review/contract';
+	import { tropeMutationLabOutputSchema } from '$lib/story-modules/modules/trope-mutation-lab/contract';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form?: ActionData } = $props();
 
-	const forge = createDefaultForge();
-	let selectedGenre = $state<ContestGenre>(defaultForgeRequest.contestId);
-	let workingTitle = $state(defaultForgeRequest.seed.workingTitle);
-	let protagonistName = $state(defaultForgeRequest.seed.protagonistName);
-	let logline = $state(defaultForgeRequest.seed.logline);
-	let emotionalPromise = $state(defaultForgeRequest.seed.emotionalPromise);
-	let tabooLever = $state(defaultForgeRequest.seed.tabooLever);
-	let episodeCountTarget = $state(defaultForgeRequest.seed.episodeCountTarget);
-	let minutesPerEpisode = $state(defaultForgeRequest.seed.minutesPerEpisode);
-	let riskLevel = $state<number>(defaultForgeRequest.riskTolerance);
-	let selectedMechanisms = $state<MechanismId[]>([...defaultForgeRequest.selectedMechanisms]);
+	const defaultRequest = defaultForgeRequest;
+	let selectedGenre = $state<ContestGenre>(defaultRequest.contestId);
+	let workingTitle = $state(defaultRequest.seed.workingTitle);
+	let protagonistName = $state(defaultRequest.seed.protagonistName);
+	let logline = $state(defaultRequest.seed.logline);
+	let emotionalPromise = $state(defaultRequest.seed.emotionalPromise);
+	let tabooLever = $state(defaultRequest.seed.tabooLever);
+	let episodeCountTarget = $state(defaultRequest.seed.episodeCountTarget);
+	let minutesPerEpisode = $state(defaultRequest.seed.minutesPerEpisode);
+	let riskLevel = $state<number>(defaultRequest.riskTolerance);
+	let selectedMechanisms = $state<MechanismId[]>([...defaultRequest.selectedMechanisms]);
 	let liveAccessCode = $state('');
 	let isLiveSubmitting = $state(false);
 
-	const request = $derived({
-		...defaultForgeRequest,
+	const request = $derived<ForgeRequest>({
+		...defaultRequest,
 		contestId: selectedGenre,
 		riskTolerance: Math.round(riskLevel) as RiskTolerance,
 		selectedMechanisms,
 		seed: {
-			...defaultForgeRequest.seed,
+			...defaultRequest.seed,
 			workingTitle,
 			protagonistName,
 			logline,
@@ -45,28 +51,6 @@
 		}
 	});
 
-	let result = $state<UseCaseResponse<ForgePlan> | null>(null);
-	let isForging = $state(false);
-
-	$effect(() => {
-		const nextRequest = request;
-		let cancelled = false;
-		isForging = true;
-
-		forge
-			.forge(nextRequest)
-			.then((nextResult) => {
-				if (!cancelled) result = nextResult;
-			})
-			.finally(() => {
-				if (!cancelled) isForging = false;
-			});
-
-		return () => {
-			cancelled = true;
-		};
-	});
-
 	$effect(() => {
 		if (form?.submittedRequest) {
 			syncRequest(form.submittedRequest);
@@ -74,20 +58,13 @@
 		}
 	});
 
-	const plan = $derived(result?.success ? result.data : data.initialPlan);
-	const liveColdOpen = $derived<LiveColdOpenResponse | null>(
+	const storyStudio = $derived<StoryStudioResponse | null>(
 		form?.submittedRequest && requestsMatch(request, form.submittedRequest)
-			? (form.liveColdOpen ?? null)
+			? (form.storyStudio ?? null)
 			: null
 	);
-	const issues = $derived(result && !result.success ? (result.error.issues ?? []) : []);
-	const scoreRows = $derived([
-		['Contest score', plan.score.score],
-		['First minute', plan.score.firstMinuteGrip],
-		['Cliffhanger pull', plan.score.cliffhangerPull],
-		['Audio flow', plan.score.audioFlow],
-		['Novelty', plan.score.novelty]
-	]);
+	const studioRun = $derived(storyStudio?.success ? storyStudio.data : data.initialStudioRun);
+	const studioError = $derived(storyStudio && !storyStudio.success ? storyStudio.error : null);
 
 	function toggleMechanism(id: MechanismId) {
 		selectedMechanisms = selectedMechanisms.includes(id)
@@ -99,7 +76,7 @@
 		isLiveSubmitting = true;
 	}
 
-	function syncRequest(nextRequest: typeof defaultForgeRequest) {
+	function syncRequest(nextRequest: ForgeRequest) {
 		selectedGenre = nextRequest.contestId;
 		workingTitle = nextRequest.seed.workingTitle;
 		protagonistName = nextRequest.seed.protagonistName;
@@ -112,10 +89,7 @@
 		selectedMechanisms = [...nextRequest.selectedMechanisms];
 	}
 
-	function requestsMatch(
-		currentRequest: typeof defaultForgeRequest,
-		submittedRequest: typeof defaultForgeRequest
-	) {
+	function requestsMatch(currentRequest: ForgeRequest, submittedRequest: ForgeRequest) {
 		return (
 			currentRequest.contestId === submittedRequest.contestId &&
 			currentRequest.riskTolerance === submittedRequest.riskTolerance &&
@@ -136,22 +110,26 @@
 			currentMechanisms.every((mechanism, index) => mechanism === submittedMechanisms[index])
 		);
 	}
+
+	function artifactStatusClass(artifact: StoryStudioArtifact) {
+		return `artifact ${artifact.status}`;
+	}
 </script>
 
 <main class="app-shell">
 	<section class="workbench">
-		<div class="control-rail">
+		<form class="control-rail" method="POST" action="?/runLiveStudio" onsubmit={markLiveSubmit}>
 			<div class="brand-lockup">
 				<div class="mark">PF</div>
 				<div>
-					<p class="eyebrow">Contest forge</p>
-					<h1>Pocket FM Writing Lab</h1>
+					<p class="eyebrow">Serial Story Studio</p>
+					<h1>Pocket FM Contest Forge</h1>
 				</div>
 			</div>
 
 			<label>
 				<span>Contest lane</span>
-				<select bind:value={selectedGenre}>
+				<select name="contestId" bind:value={selectedGenre}>
 					{#each data.briefs as brief (brief.id)}
 						<option value={brief.id}>{brief.contestName}</option>
 					{/each}
@@ -160,44 +138,56 @@
 
 			<label>
 				<span>Working title</span>
-				<input bind:value={workingTitle} />
+				<input name="workingTitle" bind:value={workingTitle} />
 			</label>
 
 			<label>
 				<span>Protagonist</span>
-				<input bind:value={protagonistName} />
+				<input name="protagonistName" bind:value={protagonistName} />
 			</label>
 
 			<label>
 				<span>Logline</span>
-				<textarea rows="5" bind:value={logline}></textarea>
+				<textarea name="logline" rows="5" bind:value={logline}></textarea>
 			</label>
 
 			<label>
 				<span>Emotional promise</span>
-				<input bind:value={emotionalPromise} />
+				<input name="emotionalPromise" bind:value={emotionalPromise} />
 			</label>
 
 			<label>
 				<span>Taboo lever</span>
-				<input bind:value={tabooLever} />
+				<input name="tabooLever" bind:value={tabooLever} />
 			</label>
 
 			<div class="number-grid">
 				<label>
 					<span>Episodes</span>
-					<input type="number" min="30" max="300" bind:value={episodeCountTarget} />
+					<input
+						name="episodeCountTarget"
+						type="number"
+						min="30"
+						max="300"
+						bind:value={episodeCountTarget}
+					/>
 				</label>
 
 				<label>
 					<span>Minutes</span>
-					<input type="number" min="5" max="15" bind:value={minutesPerEpisode} />
+					<input
+						name="minutesPerEpisode"
+						type="number"
+						min="5"
+						max="15"
+						bind:value={minutesPerEpisode}
+					/>
 				</label>
 			</div>
 
 			<label>
 				<span>Risk tolerance {Math.round(riskLevel)}</span>
-				<input type="range" min="1" max="5" step="1" bind:value={riskLevel} />
+				<input name="riskTolerance" type="range" min="1" max="5" step="1" bind:value={riskLevel} />
 			</label>
 
 			<div class="mechanism-picker">
@@ -213,255 +203,236 @@
 					</button>
 				{/each}
 			</div>
-		</div>
+
+			{#each selectedMechanisms as mechanism (mechanism)}
+				<input type="hidden" name="selectedMechanisms" value={mechanism} />
+			{/each}
+
+			<div class="live-action">
+				<label>
+					<span>Live access code</span>
+					<input
+						type="password"
+						name="accessCode"
+						autocomplete="one-time-code"
+						bind:value={liveAccessCode}
+					/>
+				</label>
+
+				<button type="submit" disabled={isLiveSubmitting}>
+					{isLiveSubmitting ? 'Running Story Studio' : 'Run Story Studio'}
+				</button>
+			</div>
+		</form>
 
 		<div class="output-rail">
 			<section class="score-band">
 				<div>
-					<p class="eyebrow">Live readiness</p>
-					<h2>{plan.score.score}</h2>
-					<span class="mode-pill" class:busy={isForging}>
-						{isForging ? 'updating' : plan.generationMode}
+					<p class="eyebrow">Live artifacts</p>
+					<h2>{studioRun.qualitySummary.accepted}/{studioRun.artifacts.length}</h2>
+					<span class="mode-pill" class:busy={isLiveSubmitting}>
+						{isLiveSubmitting ? 'running' : studioRun.generationMode}
 					</span>
 				</div>
-				<div class="score-stack" aria-label="Contest readiness metrics">
-					{#each scoreRows as row (row[0])}
-						<div class="metric">
-							<span>{row[0]}</span>
-							<div class="meter"><i style={`width: ${row[1]}%`}></i></div>
-							<strong>{row[1]}</strong>
-						</div>
-					{/each}
+
+				<div class="score-stack" aria-label="Story Studio artifact status">
+					<div class="metric accepted">
+						<span>Accepted</span>
+						<strong>{studioRun.qualitySummary.accepted}</strong>
+					</div>
+					<div class="metric failed">
+						<span>Failed</span>
+						<strong>{studioRun.qualitySummary.failed}</strong>
+					</div>
+					<div class="metric locked">
+						<span>Locked</span>
+						<strong>{studioRun.qualitySummary.locked}</strong>
+					</div>
+					<div class="metric rejected">
+						<span>Rejected</span>
+						<strong>{studioRun.qualitySummary.rejected}</strong>
+					</div>
 				</div>
 			</section>
 
-			{#if issues.length}
+			{#if studioError}
 				<section class="alert-band">
-					{#each issues as issue (`${issue.field}-${issue.message}`)}
-						<p>{issue.field}: {issue.message}</p>
-					{/each}
+					<p>{studioError.message}</p>
+					{#if studioError.issues?.length}
+						<ul>
+							{#each studioError.issues as issue (`studio-error-${issue.field}-${issue.message}`)}
+								<li>{issue.field}: {issue.message}</li>
+							{/each}
+						</ul>
+					{/if}
 				</section>
 			{/if}
 
 			<section class="thesis-band">
-				<p class="eyebrow">{plan.brief.prizeSignal}</p>
-				<h2>{plan.oneSentencePremise}</h2>
-				<p>{plan.strategicThesis}</p>
+				<p class="eyebrow">{studioRun.brief.contestName}</p>
+				<h2>{workingTitle}</h2>
+				<p>{logline}</p>
+				<div class="brief-strip">
+					<span>{studioRun.brief.formatSignal}</span>
+					<span>{studioRun.contestFreshness.status}</span>
+					{#if studioRun.contestFreshness.warning}
+						<span>{studioRun.contestFreshness.warning}</span>
+					{/if}
+				</div>
 			</section>
 
-			<section class="visual-band" aria-label="Retention heatmap">
-				<div class="heatmap">
-					{#each plan.score.heatmap as point (point.minute)}
-						<div class="heat-column">
-							<i style={`height: ${point.intensity}%`}></i>
-							<span>{point.minute}m</span>
-						</div>
+			<section class="visual-band" aria-label="Story Studio run order">
+				<ol class="beat-list">
+					{#each studioRun.artifacts as artifact, index (artifact.id)}
+						<li class={artifact.status}>
+							<span>{index + 1}</span>
+							<div>
+								<strong>{artifact.label}</strong>
+								<p>{artifact.summary}</p>
+							</div>
+						</li>
 					{/each}
-				</div>
-				<div class="audio-sigil">
-					<div></div>
-					<div></div>
-					<div></div>
-					<div></div>
-				</div>
+				</ol>
 			</section>
 
-			<section class="grid two">
-				<div class="panel">
-					<p class="eyebrow">Pilot episode</p>
-					<h2>{plan.pilot.title}</h2>
-					<ol class="beat-list">
-						{#each plan.pilot.beats as beat (beat.id)}
-							<li>
-								<span>{beat.minute}m</span>
-								<div>
-									<strong>{beat.function}</strong>
-									<p>{beat.text}</p>
-									<em>{beat.unansweredQuestion}</em>
-								</div>
-							</li>
-						{/each}
-					</ol>
-				</div>
+			<section class="module-grid">
+				{#each studioRun.artifacts as artifact (artifact.id)}
+					<article class={artifactStatusClass(artifact)}>
+						<div class="module-header">
+							<span>{artifact.status}</span>
+							<h3>{artifact.label}</h3>
+						</div>
 
-				<div class="panel">
-					<p class="eyebrow">Cold open split test</p>
-					<ul class="clean-list">
-						{#each plan.pilot.coldOpenVariants as variant (variant)}
-							<li>{variant}</li>
-						{/each}
-					</ul>
+						<p>{artifact.summary}</p>
 
-					<p class="eyebrow">Binge debt ledger</p>
-					<ul class="debt-list">
-						{#each plan.pilot.bingeDebtAdded as debt (debt)}
-							<li>{debt}</li>
-						{/each}
-					</ul>
-				</div>
-			</section>
+						{#if artifact.nextAction}
+							<div class="next-action">
+								<strong>{artifact.nextAction.label}</strong>
+								<span>{artifact.nextAction.reason}</span>
+							</div>
+						{/if}
 
-			<section class="grid mechanisms">
-				{#each plan.mechanisms as mechanism (mechanism.id)}
-					<article class="mechanism-card">
-						<p>{mechanism.label}</p>
-						<h3>{mechanism.artifact}</h3>
-						<span>{mechanism.risk}</span>
+						{#if artifact.provenance}
+							<small>
+								{artifact.provenance.provider} · {artifact.provenance.model} ·
+								{artifact.provenance.promptVersion} · {artifact.provenance.latencyMs}ms · repairs
+								{artifact.provenance.repairAttempts ?? 0}
+							</small>
+						{/if}
+
+						{#if artifact.issues.length}
+							<ul class="issue-list">
+								{#each artifact.issues as issue (`${artifact.id}-${issue.code}-${issue.message}`)}
+									<li>{issue.code}: {issue.message}</li>
+								{/each}
+							</ul>
+						{/if}
+
+						{#if artifact.result?.output}
+							{#if artifact.id === 'cold-open-lab'}
+								{@const parsedOutput = coldOpenLabOutputSchema.safeParse(artifact.result.output)}
+								{#if parsedOutput.success}
+									<ul class="clean-list live-variant-list">
+										{#each parsedOutput.data.variants as variant (variant.id)}
+											<li class:winner={variant.id === parsedOutput.data.winnerId}>
+												<strong>{variant.text}</strong>
+												<span>{variant.firstMinuteQuestion}</span>
+												<em>{variant.audioNote}</em>
+											</li>
+										{/each}
+									</ul>
+									<p>{parsedOutput.data.winnerRationale}</p>
+								{/if}
+							{:else if artifact.id === 'binge-debt-ledger'}
+								{@const parsedOutput = bingeDebtLedgerOutputSchema.safeParse(
+									artifact.result.output
+								)}
+								{#if parsedOutput.success}
+									<ul class="debt-list">
+										{#each parsedOutput.data.openedDebts as debt (debt.id)}
+											<li>
+												<strong>{debt.label}</strong>
+												<span>{debt.payoffWindow}</span>
+												<em>{debt.interest}</em>
+											</li>
+										{/each}
+									</ul>
+									<p>{parsedOutput.data.auditorNote}</p>
+								{/if}
+							{:else if artifact.id === 'cliffhanger-futures'}
+								{@const parsedOutput = cliffhangerFuturesOutputSchema.safeParse(
+									artifact.result.output
+								)}
+								{#if parsedOutput.success}
+									<ul class="clean-list">
+										{#each parsedOutput.data.candidates as candidate (candidate.id)}
+											<li class:winner={candidate.id === parsedOutput.data.recommendationId}>
+												<strong>{candidate.text}</strong>
+												<span>{candidate.payoffPath}</span>
+												<em>{candidate.payoffWarning}</em>
+											</li>
+										{/each}
+									</ul>
+									<p>{parsedOutput.data.marketRationale}</p>
+								{/if}
+							{:else if artifact.id === 'trope-mutation-lab'}
+								{@const parsedOutput = tropeMutationLabOutputSchema.safeParse(
+									artifact.result.output
+								)}
+								{#if parsedOutput.success}
+									<ul class="clean-list">
+										<li><strong>Doorway</strong><span>{parsedOutput.data.expectedTrope}</span></li>
+										<li><strong>Mutation</strong><span>{parsedOutput.data.mutationRule}</span></li>
+										<li><strong>Engine</strong><span>{parsedOutput.data.serialEngine}</span></li>
+										<li><strong>Scene proof</strong><span>{parsedOutput.data.sceneProof}</span></li>
+									</ul>
+								{/if}
+							{:else if artifact.id === 'council-review'}
+								{@const parsedOutput = councilReviewOutputSchema.safeParse(artifact.result.output)}
+								{#if parsedOutput.success}
+									<div class="council-grid">
+										{#each parsedOutput.data.roles as role (role.role)}
+											<section>
+												<span>{role.role}</span>
+												<h4>{role.finding}</h4>
+												<p>{role.revisionMove}</p>
+												<em>{role.riskIfIgnored}</em>
+											</section>
+										{/each}
+									</div>
+									<div class="next-action">
+										<strong>{parsedOutput.data.greenlight}</strong>
+										<span>{parsedOutput.data.topRevisionMove}</span>
+									</div>
+								{/if}
+							{/if}
+						{/if}
 					</article>
 				{/each}
-			</section>
-
-			<section class="panel">
-				<p class="eyebrow">Story modules</p>
-				<div class="module-grid">
-					{#each plan.moduleResults as module (module.moduleId)}
-						<article class:failed={module.status === 'failed'}>
-							<div class="module-header">
-								<span>{module.status}</span>
-								<h3>{module.label}</h3>
-							</div>
-							<p>{module.summary}</p>
-							<small>
-								{module.provenance.promptVersion} · {module.provenance.provider}
-							</small>
-							{#if module.issues.length}
-								<ul>
-									{#each module.issues as issue (`${module.moduleId}-${issue.code}-${issue.message}`)}
-										<li>{issue.message}</li>
-									{/each}
-								</ul>
-							{/if}
-						</article>
-					{/each}
-				</div>
-			</section>
-
-			<section
-				class="panel live-ai-panel"
-				class:failed={liveColdOpen?.success && liveColdOpen.data.moduleResult.status === 'failed'}
-			>
-				<div class="module-header">
-					<span>{liveColdOpen?.success ? liveColdOpen.data.moduleResult.status : 'locked'}</span>
-					<h3>Grok cold open</h3>
-				</div>
-
-				<form
-					method="POST"
-					action="?/runLiveColdOpen"
-					class="live-action"
-					onsubmit={markLiveSubmit}
-				>
-					<input type="hidden" name="contestId" value={selectedGenre} />
-					<input type="hidden" name="workingTitle" value={workingTitle} />
-					<input type="hidden" name="protagonistName" value={protagonistName} />
-					<input type="hidden" name="logline" value={logline} />
-					<input type="hidden" name="emotionalPromise" value={emotionalPromise} />
-					<input type="hidden" name="tabooLever" value={tabooLever} />
-					<input type="hidden" name="episodeCountTarget" value={episodeCountTarget} />
-					<input type="hidden" name="minutesPerEpisode" value={minutesPerEpisode} />
-					<input type="hidden" name="riskTolerance" value={Math.round(riskLevel)} />
-					{#each selectedMechanisms as mechanism (mechanism)}
-						<input type="hidden" name="selectedMechanisms" value={mechanism} />
-					{/each}
-
-					<label>
-						<span>Live access code</span>
-						<input
-							type="password"
-							name="accessCode"
-							autocomplete="one-time-code"
-							bind:value={liveAccessCode}
-						/>
-					</label>
-
-					<button type="submit" disabled={isLiveSubmitting}>
-						{isLiveSubmitting ? 'Running Grok' : 'Run Grok cold open'}
-					</button>
-				</form>
-
-				{#if liveColdOpen}
-					{#if liveColdOpen.success}
-						{@const module = liveColdOpen.data.moduleResult}
-						<p>{module.summary}</p>
-						<small>
-							{module.provenance.provider} · {module.provenance.model} ·
-							{module.provenance.promptVersion} · {module.provenance.latencyMs}ms
-						</small>
-
-						{#if module.issues.length}
-							<ul>
-								{#each module.issues as issue (`live-${issue.code}-${issue.message}`)}
-									<li>{issue.message}</li>
-								{/each}
-							</ul>
-						{/if}
-
-						{@const parsedOutput = coldOpenLabOutputSchema.safeParse(module.output)}
-						{#if parsedOutput.success}
-							<ul class="clean-list live-variant-list">
-								{#each parsedOutput.data.variants as variant (variant.id)}
-									<li>
-										<strong>{variant.text}</strong>
-										<span>{variant.firstMinuteQuestion}</span>
-										<em>{variant.audioNote}</em>
-									</li>
-								{/each}
-							</ul>
-							<p>{parsedOutput.data.winnerRationale}</p>
-						{/if}
-					{:else}
-						<p>{liveColdOpen.error.message}</p>
-						{#if liveColdOpen.error.issues?.length}
-							<ul>
-								{#each liveColdOpen.error.issues as issue (`live-error-${issue.field}-${issue.message}`)}
-									<li>{issue.field}: {issue.message}</li>
-								{/each}
-							</ul>
-						{/if}
-					{/if}
-				{/if}
-			</section>
-
-			<section class="panel">
-				<p class="eyebrow">AI council runbook</p>
-				<div class="council-grid">
-					{#each plan.aiCouncil as prompt (prompt.role)}
-						<article>
-							<span>{prompt.role}</span>
-							<h3>{prompt.job}</h3>
-							<p>{prompt.prompt}</p>
-							<em>{prompt.expectedArtifact}</em>
-						</article>
-					{/each}
-				</div>
 			</section>
 
 			<section class="grid three">
 				<div class="panel">
 					<p class="eyebrow">Contest signals</p>
 					<ul class="clean-list">
-						{#each plan.brief.judgingSignals as signal (signal)}
+						{#each studioRun.brief.judgingSignals as signal (signal)}
 							<li>{signal}</li>
 						{/each}
 					</ul>
 				</div>
 
 				<div class="panel">
-					<p class="eyebrow">Series rules</p>
+					<p class="eyebrow">Mandatory elements</p>
 					<ul class="clean-list">
-						{#each plan.seriesRules as rule (rule)}
-							<li>{rule}</li>
+						{#each studioRun.brief.mandatoryElements as item (item)}
+							<li>{item}</li>
 						{/each}
 					</ul>
 				</div>
 
 				<div class="panel">
-					<p class="eyebrow">Submission checks</p>
-					<ul class="clean-list">
-						{#each plan.submissionChecklist as item (item)}
-							<li>{item}</li>
-						{/each}
-					</ul>
+					<p class="eyebrow">Prompt pressure</p>
+					<p>{studioRun.brief.promptPressure}</p>
 				</div>
 			</section>
 		</div>
@@ -471,8 +442,8 @@
 <style>
 	:global(body) {
 		margin: 0;
-		background: #f5f3ef;
-		color: #181716;
+		background: #fff8ea;
+		color: #191713;
 		font-family:
 			Inter,
 			ui-sans-serif,
@@ -490,14 +461,14 @@
 	.app-shell {
 		min-height: 100vh;
 		background:
-			linear-gradient(90deg, rgba(17, 111, 108, 0.08) 1px, transparent 1px),
-			linear-gradient(180deg, rgba(126, 38, 50, 0.08) 1px, transparent 1px), #f5f3ef;
+			linear-gradient(90deg, rgba(15, 143, 131, 0.08) 1px, transparent 1px),
+			linear-gradient(180deg, rgba(111, 60, 123, 0.07) 1px, transparent 1px), #fff8ea;
 		background-size: 42px 42px;
 	}
 
 	.workbench {
 		display: grid;
-		grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+		grid-template-columns: minmax(290px, 370px) minmax(0, 1fr);
 		min-height: 100vh;
 	}
 
@@ -507,9 +478,9 @@
 		align-self: start;
 		min-height: 100vh;
 		padding: 24px;
-		background: #1c1a18;
-		color: #f8f4ec;
-		border-right: 1px solid rgba(255, 255, 255, 0.08);
+		background: #191713;
+		color: #fff8ea;
+		border-right: 1px solid rgba(255, 255, 255, 0.12);
 	}
 
 	.brand-lockup {
@@ -524,38 +495,53 @@
 		width: 44px;
 		height: 44px;
 		place-items: center;
-		background: #e24d3d;
-		color: #fff;
+		background: #e9543f;
+		color: #fff8ea;
 		font-weight: 900;
 	}
 
 	.eyebrow {
 		margin: 0 0 8px;
-		color: #11706c;
-		font-size: 0.72rem;
+		color: #0f8f83;
+		font-size: 12px;
 		font-weight: 800;
 		text-transform: uppercase;
 	}
 
 	.control-rail .eyebrow {
-		color: #78d4c8;
+		color: #8bd8cf;
 	}
 
 	h1,
 	h2,
 	h3,
+	h4,
 	p {
 		margin-top: 0;
 	}
 
 	h1 {
 		margin-bottom: 0;
-		font-size: 1.35rem;
+		font-size: 22px;
+		line-height: 1.05;
 	}
 
 	h2 {
-		font-size: clamp(1.35rem, 2vw, 2.2rem);
-		line-height: 1.05;
+		margin-bottom: 10px;
+		font-size: 28px;
+		line-height: 1.08;
+	}
+
+	h3 {
+		margin-bottom: 0;
+		font-size: 18px;
+		line-height: 1.15;
+	}
+
+	h4 {
+		margin-bottom: 0;
+		font-size: 15px;
+		line-height: 1.25;
 	}
 
 	label,
@@ -568,8 +554,8 @@
 	label span,
 	.mechanism-picker p {
 		margin: 0;
-		color: rgba(248, 244, 236, 0.72);
-		font-size: 0.78rem;
+		color: rgba(255, 248, 234, 0.72);
+		font-size: 12px;
 		font-weight: 800;
 		text-transform: uppercase;
 	}
@@ -578,7 +564,7 @@
 	select,
 	textarea {
 		width: 100%;
-		border: 1px solid rgba(255, 255, 255, 0.16);
+		border: 1px solid rgba(255, 255, 255, 0.18);
 		border-radius: 6px;
 		background: rgba(255, 255, 255, 0.08);
 		color: inherit;
@@ -587,14 +573,15 @@
 	}
 
 	select option {
-		color: #181716;
+		color: #191713;
 	}
 
 	textarea {
 		resize: vertical;
 	}
 
-	.number-grid {
+	.number-grid,
+	.live-action {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 12px;
@@ -610,24 +597,40 @@
 
 	button {
 		min-height: 42px;
-		border: 1px solid rgba(255, 255, 255, 0.16);
+		border: 1px solid rgba(255, 255, 255, 0.18);
 		border-radius: 6px;
 		background: rgba(255, 255, 255, 0.06);
-		color: #f8f4ec;
+		color: #fff8ea;
 		cursor: pointer;
 		font: inherit;
-		font-size: 0.82rem;
+		font-size: 13px;
 		font-weight: 800;
 	}
 
 	button.active {
-		background: #11706c;
-		border-color: #78d4c8;
+		background: #0f8f83;
+		border-color: #8bd8cf;
 	}
 
 	button:disabled {
 		cursor: wait;
 		opacity: 0.66;
+	}
+
+	.live-action {
+		align-items: end;
+		margin-top: 18px;
+		padding-top: 18px;
+		border-top: 1px solid rgba(255, 255, 255, 0.16);
+	}
+
+	.live-action label {
+		margin: 0;
+	}
+
+	.live-action button {
+		background: #e9543f;
+		border-color: #e9543f;
 	}
 
 	.output-rail {
@@ -641,16 +644,16 @@
 	.visual-band,
 	.alert-band,
 	.panel,
-	.mechanism-card {
-		background: rgba(255, 255, 255, 0.74);
-		border: 1px solid rgba(24, 23, 22, 0.1);
+	.artifact {
+		background: rgba(255, 255, 255, 0.78);
+		border: 1px solid rgba(25, 23, 19, 0.12);
 		border-radius: 8px;
-		box-shadow: 0 12px 30px rgba(24, 23, 22, 0.06);
+		box-shadow: 0 12px 30px rgba(25, 23, 19, 0.06);
 	}
 
 	.score-band {
 		display: grid;
-		grid-template-columns: 180px 1fr;
+		grid-template-columns: 220px 1fr;
 		gap: 20px;
 		align-items: center;
 		padding: 20px;
@@ -658,9 +661,9 @@
 
 	.score-band h2 {
 		margin: 0;
-		color: #e24d3d;
-		font-size: 5rem;
-		line-height: 0.85;
+		color: #e9543f;
+		font-size: 54px;
+		line-height: 0.9;
 	}
 
 	.mode-pill {
@@ -668,171 +671,141 @@
 		margin-top: 10px;
 		padding: 5px 8px;
 		border-radius: 999px;
-		background: rgba(17, 112, 108, 0.12);
-		color: #11706c;
-		font-size: 0.72rem;
+		background: rgba(15, 143, 131, 0.12);
+		color: #0f8f83;
+		font-size: 12px;
 		font-weight: 900;
 		text-transform: uppercase;
 	}
 
 	.mode-pill.busy {
-		background: rgba(224, 170, 49, 0.18);
-		color: #7e2632;
+		background: rgba(216, 155, 39, 0.18);
+		color: #6f3c7b;
 	}
 
 	.score-stack {
 		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 10px;
 	}
 
 	.metric {
 		display: grid;
-		grid-template-columns: 130px 1fr 34px;
-		gap: 10px;
-		align-items: center;
-		font-size: 0.88rem;
+		gap: 6px;
+		min-height: 74px;
+		align-content: center;
+		padding: 12px;
+		border: 1px solid #e7e0d2;
+		background: #fff8ea;
 	}
 
-	.meter {
-		overflow: hidden;
-		height: 9px;
-		background: #ddd7cc;
-		border-radius: 999px;
+	.metric span {
+		font-size: 12px;
+		font-weight: 800;
+		text-transform: uppercase;
 	}
 
-	.meter i {
-		display: block;
-		height: 100%;
-		background: linear-gradient(90deg, #11706c, #e0aa31, #e24d3d);
+	.metric strong {
+		font-size: 26px;
+	}
+
+	.metric.accepted {
+		border-color: rgba(15, 143, 131, 0.35);
+	}
+
+	.metric.failed,
+	.metric.rejected {
+		border-color: rgba(233, 84, 63, 0.35);
+	}
+
+	.metric.locked {
+		border-color: rgba(216, 155, 39, 0.42);
 	}
 
 	.alert-band {
-		padding: 12px 16px;
-		border-color: rgba(226, 77, 61, 0.42);
+		padding: 14px 16px;
+		border-color: rgba(233, 84, 63, 0.42);
 		background: #fff2ee;
-		color: #7e2632;
+		color: #6f3c7b;
 	}
 
-	.alert-band p:last-child {
-		margin-bottom: 0;
-	}
-
-	.thesis-band {
-		padding: 24px;
-	}
-
+	.alert-band p:last-child,
+	.panel p:last-child,
 	.thesis-band p:last-child {
-		max-width: 980px;
 		margin-bottom: 0;
+	}
+
+	.thesis-band,
+	.visual-band,
+	.panel,
+	.artifact {
+		padding: 18px;
+	}
+
+	.thesis-band p {
+		max-width: 980px;
 		color: #504a43;
-		font-size: 1.04rem;
+		font-size: 16px;
+	}
+
+	.brief-strip {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 14px;
+	}
+
+	.brief-strip span,
+	.next-action strong,
+	.module-header span,
+	.artifact small {
+		color: #2f6fbb;
+		font-size: 12px;
+		font-weight: 900;
+		text-transform: uppercase;
+	}
+
+	.brief-strip span {
+		padding: 5px 8px;
+		border: 1px solid rgba(47, 111, 187, 0.18);
+		background: rgba(47, 111, 187, 0.08);
 	}
 
 	.visual-band {
-		display: grid;
-		grid-template-columns: 1fr 220px;
-		gap: 22px;
-		align-items: stretch;
-		padding: 20px;
-		min-height: 190px;
 		background: #221f1d;
+		color: #fff8ea;
 	}
 
-	.heatmap {
-		display: flex;
-		align-items: end;
-		gap: 12px;
-		min-height: 150px;
-	}
-
-	.heat-column {
+	.grid,
+	.module-grid,
+	.council-grid,
+	.beat-list,
+	.clean-list,
+	.debt-list,
+	.issue-list {
 		display: grid;
-		grid-template-rows: 1fr auto;
-		align-items: end;
-		gap: 8px;
-		flex: 1;
-		height: 150px;
-		color: rgba(248, 244, 236, 0.7);
-		text-align: center;
-		font-size: 0.72rem;
-	}
-
-	.heat-column i {
-		display: block;
-		min-height: 18px;
-		border-radius: 4px 4px 0 0;
-		background: linear-gradient(180deg, #e24d3d, #e0aa31 46%, #11706c);
-	}
-
-	.audio-sigil {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 8px;
-		align-items: center;
-	}
-
-	.audio-sigil div {
-		height: 100%;
-		min-height: 120px;
-		background:
-			radial-gradient(circle at 50% 20%, rgba(226, 77, 61, 0.9), transparent 22%),
-			linear-gradient(180deg, rgba(120, 212, 200, 0.7), rgba(224, 170, 49, 0.9));
-		border-radius: 8px;
-	}
-
-	.audio-sigil div:nth-child(2) {
-		min-height: 80px;
-	}
-
-	.audio-sigil div:nth-child(3) {
-		min-height: 150px;
-	}
-
-	.grid {
-		display: grid;
-		gap: 18px;
-	}
-
-	.two {
-		grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+		gap: 14px;
 	}
 
 	.three {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 
-	.mechanisms {
-		grid-template-columns: repeat(4, minmax(0, 1fr));
+	.module-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
 	.council-grid {
-		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 14px;
-	}
-
-	.module-grid {
-		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 14px;
-	}
-
-	.panel,
-	.mechanism-card {
-		padding: 18px;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
 	.beat-list,
 	.clean-list,
-	.debt-list {
+	.debt-list,
+	.issue-list {
 		margin: 0;
 		padding: 0;
 		list-style: none;
-	}
-
-	.beat-list {
-		display: grid;
-		gap: 14px;
 	}
 
 	.beat-list li {
@@ -846,79 +819,74 @@
 		width: 40px;
 		height: 40px;
 		place-items: center;
-		background: #11706c;
+		background: #2f6fbb;
 		color: #fff;
 		font-weight: 900;
 	}
 
+	.beat-list li.accepted > span {
+		background: #0f8f83;
+	}
+
+	.beat-list li.failed > span,
+	.beat-list li.rejected > span {
+		background: #e9543f;
+	}
+
+	.beat-list li.locked > span {
+		background: #d89b27;
+	}
+
 	.beat-list p,
-	.beat-list em {
+	.clean-list span,
+	.clean-list em,
+	.debt-list span,
+	.debt-list em {
 		display: block;
 		margin: 3px 0 0;
 		color: #504a43;
-	}
-
-	.beat-list em {
-		color: #7e2632;
 		font-style: normal;
-		font-weight: 700;
 	}
 
-	.clean-list,
-	.debt-list {
-		display: grid;
-		gap: 10px;
-		margin-bottom: 22px;
+	.visual-band .beat-list p {
+		color: rgba(255, 248, 234, 0.74);
 	}
 
 	.clean-list li,
 	.debt-list li {
 		padding-left: 12px;
-		border-left: 3px solid #e0aa31;
+		border-left: 3px solid #d89b27;
 		color: #504a43;
 	}
 
+	.clean-list li.winner {
+		border-color: #0f8f83;
+		background: rgba(15, 143, 131, 0.06);
+	}
+
 	.debt-list li {
-		border-color: #e24d3d;
+		border-color: #e9543f;
 	}
 
-	.mechanism-card {
+	.artifact {
 		display: grid;
-		align-content: space-between;
-		min-height: 210px;
-	}
-
-	.mechanism-card p {
-		color: #11706c;
-		font-size: 0.78rem;
-		font-weight: 900;
-		text-transform: uppercase;
-	}
-
-	.mechanism-card h3 {
-		font-size: 1rem;
-		line-height: 1.25;
-	}
-
-	.mechanism-card span {
-		color: #7e2632;
-		font-size: 0.84rem;
-		font-weight: 700;
-	}
-
-	.module-grid article {
-		display: grid;
-		gap: 10px;
+		gap: 12px;
 		align-content: start;
-		padding: 14px;
-		border: 1px solid rgba(126, 38, 50, 0.16);
-		border-radius: 8px;
-		background: rgba(224, 170, 49, 0.08);
 	}
 
-	.module-grid article.failed {
-		border-color: rgba(226, 77, 61, 0.4);
+	.artifact.accepted {
+		border-color: rgba(15, 143, 131, 0.36);
+	}
+
+	.artifact.failed,
+	.artifact.rejected {
+		border-color: rgba(233, 84, 63, 0.44);
 		background: #fff2ee;
+	}
+
+	.artifact.locked {
+		border-color: rgba(216, 155, 39, 0.42);
+		background: rgba(242, 227, 191, 0.5);
 	}
 
 	.module-header {
@@ -926,136 +894,57 @@
 		gap: 5px;
 	}
 
-	.module-header span,
-	.module-grid small {
-		color: #11706c;
-		font-size: 0.72rem;
-		font-weight: 900;
-		text-transform: uppercase;
-	}
-
-	.module-header h3,
-	.module-grid p {
-		margin-bottom: 0;
-	}
-
-	.module-grid p,
-	.module-grid li {
+	.artifact p,
+	.artifact li,
+	.panel li,
+	.panel p,
+	.council-grid p,
+	.council-grid em {
 		color: #504a43;
-		font-size: 0.9rem;
+		font-size: 14px;
+		line-height: 1.45;
 	}
 
-	.module-grid ul {
-		margin: 0;
+	.next-action {
+		display: grid;
+		gap: 4px;
+		padding: 10px;
+		border: 1px solid rgba(216, 155, 39, 0.35);
+		background: rgba(216, 155, 39, 0.1);
+	}
+
+	.next-action span {
+		color: #504a43;
+		font-size: 14px;
+	}
+
+	.issue-list {
 		padding-left: 18px;
+		color: #6f3c7b;
+		list-style: disc;
 	}
 
-	.live-ai-panel {
+	.council-grid section {
 		display: grid;
-		gap: 14px;
-		border-color: rgba(17, 112, 108, 0.26);
-	}
-
-	.live-ai-panel.failed {
-		border-color: rgba(226, 77, 61, 0.4);
-		background: #fff2ee;
-	}
-
-	.live-action {
-		display: grid;
-		grid-template-columns: minmax(220px, 1fr) auto;
-		gap: 12px;
-		align-items: end;
-		padding: 14px;
-		border: 1px solid rgba(17, 112, 108, 0.18);
-		border-radius: 8px;
-		background: rgba(17, 112, 108, 0.06);
-	}
-
-	.live-action label {
-		margin: 0;
-	}
-
-	.live-action label span {
-		color: #504a43;
-	}
-
-	.live-action input {
-		border-color: rgba(24, 23, 22, 0.16);
-		background: #fff;
-		color: #181716;
-	}
-
-	.live-action button {
-		min-width: 180px;
-		background: #7e2632;
-		border-color: #7e2632;
-	}
-
-	.live-ai-panel small,
-	.live-variant-list span,
-	.live-variant-list em {
-		display: block;
-		color: #504a43;
-		font-size: 0.88rem;
-	}
-
-	.live-variant-list {
-		gap: 14px;
-		margin-top: 4px;
-	}
-
-	.live-variant-list li {
-		display: grid;
-		gap: 5px;
-	}
-
-	.live-variant-list strong {
-		color: #181716;
-	}
-
-	.live-variant-list em {
-		color: #7e2632;
-		font-style: normal;
-		font-weight: 700;
-	}
-
-	.council-grid article {
-		display: grid;
-		gap: 10px;
-		align-content: start;
-		padding: 14px;
-		border: 1px solid rgba(17, 112, 108, 0.18);
-		border-radius: 8px;
-		background: rgba(17, 112, 108, 0.06);
+		gap: 8px;
+		padding: 12px;
+		border: 1px solid rgba(15, 143, 131, 0.2);
+		background: rgba(15, 143, 131, 0.06);
 	}
 
 	.council-grid span,
 	.council-grid em {
-		color: #7e2632;
-		font-size: 0.78rem;
+		color: #6f3c7b;
+		font-size: 12px;
 		font-style: normal;
 		font-weight: 900;
 		text-transform: uppercase;
-	}
-
-	.council-grid h3,
-	.council-grid p {
-		margin-bottom: 0;
-	}
-
-	.council-grid p {
-		color: #504a43;
-		font-size: 0.9rem;
 	}
 
 	@media (max-width: 1040px) {
 		.workbench,
 		.score-band,
-		.visual-band,
-		.two,
 		.three,
-		.mechanisms,
 		.module-grid,
 		.council-grid {
 			grid-template-columns: 1fr;
@@ -1066,11 +955,7 @@
 			min-height: auto;
 		}
 
-		.mechanisms {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-
-		.module-grid {
+		.score-stack {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 	}
@@ -1082,16 +967,14 @@
 		}
 
 		.number-grid,
+		.live-action,
 		.mechanism-picker,
-		.metric,
-		.mechanisms,
-		.module-grid,
-		.live-action {
+		.score-stack {
 			grid-template-columns: 1fr;
 		}
 
 		.score-band h2 {
-			font-size: 4rem;
+			font-size: 44px;
 		}
 	}
 </style>

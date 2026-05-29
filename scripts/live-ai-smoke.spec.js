@@ -8,7 +8,7 @@ import { isMainModule, liveActionRequest, liveActionUrl } from './live-ai-smoke.
 describe('live AI smoke script', () => {
 	it('builds the SvelteKit action URL from the deployed target', () => {
 		expect(liveActionUrl('https://pocketfm-contest-forge.vercel.app').href).toBe(
-			'https://pocketfm-contest-forge.vercel.app/?/runLiveColdOpen'
+			'https://pocketfm-contest-forge.vercel.app/?/runLiveStudio'
 		);
 	});
 
@@ -16,7 +16,7 @@ describe('live AI smoke script', () => {
 		const request = liveActionRequest('https://pocketfm-contest-forge.vercel.app', 'demo-code');
 		const body = request.init.body;
 
-		expect(request.url.href).toBe('https://pocketfm-contest-forge.vercel.app/?/runLiveColdOpen');
+		expect(request.url.href).toBe('https://pocketfm-contest-forge.vercel.app/?/runLiveStudio');
 		expect(request.init.method).toBe('POST');
 		expect(request.init.headers).toMatchObject({
 			'Content-Type': 'application/x-www-form-urlencoded',

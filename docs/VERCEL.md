@@ -38,9 +38,9 @@ The xAI adapter calls `https://api.x.ai/v1/responses` from server-side code and 
 text plus provider diagnostics. Client components must not import provider creation helpers or read
 private env values.
 
-`STORY_AI_ACCESS_CODE` is enforced before paid provider calls. Without it, the live cold-open action
-returns an unavailable state and does not call xAI. The current per-client limiter is in-memory and
-intended only for MVP demo protection; it is not durable auth.
+`STORY_AI_ACCESS_CODE` is enforced before paid provider calls. Without it, the live Story Studio
+action returns an unavailable state and does not call xAI. The current per-client limiter is
+in-memory and intended only for MVP demo protection; it is not durable auth.
 
 ## Verification
 
@@ -57,9 +57,9 @@ Before merging deployment changes:
 RUN_LIVE_AI_SMOKE=1 LIVE_AI_SMOKE_URL=https://your-preview-or-production-url.vercel.app LIVE_AI_SMOKE_ACCESS_CODE=<your-access-code> npm run ai:smoke
 ```
 
-The smoke submits the server-side `runLiveColdOpen` action, expects an accepted `live-ai`
-`cold-open-lab` result from provider `xai`, and fails if the action falls back to fixture output or
-returns a provider/schema/prose rejection.
+The smoke submits the server-side `runLiveStudio` action, expects accepted `live-ai` Story Studio
+artifacts from provider `xai`, and fails if the action falls back to fixture output or returns a
+provider/schema/prose rejection.
 
 The same proof can be run from GitHub after adding the repository secret
 `LIVE_AI_SMOKE_ACCESS_CODE`. Open the `Live AI Smoke` workflow, choose "Run workflow", and provide

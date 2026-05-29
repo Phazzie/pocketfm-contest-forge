@@ -2,34 +2,32 @@
 
 import { env } from '$env/dynamic/private';
 import { fail, type Actions } from '@sveltejs/kit';
-import { createDefaultForge, defaultForgeRequest } from '$lib/application/createDefaultForge';
-import { RunLiveColdOpenLab } from '$lib/application/runLiveColdOpenLab';
+import { createInitialStoryStudioRun } from '$lib/application/createInitialStoryStudioRun';
+import { defaultForgeRequest } from '$lib/application/defaultForgeRequest';
+import { RunLiveStoryStudio } from '$lib/application/runLiveStoryStudio';
 import { createXaiStoryModuleProviderFromEnv } from '$lib/adapters/ai/xaiStoryModuleProvider';
 import { InMemoryContestResearchRepository } from '$lib/adapters/research/inMemoryContestResearchRepository';
-import type {
-	ForgeRequest,
-	LiveColdOpenResponse,
-	RiskTolerance
-} from '$lib/core/contracts/contestForgeContract';
+import type { ForgeRequest, RiskTolerance } from '$lib/core/contracts/contestForgeContract';
 import {
 	isContestGenre,
 	isMechanismId,
 	validateForgeRequest
 } from '$lib/core/contracts/contestForgeContract';
+import type { StoryStudioResponse } from '$lib/core/contracts/storyStudioContract';
 import { mechanismCatalog } from '$lib/core/domain/mechanisms';
 import { consumeLiveAiQuota, verifyLiveAiAccessCode } from '$lib/server/liveAiAccess';
+import { defaultStoryModuleRegistry } from '$lib/story-modules/registry';
 
 export async function load() {
-	const forge = createDefaultForge();
-	const initial = await forge.forge(defaultForgeRequest);
 	const research = new InMemoryContestResearchRepository();
+	const brief = research.findById(defaultForgeRequest.contestId);
 
-	if (!initial.success) {
-		throw new Error(initial.error.message);
+	if (!brief) {
+		throw new Error(`Default contest brief missing: ${defaultForgeRequest.contestId}.`);
 	}
 
 	return {
-		initialPlan: initial.data,
+		initialStudioRun: createInitialStoryStudioRun(brief),
 		defaultRequest: defaultForgeRequest,
 		briefs: research.list(),
 		mechanisms: mechanismCatalog
@@ -37,7 +35,7 @@ export async function load() {
 }
 
 export const actions: Actions = {
-	runLiveColdOpen: async ({ request, getClientAddress }) => {
+	runLiveStudio: async ({ request, getClientAddress }) => {
 		const formData = await request.formData();
 		const submittedRequest = parseForgeRequest(formData);
 		const clientKey = safeClientAddress(getClientAddress);
@@ -48,52 +46,60 @@ export const actions: Actions = {
 		});
 
 		if (accessFailure) {
-			return fail(statusForLiveColdOpenFailure(accessFailure), {
+			const storyStudio = storyStudioFailureFromAccessFailure(accessFailure);
+
+			return fail(statusForStoryStudioFailure(storyStudio), {
 				submittedRequest,
-				liveColdOpen: accessFailure
+				storyStudio
 			});
 		}
 
 		const research = new InMemoryContestResearchRepository();
-		const requestFailure = validateLiveColdOpenRequest(submittedRequest, research);
+		const requestFailure = validateLiveStudioRequest(submittedRequest, research);
 
 		if (requestFailure) {
-			return fail(statusForLiveColdOpenFailure(requestFailure), {
+			return fail(statusForStoryStudioFailure(requestFailure), {
 				submittedRequest,
-				liveColdOpen: requestFailure
+				storyStudio: requestFailure
 			});
 		}
 
 		const quotaFailure = consumeLiveAiQuota({ clientKey });
 
 		if (quotaFailure) {
-			return fail(statusForLiveColdOpenFailure(quotaFailure), {
+			const storyStudio = storyStudioFailureFromAccessFailure(quotaFailure);
+
+			return fail(statusForStoryStudioFailure(storyStudio), {
 				submittedRequest,
-				liveColdOpen: quotaFailure
+				storyStudio
 			});
 		}
 
 		const provider = createXaiStoryModuleProviderFromEnv(env);
-		const liveColdOpen = await new RunLiveColdOpenLab(research, provider).run(submittedRequest);
+		const storyStudio = await new RunLiveStoryStudio(
+			research,
+			provider,
+			defaultStoryModuleRegistry
+		).run(submittedRequest);
 
-		if (!liveColdOpen.success) {
-			return fail(statusForLiveColdOpenFailure(liveColdOpen), {
+		if (!storyStudio.success) {
+			return fail(statusForStoryStudioFailure(storyStudio), {
 				submittedRequest,
-				liveColdOpen
+				storyStudio
 			});
 		}
 
 		return {
 			submittedRequest,
-			liveColdOpen
+			storyStudio
 		};
 	}
 };
 
-function validateLiveColdOpenRequest(
+function validateLiveStudioRequest(
 	request: ForgeRequest,
 	research: InMemoryContestResearchRepository
-): Extract<LiveColdOpenResponse, { success: false }> | undefined {
+): Extract<StoryStudioResponse, { success: false }> | undefined {
 	const issues = validateForgeRequest(request);
 	const errors = issues.filter((issue) => issue.severity === 'error');
 
@@ -102,7 +108,7 @@ function validateLiveColdOpenRequest(
 			success: false,
 			error: {
 				code: 'CONTRACT_INVALID',
-				message: 'Live cold open request failed contract validation.',
+				message: 'Live Story Studio request failed contract validation.',
 				issues
 			}
 		};
@@ -119,6 +125,15 @@ function validateLiveColdOpenRequest(
 	}
 
 	return undefined;
+}
+
+function storyStudioFailureFromAccessFailure(
+	response: Extract<ReturnType<typeof verifyLiveAiAccessCode>, { success: false }>
+): Extract<StoryStudioResponse, { success: false }> {
+	return {
+		success: false,
+		error: response.error
+	};
 }
 
 function parseForgeRequest(formData: FormData): ForgeRequest {
@@ -164,7 +179,7 @@ function parseForgeRequest(formData: FormData): ForgeRequest {
 	};
 }
 
-function statusForLiveColdOpenFailure(response: Extract<LiveColdOpenResponse, { success: false }>) {
+function statusForStoryStudioFailure(response: Extract<StoryStudioResponse, { success: false }>) {
 	switch (response.error.code) {
 		case 'ACCESS_DENIED':
 			return 403;
@@ -176,6 +191,10 @@ function statusForLiveColdOpenFailure(response: Extract<LiveColdOpenResponse, { 
 			return 404;
 		case 'CONTRACT_INVALID':
 			return 400;
+		case 'PROVIDER_UNAVAILABLE':
+			return 503;
+		case 'STUDIO_RUN_FAILED':
+			return 500;
 	}
 }
 

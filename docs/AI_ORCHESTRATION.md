@@ -140,11 +140,11 @@ Required server-side environment:
 No xAI call is allowed from Svelte client code. The next public-MVP slice must instantiate this
 adapter only from server-side load/action code or a server-only application service.
 
-`src/routes/+page.server.ts` now exposes the first server-side live path through the
-`runLiveColdOpen` form action. It passes private env values into the xAI adapter on the server,
+`src/routes/+page.server.ts` now exposes the production server-side live path through the
+`runLiveStudio` form action. It passes private env values into the xAI adapter on the server,
 authorizes the request with `STORY_AI_ACCESS_CODE`, applies a small per-client in-memory rate limit,
-and returns a `LiveColdOpenResponse` for the UI to render. Provider failures remain visible as failed
-module results; the action does not replace them with fixture prose.
+and returns a `StoryStudioResponse` for the UI to render. Provider failures remain visible as failed
+or locked story artifacts; the action does not replace them with fixture prose.
 
 `src/lib/core/contracts/storyStudioContract.ts` now defines the production Story Studio response
 shape. `src/lib/application/runLiveStoryStudio.ts` is the first application use case for that
@@ -153,6 +153,12 @@ production artifact, runs `binge-debt-ledger` from accepted cold-open variants, 
 `cliffhanger-futures` from accepted cold-open and debt-ledger output, runs `trope-mutation-lab` from
 accepted cold-open, debt-ledger, and cliffhanger output, and runs `council-review` after those live
 artifacts are accepted. Locked artifacts are explicit product states, not fallback prose.
+
+The Svelte page renders this `StoryStudioRun` contract directly. It no longer imports
+`createDefaultForge()`, computes deterministic forge output in the browser, or shows heuristic
+readiness scores as production advice. The default request lives in
+`src/lib/application/defaultForgeRequest.ts` so the route can populate controls without importing
+the deterministic fixture forge.
 
 ## Provider Tracking
 

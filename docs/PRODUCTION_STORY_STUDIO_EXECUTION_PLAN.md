@@ -36,7 +36,12 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [x] 2026-05-29 11:14 - Added `storyStudioContract`, shared story-module input builders, and
       the initial `RunLiveStoryStudio` application use case. The use case runs the live cold-open
       path and returns locked artifacts for modules whose live gates are not implemented yet.
-- [ ] Move deterministic forge output out of the production route.
+- [x] 2026-05-29 12:25 - Moved deterministic forge output out of the production route. The page
+      now loads an initial locked `StoryStudioRun` and submits the main action to
+      `RunLiveStoryStudio`.
+- [x] 2026-05-29 12:35 - Replaced heuristic production scoring with live qualitative assessment.
+      The production page now shows artifact status counts and `council-review` findings instead
+      of deterministic readiness score meters.
 - [x] 2026-05-29 11:22 - Replaced the executor's broad supported-module set with a
       module-specific live quality gate registry. At that milestone, only `cold-open-lab` was
       registered by default.
@@ -52,19 +57,20 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [x] 2026-05-29 12:10 - Scaffolded and implemented `council-review` as a registered story module
       with six required council roles, provider prompt builders, a module-specific quality gate,
       and `RunLiveStoryStudio` execution after accepted live artifacts.
-- [ ] Replace heuristic production scoring with live qualitative assessment.
 - [ ] Add contest brief freshness metadata and stale-state UI.
 - [ ] Rebuild the visible UI to match `DESIGN.md`.
-- [ ] Update stale docs and tracking ledgers.
+- [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
+      the `runLiveStudio` route migration.
 - [ ] Validate locally, deploy, and prove production smoke.
 
 ## Surprises & Discoveries
 
-The production Grok path is healthier than the surrounding product surface. `runLiveColdOpen` is
-server-side, gated by `STORY_AI_ACCESS_CODE`, rate-limited, and backed by a provider adapter that
-fails closed. The larger debt is that `src/routes/+page.svelte` imports `createDefaultForge()` and
-computes the main plan in the browser, so deterministic fixture output is still the dominant first
-screen.
+At the start of this plan, the production Grok path was healthier than the surrounding product
+surface: the cold-open-only live path was server-side, gated by `STORY_AI_ACCESS_CODE`,
+rate-limited, and backed by a provider adapter that failed closed. The larger debt was that
+`src/routes/+page.svelte` imported `createDefaultForge()` and computed the main plan in the
+browser, so deterministic fixture output was still the dominant first screen. That route debt is now
+removed.
 
 `ForgeContestStory.forge(request, 'live')` already refuses to substitute deterministic output and
 returns `AI_PROVIDER_UNAVAILABLE`. Keep that fail-closed behavior. Do not try to make the old forge
@@ -110,6 +116,15 @@ It is a real module rather than the old static AI council runbook: six required 
 return a finding, evidence, revision move, risk if ignored, and confidence. The provider-backed path
 still runs through `LiveModuleExecutor`, so malformed, incomplete, generic, or role-duplicated
 council output fails closed.
+
+The production route no longer imports `createDefaultForge()`, `ForgePlan`, the cold-open-only
+action, or deterministic story intelligence. The visible route now renders `StoryStudioRun`
+artifacts and uses `runLiveStudio` as the main form action. The UI is still not the final component
+system from `DESIGN.md`, but it no longer centers the fixture/demo forge plan.
+
+The old live AI smoke script was still aimed at `?/runLiveColdOpen`. Route migration requires the
+smoke proof to submit `?/runLiveStudio` and inspect Story Studio artifacts, otherwise deployment
+readiness would be testing a retired path.
 
 ## Decision Log
 
@@ -180,6 +195,14 @@ give generic genre advice disconnected from the prior artifacts.
 Rationale: the MVP council is meant to judge the production Story Studio chain; if earlier artifacts
 fail, a locked council state is more honest than a broad critique of missing work.
 
+2026-05-29 12:25 - The default request moved into `src/lib/application/defaultForgeRequest.ts`.
+Rationale: the production route still needs a seed to populate controls, but importing it from
+`createDefaultForge.ts` also couples the route to the deterministic fixture forge module.
+
+2026-05-29 12:35 - The production route replaced numeric readiness meters with artifact status
+counts and council findings. Rationale: the old score was deterministic and over-authoritative;
+accepted/failed/locked live artifacts are more truthful until a calibrated live judge exists.
+
 ## Outcomes & Retrospective
 
 Not complete. Fill this in when the production route no longer displays deterministic creative
@@ -205,15 +228,18 @@ Read these files before editing:
 
 Current important files:
 
-- `src/routes/+page.svelte` renders the visible workbench. It currently imports
-  `createDefaultForge()` and renders deterministic `plan` data in the browser.
-- `src/routes/+page.server.ts` currently returns `initialPlan` from `createDefaultForge()` and
-  exposes the `runLiveColdOpen` server action.
+- `src/routes/+page.svelte` renders the visible workbench. It renders `StoryStudioRun` artifacts
+  from load/action data and does not compute deterministic forge output in the browser.
+- `src/routes/+page.server.ts` returns an initial locked `StoryStudioRun` and exposes the
+  `runLiveStudio` server action.
 - `src/lib/application/createDefaultForge.ts` wires `InMemoryContestResearchRepository`,
-  `DeterministicStoryIntelligence`, and `defaultStoryModuleRegistry`.
+  `DeterministicStoryIntelligence`, and `defaultStoryModuleRegistry` for fixture/demo use.
+- `src/lib/application/defaultForgeRequest.ts` owns the default seed/control request without
+  importing deterministic fixture forge wiring.
 - `src/lib/application/forgeContestStory.ts` owns the old fixture/demo forge use case and should
   remain fixture/dev unless deliberately replaced.
 - `src/lib/application/runLiveColdOpenLab.ts` is the first real live use case.
+- `src/lib/application/runLiveStoryStudio.ts` is the production live use case used by the route.
 - `src/lib/application/liveModuleExecutor.ts` validates provider output, performs one JSON repair
   attempt, runs module schemas and prose gates, and fails closed.
 - `src/lib/core/ports/storyModuleProviderPort.ts` is the provider boundary.
@@ -542,6 +568,22 @@ src/lib/core/domain/proseQuality.spec.ts` returned 5 files and 37 tests passing.
 src/lib/application/runLiveStoryStudio.spec.ts
 src/lib/story-modules/modules/council-review/module.spec.ts
 src/lib/story-modules/registry.spec.ts` returned 4 files and 35 tests passing.
+- 2026-05-29 12:25 - Route search found no remaining route references to `createDefaultForge`,
+  `ForgePlan`, `liveColdOpen`, `runLiveColdOpen`, `initialPlan`, or
+  `DeterministicStoryIntelligence`. Focused route/application checks passed:
+  `npm run test -- src/lib/application/createInitialStoryStudioRun.spec.ts
+src/lib/application/runLiveStoryStudio.spec.ts
+src/lib/application/liveModuleExecutor.spec.ts
+src/lib/story-modules/modules/council-review/module.spec.ts`, and `npm run check` found 0 errors
+  and 0 warnings.
+- 2026-05-29 12:55 - Route migration follow-up checks passed: focused tests for
+  `scripts/live-ai-smoke.spec.js`, `createInitialStoryStudioRun`, `runLiveStoryStudio`,
+  `liveModuleExecutor`, and `council-review` returned 5 files and 41 tests passing.
+  `npm run guard:no-live-fallback` passed for 5 registered modules; `npm run guard:docs-drift`
+  passed for 9 changed app code/script files. Full `npm run verify` passed with 101 tests,
+  zero Svelte errors/warnings, and a production build. `npm run verify:ui` passed against
+  `http://127.0.0.1:5173/` with no overlay, 27 controls, Story Studio action visible, and no browser
+  errors.
 
 ## Interfaces and Dependencies
 
