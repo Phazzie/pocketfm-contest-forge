@@ -125,6 +125,14 @@ rejected candidate warnings that described volatility without naming audience fr
 a delayed payoff, fake cliffhanger, confusion, trust break, abstract lore, or hidden-proof risk. The
 live quality gate enforces the same prefix.
 
+`council-review.v2` hardens final council critique instructions after production Story Studio smoke
+reached the final module and failed closed on abstract revision moves and vague risks. Every live
+role `revisionMove` must include an action cue and a concrete story cost word such as debt, name,
+public, relationship, status, or trust. Every live `riskIfIgnored` must start with
+`Specific risk:` or `Audience risk:` and name a concrete drop, trust, confusion, fake-payoff,
+stale-debt, generic-lane, or rejection risk. The live quality gate enforces those rules so the
+council cannot pass generic critique as useful serial advice.
+
 ## xAI Grok Adapter
 
 `src/lib/adapters/ai/xaiStoryModuleProvider.ts` implements `StoryModuleProvider` for the xAI

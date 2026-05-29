@@ -40,7 +40,8 @@ import {
 import { councilReviewModule } from '$lib/story-modules/modules/council-review/module';
 import {
 	buildCouncilReviewProviderInput,
-	buildCouncilReviewProviderMessages
+	buildCouncilReviewProviderMessages,
+	COUNCIL_REVIEW_PROMPT_VERSION
 } from '$lib/story-modules/modules/council-review/prompts';
 import type { TropeMutationLabOutput } from '$lib/story-modules/modules/trope-mutation-lab/contract';
 import {
@@ -439,8 +440,75 @@ describe('live module executor', () => {
 		expect(result.status).toBe('success');
 		expect(result.output?.roles).toHaveLength(6);
 		expect(result.output?.greenlight).toBe('ready-for-demo');
-		expect(result.provenance.promptVersion).toBe('council-review.v1');
+		expect(result.provenance.promptVersion).toBe(COUNCIL_REVIEW_PROMPT_VERSION);
 		expect(provider.requests[0]?.moduleId).toBe('council-review');
+	});
+
+	it('instructs council-review output to include cost-bearing revision moves and explicit risks', () => {
+		const promptText = buildCouncilReviewProviderMessages(councilReviewFixtureInput)
+			.map((message) => message.content)
+			.join('\n');
+
+		expect(promptText).toContain(`Prompt version: ${COUNCIL_REVIEW_PROMPT_VERSION}.`);
+		expect(promptText).toContain('Every revisionMove must include at least one action cue');
+		expect(promptText).toContain(
+			'add, cut, delay, force, keep, lock, make, mark, move, pay, put, rebuild, reveal, rewrite, save, or track'
+		);
+		expect(promptText).toContain('Every revisionMove must include at least one concrete cost word');
+		expect(promptText).toContain('betrayal, cost, court, debt, family, lover, name');
+		expect(promptText).toContain(
+			'Every riskIfIgnored must start with "Specific risk:" or "Audience risk:"'
+		);
+		expect(promptText).toContain(
+			'concrete drop, trust, confusion, fake-payoff, stale-debt, generic-lane, or rejection risk'
+		);
+		expect(promptText).toContain(
+			'Add one public witness choice, then make that choice cost the protagonist a lover trust debt.'
+		);
+	});
+
+	it('rejects council-review revision moves that omit a concrete story cost', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(
+				JSON.stringify({
+					...councilReviewFixtureOutput,
+					roles: councilReviewFixtureOutput.roles.map((role) => ({
+						...role,
+						revisionMove: 'Rewrite the scene so the opening question is clearer before the reveal.'
+					}))
+				} satisfies CouncilReviewOutput)
+			)
+		);
+		const result = await runCouncilReview(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+		expect(result.issues.map((issue) => issue.message).join(' ')).toContain(
+			'playable revision move with a concrete cost'
+		);
+	});
+
+	it('rejects council-review risks that omit the explicit risk prefix', async () => {
+		const provider = new FakeStoryModuleProvider(
+			providerSuccess(
+				JSON.stringify({
+					...councilReviewFixtureOutput,
+					roles: councilReviewFixtureOutput.roles.map((role) => ({
+						...role,
+						riskIfIgnored: 'Listeners lose trust because the name debt feels fake.'
+					}))
+				} satisfies CouncilReviewOutput)
+			)
+		);
+		const result = await runCouncilReview(provider);
+
+		expect(result.status).toBe('failed');
+		expect(result.output).toBeUndefined();
+		expect(result.issues.map((issue) => issue.code)).toContain('PROSE_QUALITY_REJECTION');
+		expect(result.issues.map((issue) => issue.message).join(' ')).toContain(
+			'specific risk if ignored'
+		);
 	});
 
 	it('rejects weak council-review JSON without fixture fallback', async () => {

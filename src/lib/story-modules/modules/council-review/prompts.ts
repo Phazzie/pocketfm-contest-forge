@@ -7,7 +7,7 @@ import type {
 	StoryModuleProviderMessage
 } from '$lib/core/ports/storyModuleProviderPort';
 
-export const COUNCIL_REVIEW_PROMPT_VERSION = 'council-review.v1';
+export const COUNCIL_REVIEW_PROMPT_VERSION = 'council-review.v2';
 
 export const councilReviewPrompt = {
 	system:
@@ -67,6 +67,9 @@ export function buildCouncilReviewProviderMessages(
 					.join(', ')}.`,
 				'Each role must include finding, evidence, revisionMove, riskIfIgnored, and confidence.',
 				'Evidence must cite a concrete accepted artifact, rejected artifact issue, contest requirement, or seed detail.',
+				'Every revisionMove must include at least one action cue: add, cut, delay, force, keep, lock, make, mark, move, pay, put, rebuild, reveal, rewrite, save, or track.',
+				'Every revisionMove must include at least one concrete cost word: betrayal, cost, court, debt, family, lover, name, price, public, relationship, reputation, secret, shame, status, or trust.',
+				'Every riskIfIgnored must start with "Specific risk:" or "Audience risk:" and name a concrete drop, trust, confusion, fake-payoff, stale-debt, generic-lane, or rejection risk.',
 				'Revision moves must be playable story changes, not abstract writing advice.',
 				'Do not use generic craft phrases such as strong hook, raise the stakes, emotional stakes, or build suspense.',
 				'If a prior artifact is missing or rejected, critique that absence directly instead of inventing the missing artifact.'
@@ -83,12 +86,15 @@ export function buildCouncilReviewProviderMessages(
 							role,
 							finding: 'Specific role finding grounded in the provided artifacts.',
 							evidence: 'Concrete artifact, issue, contest, or seed evidence.',
-							revisionMove: 'Concrete playable revision move.',
-							riskIfIgnored: 'Specific risk if the writer ignores this finding.',
+							revisionMove:
+								'Add one public witness choice, then make that choice cost the protagonist a lover trust debt.',
+							riskIfIgnored:
+								'Specific risk: listeners lose trust because the unpaid name debt feels fake.',
 							confidence: 0.82
 						})),
 						consensus: 'The shared council judgment across roles.',
-						topRevisionMove: 'The single highest-leverage next revision.',
+						topRevisionMove:
+							'Rebuild the next public scene around one name debt that costs status and relationship trust.',
 						greenlight: 'revise-before-submitting'
 					},
 					null,

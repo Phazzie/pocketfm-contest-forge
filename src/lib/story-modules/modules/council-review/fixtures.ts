@@ -72,7 +72,7 @@ export const councilReviewFixtureOutput: CouncilReviewOutput = {
 			revisionMove:
 				'Keep the first revision inside the court scene and make the lover hand over the proof before any lore.',
 			riskIfIgnored:
-				'If the opening moves into history first, listeners may miss the public status wound and drop before the debt appears.',
+				'Specific risk: if the opening moves into history first, listeners may miss the public status wound and drop before the debt appears.',
 			confidence: 0.88
 		},
 		{
@@ -84,7 +84,7 @@ export const councilReviewFixtureOutput: CouncilReviewOutput = {
 			revisionMove:
 				'Add one public witness who changes allegiance after the crowd believes the crueler truth about Mara.',
 			riskIfIgnored:
-				'If the mutation becomes abstract philosophy, the audience loses the familiar throne revenge doorway.',
+				'Audience risk: if the mutation becomes abstract philosophy, the audience loses the familiar throne revenge doorway.',
 			confidence: 0.82
 		},
 		{
@@ -96,7 +96,7 @@ export const councilReviewFixtureOutput: CouncilReviewOutput = {
 			revisionMove:
 				'Pay only one public clue in episode two, then make the unpaid lover proof cost Mara trust in episode three.',
 			riskIfIgnored:
-				'Paying both debts at once would drain the binge engine and leave the next court consequence weak.',
+				'Specific risk: paying both debts at once would drain the binge engine and leave the next court consequence weak.',
 			confidence: 0.86
 		},
 		{
@@ -108,7 +108,7 @@ export const councilReviewFixtureOutput: CouncilReviewOutput = {
 			revisionMove:
 				'Rewrite the ending line so the antagonist says Mara old name once and the crowd repeats the wrong title.',
 			riskIfIgnored:
-				'If the magic rule is only visual, audio listeners may miss who paid the name price.',
+				'Audience risk: if the magic rule is only visual, audio listeners may miss who paid the name price.',
 			confidence: 0.8
 		},
 		{
@@ -120,7 +120,7 @@ export const councilReviewFixtureOutput: CouncilReviewOutput = {
 			revisionMove:
 				'Put the cursed crown consequence in the first two minutes and make the court price public before royal history.',
 			riskIfIgnored:
-				'If the submission waits too long on crown mechanics, it may read like generic palace intrigue.',
+				'Specific risk: if the submission waits too long on crown mechanics, it may read like generic palace intrigue.',
 			confidence: 0.84
 		},
 		{
@@ -132,7 +132,7 @@ export const councilReviewFixtureOutput: CouncilReviewOutput = {
 			revisionMove:
 				'Track who knows Mara old name after every public ceremony and mark each witness memory as paid or stolen.',
 			riskIfIgnored:
-				'Loose name continuity would make the antagonist proof feel fake and weaken every later payoff.',
+				'Specific risk: loose name continuity would make the antagonist proof feel fake and weaken every later payoff.',
 			confidence: 0.9
 		}
 	],

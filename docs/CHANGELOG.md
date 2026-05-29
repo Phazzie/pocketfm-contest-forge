@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Hardened `council-review.v2` after production smoke reached the final module and rejected role
+  advice without concrete revision costs or specific risk-if-ignored cues.
 - Hardened `trope-mutation-lab.v4` after production smoke rejected a mutation rule without a
   visible inversion/subversion cue; live mutation rules must now include an explicit rule-change
   word.

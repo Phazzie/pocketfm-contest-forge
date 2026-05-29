@@ -505,7 +505,7 @@ function evaluateCouncilReviewQuality(review: ProseQualityReview): ProseQualityR
 			});
 		}
 
-		if (!hasAny(lowerRisk, councilRiskTerms)) {
+		if (!startsWithAny(lowerRisk, councilRiskPrefixes) || !hasAny(lowerRisk, councilRiskTerms)) {
 			issues.push({
 				code: 'MISSING_SPECIFIC_COST',
 				field: `${review.moduleId}.roles.${role.role}.riskIfIgnored`,
@@ -714,6 +714,7 @@ const revisionMoveTerms = [
 const councilRiskTerms = [
 	'abstract',
 	'confuse',
+	'confusion',
 	'drain',
 	'drop',
 	'fake',
@@ -723,11 +724,12 @@ const councilRiskTerms = [
 	'loses',
 	'miss',
 	'rejection',
-	'risk',
 	'stale',
 	'trust',
 	'weak'
 ];
+
+const councilRiskPrefixes = ['specific risk:', 'audience risk:'];
 
 const cliffhangerPayoffTerms = [
 	'because',
