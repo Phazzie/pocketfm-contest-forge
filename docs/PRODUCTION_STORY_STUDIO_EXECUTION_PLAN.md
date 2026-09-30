@@ -120,6 +120,10 @@ locked state. It must not display heuristic or fixture prose as a replacement.
 - [x] 2026-05-29 21:18 UTC - Addressed PR #26 review feedback by normalizing hyphenated and
       underscored provider quota wording before classification, with regression coverage for
       `rate-limit`, `rate_limit`, and `usage_limit`.
+- [x] 2026-05-29 21:27 UTC - Merged provider quota failure clarity through PR #26 and verified
+      the production deploy. Main CI passed for `fe10275`, Vercel production deployment
+      `dpl_CRU2oo3tGFX2zPDxLmHsZUR34LvK` is ready, deploy readiness passed, and production browser
+      smoke passed against `https://pocketfm-contest-forge.vercel.app`.
 - [x] 2026-05-29 12:40 - Updated stale route/orchestration/deployment docs and smoke scripts for
       the `runLiveStudio` route migration.
 - [ ] Restore xAI credits/spend and prove a full accepted production live AI smoke run.
@@ -940,6 +944,14 @@ src/lib/application/liveModuleExecutor.spec.ts` returned 2 files and 49 tests pa
 - 2026-05-29 21:18 UTC - PR #26 review hardening added delimiter-variant quota tests. Focused
   provider/executor tests now cover 53 tests. Full `npm run verify` passed again with 22 test files,
   129 tests, zero Svelte errors/warnings, no approved explicit `any` lines, and a production build.
+- 2026-05-29 21:27 UTC - PR #26 merged by squash at `fe10275`. Main CI
+  `https://github.com/Phazzie/pocketfm-contest-forge/actions/runs/26662983667` passed in 1 minute
+  1 second. Vercel production deployment `dpl_CRU2oo3tGFX2zPDxLmHsZUR34LvK` is ready for commit
+  `fe10275543868aaaf7f3026099ce27492ad6c32d` and aliased to
+  `https://pocketfm-contest-forge.vercel.app`. The deploy-readiness command passed for the
+  production URL. Production browser smoke passed with body length 3259, 27 controls, Story Studio
+  action visible, and no browser errors. Full live AI smoke was not retried because xAI
+  credits/monthly spend remains the external blocker.
 
 ## Interfaces and Dependencies
 
